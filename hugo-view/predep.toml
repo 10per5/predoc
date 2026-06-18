@@ -1,0 +1,49 @@
+[[stages]]
+name = "hugo-binary"
+description = "Download Hugo static site generator"
+type = "binary"
+
+[[binary]]
+name = "hugo"
+url = "https://github.com/gohugoio/hugo/releases/download/v${VERSION}/hugo_extended_${VERSION}_${PLATFORM}-${CPU}.tar.gz"
+extract = true
+version = "0.158.0"
+
+[[stages]]
+name = "hugo-theme"
+description = "Download hugo-book theme"
+type = "resource"
+
+[[resource]]
+name = "book"
+url = "https://github.com/alex-shpak/hugo-book/archive/refs/tags/v${VERSION}.zip"
+dest = "root://themes/"
+extract = true
+create_directory = true
+version = "0.14.0"
+
+[[stages]]
+name = "hugo-build"
+description = "Generate static site from content via Hugo"
+type = "run"
+depends = ["hugo-binary", "hugo-theme"]
+outputs = ["root://build/index.html"]
+
+commands = [
+    "hugo --source hugo-view --contentDir ../content --themesDir themes --theme book --destination build",
+]
+
+[platform.windows]
+commands = [
+    "hugo.exe --source hugo-view --contentDir ../content --themesDir themes --theme book --destination build",
+]
+
+[[stages]]
+name = "hugo-docker"
+description = "Generate static site via Docker"
+type = "docker"
+depends = ["hugo-theme"]
+outputs = ["root://build/index.html"]
+recipe = "hugo-view/Dockerfile"
+target = "/output/build/"
+dest = "root://build/"

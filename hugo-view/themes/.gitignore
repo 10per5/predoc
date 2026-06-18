@@ -1,0 +1,5 @@
+# Theme directories are downloaded automatically by cli/src/theme.ts.
+# Run `bun run build` to fetch missing themes.
+# To add or update a theme, edit THEME_SOURCES in cli/src/theme.ts.
+*
+!.gitignore

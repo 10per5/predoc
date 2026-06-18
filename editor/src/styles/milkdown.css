@@ -1,0 +1,6 @@
+.milkdown-slash { display: none; background: #fff; border: 1px solid #d8dee9; border-radius: 6px; padding: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); min-width: 160px; z-index: 100; }
+.milkdown-slash[data-show="true"] { display: block; }
+.milkdown-slash [data-cmd] { padding: 0.4rem 0.8rem; cursor: pointer; border-radius: 3px; font-size: 0.9rem; outline: none; }
+.milkdown-slash [data-cmd]:hover, .milkdown-slash [data-cmd]:focus { background: #e5e9f0; }
+
+.block-handle { cursor: grab; color: #8fbcbb; font-size: 1.2rem; padding: 2px; }

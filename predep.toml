@@ -1,0 +1,42 @@
+main = "package"
+
+[[include]]
+path = "editor/predep.toml"
+
+[[include]]
+path = "hugo-view/predep.toml"
+
+[[include]]
+path = "gui/predep.toml"
+namespace = "gui"
+
+[[stages]]
+name = "build"
+description = "Build all subprojects"
+type = "group"
+depends = [
+    "editor::editor-build",
+    "hugo-view::hugo-build",
+    "gui::gui-build",
+]
+
+[[stages]]
+name = "build-docker"
+description = "Build all subprojects via Docker"
+type = "group"
+depends = [
+    "editor::editor-docker",
+    "hugo-view::hugo-docker",
+    "gui::gui-docker",
+]
+
+[[stages]]
+name = "package"
+description = "Assemble release archive"
+type = "package"
+bundle = "predoc"
+depends = ["build"]
+artifacts = [
+    { source = "root://editor/public/", dest = "editor/public" },
+    { source = "root://gui/bin/predoc-gui", dest = "gui/" },
+]

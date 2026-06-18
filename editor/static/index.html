@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>predoc</title>
+    <link rel="stylesheet" href="/assets/app.css" />
+  </head>
+  <body>
+    <div class="book-layout">
+      <nav class="book-menu">
+        <div id="sidebar-nav"></div>
+      </nav>
+      <div class="book-page" data-controller="editor">
+        <div class="book-page-main">
+          <div id="editor-area">
+            <div id="milkdown-editor"></div>
+            <div id="source-editor">
+              <textarea></textarea>
+              <div class="source-actions">
+                <button class="primary" data-action="editor#applySource">
+                  Apply
+                </button>
+                <button data-action="editor#toggleSource">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <aside class="book-aside" id="meta-panel-mount"></aside>
+    </div>
+    <script type="module" src="/assets/app.js"></script>
+  </body>
+</html>

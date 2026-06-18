@@ -1,0 +1,25 @@
+[[stages]]
+name = "gui-build"
+description = "Build GUI binary"
+type = "run"
+depends = []
+outputs = ["root://bin/predoc-gui"]
+
+commands = [
+    "cd gui && bash build.sh",
+]
+
+[platform.linux]
+commands = [
+    "cd gui && bash build.sh",
+]
+
+[[stages]]
+name = "gui-docker"
+description = "Build GUI binary via Docker"
+type = "docker"
+depends = []
+outputs = ["root://bin/predoc-gui"]
+recipe = "gui/Dockerfile"
+target = "/build/bin/predoc-gui"
+dest = "root://bin/"

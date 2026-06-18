@@ -1,0 +1,24 @@
+[[stages]]
+name = "editor-build"
+description = "Build editor static assets"
+type = "run"
+depends = []
+outputs = ["root://public/"]
+commands = [
+    "if command -v bun >/dev/null 2>&1; then cd editor && bun install && bun run build; elif command -v npm >/dev/null 2>&1; then cd editor && npm install && npm run build; fi",
+]
+
+[platform.windows]
+commands = [
+    "cd editor && powershell -Command \"if (Get-Command bun -ErrorAction SilentlyContinue) { bun install; bun run build } else { npm install; npm run build }\"",
+]
+
+[[stages]]
+name = "editor-docker"
+description = "Build editor static assets via Docker"
+type = "docker"
+depends = []
+outputs = ["root://public/"]
+recipe = "editor/Dockerfile"
+target = "/output/editor/public/"
+dest = "root://public/"

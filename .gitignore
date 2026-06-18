@@ -1,0 +1,4 @@
+# os specific
+.DS_Store
+*.local
+
