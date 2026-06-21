@@ -9,11 +9,13 @@
         "@hotwired/turbo": "^8.0",
         "@milkdown/core": "^7.21.2",
         "@milkdown/kit": "^7.21.2",
+        "@milkdown/plugin-clipboard": "^7.21.2",
         "@milkdown/plugin-listener": "^7.21.2",
         "@milkdown/preset-gfm": "7.21.2",
         "@milkdown/theme-nord": "^7.21",
         "@types/diff": "^8.0.0",
         "diff": "^9.0.0",
+        "fflate": "^0.8.3",
         "lit-html": "^3.3.3",
         "prosemirror-commands": "^1.7.1",
         "prosemirror-schema-list": "^1.5.1",
@@ -171,6 +173,8 @@
     "estree-walker": ["estree-walker@2.0.2", "", {}, "sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w=="],
 
     "extend": ["extend@3.0.2", "", {}, "sha512-fjquC59cD7CyW6urNXK0FBufkZcoiGG80wTuPujX590cB5Ttln20E2UB4S/WARVqhXffZl2LNgS+gQdPIIim/g=="],
+
+    "fflate": ["fflate@0.8.3", "", {}, "sha512-tbZNuJrLwGUp3zshBtdy4W+ORxZuIh8a5ilyIEQDC5rY1f3U20JMry0Ll3WBzU58EZKsEuJFXhb5gwv8CsPvgA=="],
 
     "is-plain-obj": ["is-plain-obj@4.1.0", "", {}, "sha512-+Pgi+vMuUNkJyExiMBt5IlFoMyKnr5zhJ4Uspz58WOhBF5QoIZkFyNHIbBAtHwzVAgk5RtndVNsDRN61/mmDqg=="],
 

@@ -1,6 +1,12 @@
-{{- if hugo.IsServer -}} {{- $pagePath := strings.TrimPrefix "/" .RelPermalink
--}} {{- $pagePath = strings.TrimSuffix "/" $pagePath -}} {{- $editorURL :=
-printf "http://localhost:3000/%s" $pagePath -}}
+{{- $editorURL := or (os.Getenv "EDITOR_URL") "" -}}
+{{- if or $editorURL hugo.IsServer -}}
+  {{- if hugo.IsServer -}}
+    {{- $baseURL := or (os.Getenv "HUGO_BASEURL") "" -}}
+    {{- $pagePath := strings.TrimPrefix $baseURL .RelPermalink -}}
+    {{- $pagePath = strings.TrimPrefix "/" $pagePath -}}
+    {{- $pagePath = strings.TrimSuffix "/" $pagePath -}}
+    {{- $editorURL = printf "http://localhost:3000/%s" $pagePath -}}
+  {{- end -}}
 <div class="sidebar-footer">
   <a class="nav-live-link" href="{{ $editorURL }}" title="Open in editor">
     <svg

@@ -106,3 +106,7 @@ COPY src/ src/
 ENV CXXFLAGS="-std=c++23 -mno-direct-extern-access"
 ENV LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu
 RUN premake5 gmake && make config=redist -j"$(nproc)" CXX=g++-15
+
+FROM scratch
+COPY --from=builder /build /build
+CMD ["true"]

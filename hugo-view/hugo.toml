@@ -4,6 +4,10 @@ theme = "book"
 contentDir = "../content"
 disableKinds = ["RSS", "sitemap"]
 
+[security]
+  [security.funcs]
+    getenv = ["^EDITOR_URL$", "^HUGO_", "^CI$"]
+
 [params]
   BookSearch = true
   BookTheme = "auto"

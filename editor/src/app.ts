@@ -3,15 +3,24 @@ import "./styles/global.css"
 import "./styles/milkdown.css"
 
 import { Application } from "@hotwired/stimulus"
-import EditorController from "./controllers/editor_controller"
+import EditorController, { setProvider, setSessionStarted } from "./controllers/editor_controller"
 import { initToast } from "./components/toast/toast"
+import { createProvider } from "./content"
 
-const app = Application.start()
-app.register("editor", EditorController)
+async function init() {
+  setSessionStarted(Date.now())
 
-document.addEventListener("turbo:load", () => {
-  app.load()
+  const provider = await createProvider()
+  setProvider(provider)
+
+  const app = Application.start()
+  app.register("editor", EditorController)
+
+  document.addEventListener("turbo:load", () => {
+    app.load()
+    initToast()
+  })
   initToast()
-})
-// Also init on initial load (before turbo)
-initToast()
+}
+
+init()

@@ -187,6 +187,35 @@ class Cache {
     this.frontmatterCache.clear();
     this.serverTimes.clear();
   }
+
+  saveState(key: string) {
+    try {
+      const state = {
+        patches: [...this.patches.entries()],
+        bodies: [...this.bodies.entries()],
+        baselines: [...this.baselines.entries()],
+        dirty: [...this.dirty],
+        frontmatter: [...this.frontmatterCache.entries()],
+        serverTimes: [...this.serverTimes.entries()],
+      }
+      localStorage.setItem(`predoc-cache-${key}`, JSON.stringify(state))
+    } catch {}
+  }
+
+  restoreState(key: string) {
+    this.clearAll()
+    try {
+      const raw = localStorage.getItem(`predoc-cache-${key}`)
+      if (!raw) return
+      const state = JSON.parse(raw)
+      for (const [k, v] of state.patches ?? []) this.patches.set(k, v)
+      for (const [k, v] of state.bodies ?? []) this.bodies.set(k, v)
+      for (const [k, v] of state.baselines ?? []) this.baselines.set(k, v)
+      for (const k of state.dirty ?? []) this.dirty.add(k)
+      for (const [k, v] of state.frontmatter ?? []) this.frontmatterCache.set(k, v as MetaPanelData)
+      for (const [k, v] of state.serverTimes ?? []) this.serverTimes.set(k, v)
+    } catch {}
+  }
 }
 
 export const cache = new Cache();

@@ -1,4 +1,3 @@
-# Deploy Hugo site to GitHub Pages via predep
 name: Deploy static content to Pages
 
 on:
@@ -22,21 +21,19 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Download predep
-        run: |
-          curl -sL \
-            https://github.com/10per5/predep/releases/download/v0.0.1/predep-linux-x86_64.tar.gz \
-            -o /tmp/predep.tar.gz
-          tar xzf /tmp/predep.tar.gz -C /usr/local/bin
+      - uses: ./.github/actions/setup
 
-      - name: Build Hugo site
-        working-directory: hugo-view
-        env:
-          HUGO_BASEURL: /predoc/
-        run: predep hugo-build
+      - uses: ./.github/actions/build-editor
+        with:
+          live-url-base: /predoc
+          editor-self-base: /predoc/editor-live/
+
+      - uses: ./.github/actions/build-hugo
+        with:
+          baseurl: /predoc/
+          editor-url: /predoc/editor-live
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

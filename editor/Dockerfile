@@ -4,21 +4,21 @@
 #   docker cp tmp:/output/editor/public/. ./public/
 #   docker rm tmp
 
-FROM debian:trixie-slim AS builder
+FROM oven/bun:1 AS builder
 
+USER root
 RUN apt-get update && apt-get install -y curl unzip && rm -rf /var/lib/apt/lists/*
 
-RUN curl -fsSL https://bun.sh/install | bash
-ENV PATH="/root/.bun/bin:$PATH"
 
 WORKDIR /src
 
-COPY package.json ./
-RUN bun install
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 
 COPY src/ src/
 COPY static/ public/
 RUN bun run build
 
-FROM debian:trixie-slim
+FROM scratch
 COPY --from=builder /src/public/ /output/editor/public/
+CMD ["true"]

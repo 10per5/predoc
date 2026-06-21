@@ -1,9 +1,14 @@
 main = "hugo-docker"
 
 [[stages]]
+name = "cache"
+description = "Cache step for ci/cd"
+
+[[stages]]
 name = "hugo-binary"
 description = "Download Hugo static site generator"
-type = "binary"
+type = "fetch"
+fetch-type = "binary"
 
 [[binary]]
 name = "hugo"
@@ -15,7 +20,8 @@ sha256 = "c2a724ac3c8e949fca56dd438b868b2128837754420c20a6e7ae345616c4e625"
 [[stages]]
 name = "hugo-theme"
 description = "Download hugo-book theme"
-type = "resource"
+type = "fetch"
+fetch-type = "resource"
 
 [[resource]]
 name = "book"
@@ -29,18 +35,16 @@ sha256 = "2332a2b3fb3ddff07ccd6e1eeca49df60401bba54d9617daa6fa5ee71199eb32"
 [[stages]]
 name = "hugo-build"
 description = "Generate static site from content via Hugo"
-type = "run"
+type = "binary"
+binary  = "hugo"
 depends = ["hugo-binary", "hugo-theme"]
 outputs = ["root://build/index.html"]
 
-commands = [
-    "hugo --contentDir ../content --themesDir themes --theme book --destination build",
-]
-
-[platform.windows]
-commands = [
-    "hugo.exe --contentDir ../content --themesDir themes --theme book --destination build",
-]
+[stages.params]
+contentDir  = "../content"
+themesDir   = "themes"
+theme       = "book"
+destination = "build"
 
 [[stages]]
 name = "hugo-docker"

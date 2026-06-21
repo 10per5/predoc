@@ -1,16 +1,12 @@
 #include "args.h"
 #include "config.h"
 #include "app.h"
+#include "platform.h"
 #include <print>
 #include <iostream>
 #include <filesystem>
 #include <optional>
 namespace fs = std::filesystem;
-
-static bool mode_missing(const parsed_args &args)
-{
-    return args.editor_root.empty() && args.host.empty();
-}
 
 static bool mode_ambiguous(const parsed_args &args)
 {
@@ -22,6 +18,8 @@ static std::optional<config> resolve_config(const parsed_args &args)
     config cfg;
     cfg.debug = args.debug;
     cfg.disable_gpu = args.disable_gpu;
+    cfg.no_ignore = args.no_ignore;
+    cfg.depth = args.depth;
     cfg.favicon = args.favicon;
     cfg.live_port = args.live_port;
     cfg.live_url = "http://127.0.0.1:" + std::to_string(args.live_port);
@@ -29,13 +27,6 @@ static std::optional<config> resolve_config(const parsed_args &args)
     if (mode_ambiguous(args))
     {
         std::cerr << "error: --editor-root and --host are mutually exclusive\n";
-        return std::nullopt;
-    }
-
-    if (mode_missing(args))
-    {
-        std::cerr << "error: specify either --editor-root <path> or "
-                     "--host <addr> [--port <n>]\n";
         return std::nullopt;
     }
 
@@ -49,14 +40,29 @@ static std::optional<config> resolve_config(const parsed_args &args)
 
     // -- local mode (--editor-root) --
 
-    if (!fs::exists(args.editor_root) || !fs::is_directory(args.editor_root))
+    auto editor_root = args.editor_root;
+    if (editor_root.empty())
     {
-        std::cerr << "error: --editor-root '" << args.editor_root
+        editor_root = default_editor_root();
+        if (!fs::exists(editor_root) || !fs::is_directory(editor_root))
+            editor_root.clear();
+    }
+
+    if (editor_root.empty())
+    {
+        std::cerr << "error: specify either --editor-root <path> or "
+                     "--host <addr> [--port <n>]\n";
+        return std::nullopt;
+    }
+
+    if (!fs::exists(editor_root) || !fs::is_directory(editor_root))
+    {
+        std::cerr << "error: --editor-root '" << editor_root
                   << "' is not a valid directory\n";
         return std::nullopt;
     }
 
-    cfg.editor_root = fs::canonical(args.editor_root);
+    cfg.editor_root = fs::canonical(editor_root);
 
     auto index_html = fs::path(cfg.editor_root) / "index.html";
     if (!fs::exists(index_html))
@@ -66,21 +72,38 @@ static std::optional<config> resolve_config(const parsed_args &args)
         return std::nullopt;
     }
 
-    if (args.content_root.empty())
+    auto content_root = args.content_root;
+    if (content_root.empty())
     {
-        std::cerr << "error: --content-root is required when using "
-                     "--editor-root\n";
-        return std::nullopt;
+        content_root = ".";
+        bool has_md = false;
+        if (fs::is_directory(content_root))
+        {
+            for (const auto &entry : fs::directory_iterator(content_root))
+            {
+                if (entry.is_regular_file() && entry.path().extension() == ".md")
+                {
+                    has_md = true;
+                    break;
+                }
+            }
+        }
+        if (!has_md)
+        {
+            std::cerr << "error: you must specify a directory "
+                         "with valid markdown files\n";
+            return std::nullopt;
+        }
     }
 
-    if (!fs::exists(args.content_root) || !fs::is_directory(args.content_root))
+    if (!fs::exists(content_root) || !fs::is_directory(content_root))
     {
-        std::cerr << "error: --content-root '" << args.content_root
+        std::cerr << "error: --content-root '" << content_root
                   << "' is not a valid directory\n";
         return std::nullopt;
     }
 
-    cfg.content_root = fs::canonical(args.content_root);
+    cfg.content_root = fs::canonical(content_root);
 
     cfg.editor_url = "app://_/";
     cfg.use_app_scheme = true;
@@ -104,6 +127,8 @@ int main(int argc, char **argv)
         std::println(std::cerr, "  [debug]   favicon     = {}",
                      cfg->favicon.empty() ? "(none)" : cfg->favicon);
         std::println(std::cerr, "  [debug]   disable_gpu = {}", cfg->disable_gpu);
+        std::println(std::cerr, "  [debug]   no_ignore  = {}", cfg->no_ignore);
+        std::println(std::cerr, "  [debug]   depth      = {}", cfg->depth);
     }
 
     return run_app(std::move(*cfg));

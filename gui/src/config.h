@@ -15,6 +15,8 @@ struct config
     std::string favicon;          ///< Optional window icon path
     std::size_t live_port = 5000; ///< Port for internal_url() whitelist
     bool disable_gpu = false;     ///< --disable-gpu
+    bool no_ignore = false;       ///< --no-ignore
+    int depth = 0;                ///< --depth (0 = unlimited)
     bool debug = false;           ///< --debug
     bool use_app_scheme = false;  ///< true when --editor-root was given
 };

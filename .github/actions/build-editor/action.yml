@@ -1,0 +1,43 @@
+name: Build editor
+description: Install dependencies and build the editor with a configurable live URL base
+
+inputs:
+  live-url-base:
+    description: Base URL for the live site link in the editor sidebar
+    required: false
+    default: ""
+  editor-self-base:
+    description: Base URL path where the editor is deployed (e.g. /predoc/editor-live/)
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Cache Bun packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.bun/install/cache
+        key: bun-${{ hashFiles('editor/bun.lock', 'editor/package.json') }}
+        restore-keys: |
+          bun-
+
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+
+    - name: Copy static assets
+      working-directory: editor
+      shell: bash
+      run: cp -r static/. public/
+
+    - name: Build editor
+      working-directory: editor
+      shell: bash
+      env:
+        LIVE_URL_BASE: ${{ inputs.live-url-base }}
+        EDITOR_SELF_BASE: ${{ inputs.editor-self-base }}
+      run: |
+        bun install --frozen-lockfile
+        bun run build

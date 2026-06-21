@@ -4,3 +4,49 @@
 .milkdown-slash [data-cmd]:hover, .milkdown-slash [data-cmd]:focus { background: #e5e9f0; }
 
 .block-handle { cursor: grab; color: #8fbcbb; font-size: 1.2rem; padding: 2px; }
+
+.book-hint {
+  border-left: 4px solid #5e81ac;
+  background: #e5e9f0;
+  padding: 0.5rem 1rem;
+  margin: 1rem 0;
+  border-radius: 0 4px 4px 0;
+}
+.book-hint.info, .book-hint.note { border-color: #5e81ac; background: #e5e9f0; }
+.book-hint.warning, .book-hint.caution { border-color: #d08770; background: #fdf6ec; }
+.book-hint.danger { border-color: #bf616a; background: #fcecec; }
+.book-hint.tip, .book-hint.success { border-color: #a3be8c; background: #f0f7ed; }
+.book-hint.important { border-color: #ebcb8b; background: #fcf8e8; }
+
+.shortcode-tag {
+  background: #e5e9f0;
+  border: 1px solid #d8dee9;
+  border-radius: 3px;
+  padding: 0 4px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.85em;
+  color: #4c566a;
+  white-space: nowrap;
+}
+.shortcode-param {
+  border-color: #8fbcbb;
+}
+.shortcode-detail-tag {
+  border-color: #5e81ac;
+  font-weight: 600;
+}
+.shortcode-percent {
+  border-color: #b48ead;
+  font-style: italic;
+}
+.shortcode-body {
+  background: #fff0e0;
+  border-radius: 2px;
+  padding: 1px 2px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.85em;
+}
+.shortcode-inner {
+  color: #5e81ac;
+  font-weight: 500;
+}

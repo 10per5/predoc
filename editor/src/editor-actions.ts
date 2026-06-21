@@ -1,6 +1,7 @@
 import { confirmDialog, promptDialog } from "./components/dialogs/dialog"
 import { serializeFrontmatter } from "./utils/frontmatter"
 import type { MetaPanelData } from "./components/panels/meta-panel"
+import { getProvider } from "./controllers/editor_controller"
 
 export async function createPage(
   parentPath: string,
@@ -25,11 +26,9 @@ export async function createPage(
   const fmStr = serializeFrontmatter(fmData)
   const body = `# ${name}\n\n`
 
-  await fetch(`/content/${fullPath}.md`, {
-    method: "PUT",
-    headers: { "Content-Type": "text/markdown" },
-    body: `---\n${fmStr}\n---\n\n${body}`,
-  })
+  const provider = getProvider()
+  const fullContent = `---\n${fmStr}\n---\n\n${body}`
+  await provider.writeFile(fullPath, fullContent)
 
   await loadSidebar()
   doNavigate(fullPath)
@@ -49,7 +48,8 @@ export async function deletePage(
   })
   if (!confirmed) return false
 
-  await fetch(`/content/${pagePath}.md`, { method: "DELETE" })
+  const provider = getProvider()
+  await provider.deleteFile(pagePath)
 
   if (currentPath === pagePath) {
     doNavigate("_index")
@@ -79,13 +79,8 @@ export async function renamePage(
     : ""
   const newPath = parentDir ? `${parentDir}/${slug}` : slug
 
-  const res = await fetch("/api/move", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ from: `${pagePath}.md`, to: `${newPath}.md` }),
-  })
-
-  if (!res.ok) return false
+  const provider = getProvider()
+  await provider.moveFile(pagePath, newPath)
 
   if (currentPath === pagePath) {
     doNavigate(newPath)
@@ -104,13 +99,8 @@ export async function movePage(
 ): Promise<boolean> {
   if (from === to) return false
 
-  const res = await fetch("/api/move", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ from: `${from}.md`, to: `${to}.md` }),
-  })
-
-  if (!res.ok) return false
+  const provider = getProvider()
+  await provider.moveFile(from, to)
 
   if (currentPath === from) {
     doNavigate(to, false)

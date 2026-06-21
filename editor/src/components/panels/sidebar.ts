@@ -1,4 +1,5 @@
 import { html, render } from "lit-html";
+import { editorSelfBase } from "../../config";
 import { liveIcon } from "../icons";
 
 export interface PageNode {
@@ -15,7 +16,18 @@ export interface SidebarActions {
   onDelete: (path: string) => void;
   onRename: (path: string) => void;
   onMove: (from: string, to: string) => void;
+  onChangeProvider: () => void;
 }
+
+const LINE_COLORS = [
+  "#88c0d0",
+  "#b48ead",
+  "#a3be8c",
+  "#ebcb8b",
+  "#d08770",
+  "#5e81ac",
+  "#8fbcbb",
+];
 
 let menuTarget = "";
 let menuTimer: ReturnType<typeof setTimeout> | null = null;
@@ -31,14 +43,19 @@ export function mountSidebar(
   tree: TreeNode,
   current: string,
   actions: SidebarActions,
+  providerIcon?: string,
+  providerLabel?: string,
 ) {
+  declare var LIVE_URL_BASE: string | undefined;
   const isDev =
     window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1";
+  const basePath = editorSelfBase;
   const page = current === "_index" ? "" : `/${current}`;
-  const liveUrl = isDev ? `http://localhost:5000${page}` : "";
+  const baseUrl = typeof LIVE_URL_BASE !== 'undefined' ? LIVE_URL_BASE : (isDev ? 'http://localhost:5000' : '');
+  const liveUrl = baseUrl ? `${baseUrl}${page}` : "";
 
-  function renderItems(items: TreeNode, prefix = ""): unknown {
+  function renderItems(items: TreeNode, prefix = "", depth = 0): unknown {
     const entries = Object.entries(items).sort(
       ([nameA, valA], [nameB, valB]) => {
         if (nameA === "_index.md") return -1;
@@ -58,6 +75,8 @@ export function mountSidebar(
       },
     );
 
+    const lineColor = LINE_COLORS[depth % LINE_COLORS.length];
+
     return entries.map(([name, val]) => {
       const path = prefix ? `${prefix}/${name}` : name;
       const isPage =
@@ -66,11 +85,21 @@ export function mountSidebar(
       if (isPage) {
         const pagePath = path.replace(/\.md$/, "");
         const active = pagePath === current;
-        const label = name
-          .replace(/^_index\.md$/, "Home")
-          .replace(/\.md$/, "")
-          .replace(/-/g, " ")
-          .replace(/^\w/, (c) => c.toUpperCase());
+        let label: string;
+        if (name === "_index.md") {
+          label = !prefix
+            ? "Home"
+            : prefix
+                .split("/")
+                .pop()!
+                .replace(/-/g, " ")
+                .replace(/^\w/, (c) => c.toUpperCase());
+        } else {
+          label = name
+            .replace(/\.md$/, "")
+            .replace(/-/g, " ")
+            .replace(/^\w/, (c) => c.toUpperCase());
+        }
         return html` <div
           class="nav-item"
           draggable="true"
@@ -86,8 +115,11 @@ export function mountSidebar(
           }}
         >
           <a
-            href="/${pagePath}"
-            class="nav-link ${active ? "active" : ""}"
+            href="${basePath}${pagePath}"
+            class="nav-link ${active ? "active" : ""}${name === "_index.md" &&
+            !prefix
+              ? " nav-link-home"
+              : ""}"
             @click=${(e: Event) => {
               e.preventDefault();
               actions.onNavigate(pagePath);
@@ -106,7 +138,8 @@ export function mountSidebar(
           </button>
         </div>`;
       }
-      const children = renderItems(val as TreeNode, path);
+      const childrenDepth = depth + 1;
+      const children = renderItems(val as TreeNode, path, childrenDepth);
       const label = name
         .replace(/-/g, " ")
         .replace(/^\w/, (c) => c.toUpperCase());
@@ -122,17 +155,36 @@ export function mountSidebar(
           }
         }}
       >
-        <span class="nav-section-title">${label}</span>
-        <div class="nav-section-children">${children}</div>
+        <span class="nav-section-title depth-${depth}">${label}</span>
+        <div class="nav-section-children" style="--line-color: ${lineColor}">
+          ${children}
+        </div>
       </div>`;
     });
   }
 
+  const treeEmpty = Object.keys(tree).length === 0;
+
   render(
     html`
       <div class="sidebar-wrapper">
+        ${treeEmpty
+          ? html`
+              <div class="sidebar-provider-bar">
+                <span class="provider-label"
+                  >${providerIcon ?? ""} ${providerLabel ?? "No provider"}</span
+                >
+                <button
+                  class="provider-change-btn"
+                  @click=${() => actions.onChangeProvider()}
+                >
+                  Change
+                </button>
+              </div>
+            `
+          : html``}
         <div class="sidebar-inner">
-          ${renderItems(tree)}
+          ${treeEmpty ? html`<div class="sidebar-empty">No files</div>` : renderItems(tree)}
           <button
             class="nav-new-page"
             @click=${() => actions.onNewPage("docs")}
@@ -140,9 +192,9 @@ export function mountSidebar(
             + New Page
           </button>
         </div>
-        ${liveUrl
-          ? html`
-              <div class="sidebar-footer">
+        <div class="sidebar-footer">
+          ${liveUrl
+            ? html`
                 <a
                   href="${liveUrl}"
                   rel="noopener noreferrer"
@@ -151,9 +203,9 @@ export function mountSidebar(
                   ${liveIcon}
                   <span>View live version</span>
                 </a>
-              </div>
-            `
-          : html``}
+              `
+            : html``}
+        </div>
       </div>
     `,
     container,

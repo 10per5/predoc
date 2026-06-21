@@ -1,0 +1,16 @@
+name: Setup
+description: Checkout repo, download predep, and install Bun
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Download predep
+      shell: bash
+      run: |
+        curl -sL \
+          https://github.com/10per5/predep/releases/download/v0.0.1/predep-linux-x86_64.tar.gz \
+          -o /tmp/predep.tar.gz
+        tar xzf /tmp/predep.tar.gz -C /usr/local/bin

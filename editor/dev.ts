@@ -8,11 +8,12 @@ const serve = spawn("bun", [join(import.meta.dir, "serve.ts")], {
 });
 
 const watch = spawn("bun", [
-  "build", "src/app.ts", "--outdir", "public/assets", "--watch",
+  join(import.meta.dir, "build.ts"), "--watch",
 ], {
   cwd: import.meta.dir,
   stdio: "inherit",
   shell: true,
+  env: { ...process.env, LIVE_URL_BASE: "http://localhost:5000" },
 });
 
 for (const proc of [serve, watch]) {

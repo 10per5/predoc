@@ -13,13 +13,17 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Hugo extended v0.158.0 (linux-amd64)
-ADD https://github.com/gohugoio/hugo/releases/download/v0.158.0/hugo_extended_0.158.0_linux-amd64.tar.gz /tmp/hugo.tar.gz
+ADD --checksum=sha256:c2a724ac3c8e949fca56dd438b868b2128837754420c20a6e7ae345616c4e625 \
+    https://github.com/gohugoio/hugo/releases/download/v0.158.0/hugo_extended_0.158.0_linux-amd64.tar.gz \
+    /tmp/hugo.tar.gz
 RUN tar xzf /tmp/hugo.tar.gz -C /usr/local/bin/ hugo && \
     chmod +x /usr/local/bin/hugo && \
     rm /tmp/hugo.tar.gz
 
 # hugo-book theme v0.14.0
-ADD https://github.com/alex-shpak/hugo-book/archive/refs/tags/v0.14.0.zip /tmp/theme.zip
+ADD --checksum=sha256:2332a2b3fb3ddff07ccd6e1eeca49df60401bba54d9617daa6fa5ee71199eb32 \
+    https://github.com/alex-shpak/hugo-book/archive/refs/tags/v0.14.0.zip \
+    /tmp/theme.zip
 RUN mkdir -p /output/themes && \
     unzip /tmp/theme.zip -d /tmp/ && \
     mv /tmp/hugo-book-0.14.0 /output/themes/book && \
@@ -38,6 +42,7 @@ RUN mkdir -p /output/build && \
     --theme book \
     --destination /output/build
 
-FROM debian:trixie-slim
+FROM scratch
 COPY --from=builder /output/build/ /output/build/
 COPY --from=builder /output/themes/ /output/themes/
+CMD ["true"]

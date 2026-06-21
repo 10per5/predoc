@@ -1,19 +1,20 @@
 main = "editor-docker"
 
 [[stages]]
+name = "build-install"
+description = "Install local bun dependencies"
+type = "binary"
+binary = "bun"
+args = ["install"]
+
+[[stages]]
 name = "editor-build"
 description = "Build editor static assets"
-type = "run"
-depends = []
+type = "binary"
+binary = "bun"
+depends = ["build-install"]
 outputs = ["root://public/"]
-commands = [
-    "if command -v bun >/dev/null 2>&1; then cd editor && bun install && bun run build; elif command -v npm >/dev/null 2>&1; then cd editor && npm install && npm run build; fi",
-]
-
-[platform.windows]
-commands = [
-    "cd editor && powershell -Command \"if (Get-Command bun -ErrorAction SilentlyContinue) { bun install; bun run build } else { npm install; npm run build }\"",
-]
+args = ["run build"]
 
 [[stages]]
 name = "editor-docker"

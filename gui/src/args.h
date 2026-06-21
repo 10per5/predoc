@@ -14,6 +14,8 @@ struct parsed_args
     std::string content_root;     ///< --content-root
     std::string favicon;          ///< --favicon
     bool disable_gpu = false;     ///< --disable-gpu
+    bool no_ignore = false;       ///< --no-ignore
+    int depth = 0;                ///< --depth (0 = unlimited)
     bool debug = false;           ///< --debug
 };
 

@@ -6,7 +6,151 @@
 #include <filesystem>
 #include <vector>
 #include <algorithm>
+#include <string>
 namespace fs = std::filesystem;
+
+// ── gitignore pattern matching ──────────────────────────────────────────
+
+struct GitIgnorePattern
+{
+    std::string pattern; ///< cleaned pattern (no leading !, no trailing /)
+    bool negate   = false;
+    bool dir_only = false;
+    bool anchored = false; ///< has / in pattern (match relative path, not basename)
+};
+
+static std::vector<GitIgnorePattern> load_gitignore(const fs::path &dir)
+{
+    std::vector<GitIgnorePattern> out;
+    auto gi_path = dir / ".gitignore";
+    std::ifstream f(gi_path);
+    if (!f)
+        return out;
+
+    std::string line;
+    while (std::getline(f, line))
+    {
+        // strip trailing whitespace
+        while (!line.empty() && (line.back() == ' ' || line.back() == '\t'))
+            line.pop_back();
+        if (line.empty() || line[0] == '#')
+            continue;
+
+        GitIgnorePattern p;
+
+        if (line[0] == '!')
+        {
+            p.negate = true;
+            line = line.substr(1);
+        }
+
+        if (!line.empty() && line.back() == '/')
+        {
+            p.dir_only = true;
+            line.pop_back();
+        }
+
+        if (line.empty())
+            continue;
+
+        p.pattern = line;
+        p.anchored = line.find('/') != std::string::npos;
+        out.push_back(p);
+    }
+    return out;
+}
+
+static bool glob_match(const std::string &pat, std::size_t pi,
+                       const std::string &str, std::size_t si)
+{
+    // consume rest of pattern?
+    for (;;)
+    {
+        if (pi == pat.size() && si == str.size())
+            return true;
+
+        // ** matches everything
+        if (pi + 1 < pat.size() && pat[pi] == '*' && pat[pi + 1] == '*')
+        {
+            // skip second *
+            pi += 2;
+            // ** at end matches any trailing chars
+            if (pi == pat.size())
+                return true;
+            // try matching remaining pattern at every position
+            for (auto i = si; i <= str.size(); ++i)
+                if (glob_match(pat, pi, str, i))
+                    return true;
+            return false;
+        }
+
+        // * matches any chars except /
+        if (pi < pat.size() && pat[pi] == '*')
+        {
+            ++pi;
+            for (auto i = si; i <= str.size(); ++i)
+            {
+                if (i > si && str[i - 1] == '/')
+                    break;
+                if (glob_match(pat, pi, str, i))
+                    return true;
+            }
+            return false;
+        }
+
+        // ? matches any single char except /
+        if (pi < pat.size() && pat[pi] == '?')
+        {
+            if (si >= str.size() || str[si] == '/')
+                return false;
+            ++pi;
+            ++si;
+            continue;
+        }
+
+        // literal
+        if (pi < pat.size() && si < str.size() && pat[pi] == str[si])
+        {
+            ++pi;
+            ++si;
+            continue;
+        }
+
+        return false;
+    }
+}
+
+static bool is_ignored(const std::string &name, bool is_dir,
+                       const std::vector<GitIgnorePattern> &patterns)
+{
+    bool ignored = false;
+    for (const auto &p : patterns)
+    {
+        if (p.dir_only && !is_dir)
+            continue;
+
+        bool matched = false;
+
+        if (p.anchored)
+        {
+            // match against full relative path
+            matched = glob_match(p.pattern, 0, name, 0);
+        }
+        else
+        {
+            // match against basename
+            auto slash = name.rfind('/');
+            auto base  = (slash == std::string::npos) ? name : name.substr(slash + 1);
+            matched = glob_match(p.pattern, 0, base, 0);
+        }
+
+        if (matched)
+            ignored = !p.negate;
+    }
+    return ignored;
+}
+
+// ── ─────────────────────────────────────────────────────────────────────
 
 static saucer::stash stash_from_file(const std::string &path)
 {
@@ -58,33 +202,86 @@ static std::string guess_mime(const std::string &path)
     return "application/octet-stream";
 }
 
-static void build_tree(const fs::path &dir, std::ostringstream &out,
-                       const std::string &prefix)
+static int extract_weight(const fs::path &file)
 {
-    std::vector<fs::path> entries;
+    std::ifstream f(file);
+    if (!f)
+        return -1;
+    std::string line;
+    if (!std::getline(f, line) || line != "---")
+        return -1;
+    while (std::getline(f, line))
+    {
+        if (line == "---")
+            break;
+        if (line.starts_with("weight:"))
+        {
+            try
+            {
+                auto val = line.substr(7);
+                val.erase(0, val.find_first_not_of(" \t"));
+                return std::stoi(val);
+            }
+            catch (...) { return -1; }
+        }
+    }
+    return -1;
+}
+
+static void build_tree(const fs::path &dir, std::ostringstream &out,
+                       const std::string &prefix,
+                       const std::vector<GitIgnorePattern> &gi_patterns,
+                       int depth, int current_depth,
+                       bool no_ignore,
+                       const std::string &rel_prefix = "")
+{
+    struct item { std::string name; std::string json; };
+    std::vector<item> items;
+    bool recurse = depth == 0 || current_depth < depth;
+
     for (auto &e : fs::directory_iterator(dir))
-        entries.push_back(e.path());
-    std::sort(entries.begin(), entries.end());
+    {
+        auto name = e.path().filename().string();
+        auto rel_path = rel_prefix.empty() ? name : rel_prefix + "/" + name;
+
+        if (name[0] == '.')
+            continue;
+
+        if (!no_ignore && is_ignored(rel_path, fs::is_directory(e.path()), gi_patterns))
+            continue;
+
+        if (fs::is_directory(e.path()))
+        {
+            if (!recurse)
+                continue;
+            std::ostringstream child;
+            auto child_gi = load_gitignore(e.path());
+            std::vector<GitIgnorePattern> merged = gi_patterns;
+            merged.insert(merged.end(), child_gi.begin(), child_gi.end());
+            auto child_rel = rel_prefix.empty() ? name : rel_prefix + "/" + name;
+            build_tree(e.path(), child, prefix + "  ",
+                       merged, depth, current_depth + 1, no_ignore, child_rel);
+            auto child_str = child.str();
+            if (!child_str.empty())
+                items.push_back({name, "{\n" + child_str + "\n" + prefix + "  }"});
+        }
+        else if (name.ends_with(".md"))
+        {
+            auto w = extract_weight(e.path());
+            if (w >= 0)
+                items.push_back({name, "{\"weight\": " + std::to_string(w) + "}"});
+            else
+                items.push_back({name, "null"});
+        }
+    }
 
     bool first = true;
-    for (auto &p : entries)
+    for (auto &it : items)
     {
-        auto name = p.filename().string();
-
         if (!first)
             out << ",\n";
         first = false;
-
-        out << prefix << "  ";
-
-        if (fs::is_directory(p))
-        {
-            out << "\"" << name << "\": {\n";
-            build_tree(p, out, prefix + "  ");
-            out << "\n" << prefix << "  }";
-        }
-        else
-            out << "\"" << name << "\": null";
+        out << prefix << "  \"" << it.name << "\": " << it.json;
     }
 }
 
@@ -117,9 +314,14 @@ saucer::scheme::response handle_app_request(
             return {.data = saucer::stash::from_str("{}"),
                     .mime = "application/json", .status = 200};
 
+        auto gi_patterns = cfg.no_ignore
+            ? std::vector<GitIgnorePattern>{}
+            : load_gitignore(cfg.content_root);
+
         std::ostringstream out;
         out << "{\n";
-        build_tree(cfg.content_root, out, "");
+        build_tree(cfg.content_root, out, "",
+                   gi_patterns, cfg.depth, 0, cfg.no_ignore);
         out << "\n}\n";
 
         return {.data = saucer::stash::from_str(out.str()),
@@ -157,6 +359,10 @@ saucer::scheme::response handle_app_request(
             from = from.substr(1);
         if (to[0] == '/')
             to = to.substr(1);
+
+        if (!from.ends_with(".md") || !to.ends_with(".md"))
+            return {.data = saucer::stash::from_str("Invalid path"),
+                    .mime = "text/plain", .status = 400};
 
         if (from.find("..") != std::string::npos ||
             to.find("..") != std::string::npos)
@@ -200,6 +406,10 @@ saucer::scheme::response handle_app_request(
             spath = spath.substr(0, qm);
 
         auto fpath = fs::path(cfg.content_root) / spath;
+
+        if (fpath.extension() != ".md")
+            return {.data = saucer::stash::from_str("Not Found"),
+                    .mime = "text/plain", .status = 404};
 
         if (method == "GET")
         {

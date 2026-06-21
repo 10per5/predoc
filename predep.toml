@@ -1,4 +1,5 @@
 main = "build-docker"
+project = "predoc"
 
 [[include]]
 path = "editor/predep.toml"
@@ -8,7 +9,6 @@ path = "hugo-view/predep.toml"
 
 [[include]]
 path = "gui/predep.toml"
-namespace = "gui"
 
 [[stages]]
 name = "build"
@@ -37,6 +37,17 @@ type = "package"
 bundle = "predoc"
 depends = ["build"]
 artifacts = [
-    { source = "root://editor/public/", dest = "editor/public" },
-    { source = "root://gui/bin/predoc-gui", dest = "gui/" },
+    { source = "root://gui/bin/predoc-gui", dest = "predoc-gui" },
+    { source = "root://editor/public", dest = "editor" },
+]
+
+[install]
+dir = "/opt/predoc"
+symlink = true
+artifacts = [
+  { source = "root://gui/bin/predoc-gui", dest = "predoc-gui" },
+  { source = "root://editor/public/",      dest = "editor" },
+  { source = "root://content",            dest = "content" },
+  { source = "root://hugo-view/themes",   dest = "hugo/themes" },
+  { source = "root://hugo-view/hugo.toml",dest = "hugo/hugo.toml" },
 ]

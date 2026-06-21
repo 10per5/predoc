@@ -13,6 +13,18 @@ export interface WikiPrefs {
   stickyToolbar: boolean;
 }
 
+export function loadPrefs(): WikiPrefs {
+  try {
+    const raw = localStorage.getItem(PREFS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return { stickyToolbar: true };
+}
+
+export function savePrefs(prefs: WikiPrefs) {
+  localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+}
+
 export function loadStorage(): WikiStorage {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -36,18 +48,4 @@ export function saveStorage(storage: WikiStorage) {
 
 export function clearStorage() {
   localStorage.removeItem(STORAGE_KEY);
-}
-
-export function loadPrefs(): WikiPrefs {
-  try {
-    const raw = localStorage.getItem(PREFS_KEY);
-    if (raw) {
-      return JSON.parse(raw);
-    }
-  } catch {}
-  return { stickyToolbar: true };
-}
-
-export function savePrefs(prefs: WikiPrefs) {
-  localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
 }

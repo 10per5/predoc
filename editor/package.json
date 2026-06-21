@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "bun dev.ts",
-    "build": "bun build src/app.ts --outdir public/assets --minify",
-    "build:watch": "bun build src/app.ts --outdir public/assets --watch",
+    "build": "bun build.ts",
+    "build:watch": "bun build.ts --watch",
     "serve": "bun serve.ts"
   },
   "dependencies": {
@@ -14,11 +14,13 @@
     "@hotwired/turbo": "^8.0",
     "@milkdown/core": "^7.21.2",
     "@milkdown/kit": "^7.21.2",
+    "@milkdown/plugin-clipboard": "^7.21.2",
     "@milkdown/plugin-listener": "^7.21.2",
     "@milkdown/preset-gfm": "7.21.2",
     "@milkdown/theme-nord": "^7.21",
     "@types/diff": "^8.0.0",
     "diff": "^9.0.0",
+    "fflate": "^0.8.3",
     "lit-html": "^3.3.3",
     "prosemirror-commands": "^1.7.1",
     "prosemirror-schema-list": "^1.5.1"

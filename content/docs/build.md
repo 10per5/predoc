@@ -31,22 +31,12 @@ All build recipes are declared in `predep.toml` at each subproject root:
 
 | Step | Recipe File | Produces |
 |---|---|---|
-| CLI | [`cli/predep.toml`](https://github.com/10per5/predoc/tree/main/cli/predep.toml) | `cli/bin/predoc` |
 | GUI | [`gui/predep.toml`](https://github.com/10per5/predoc/tree/main/gui/predep.toml) | `gui/bin/predoc-gui` |
 | Editor JS | [`editor/predep.toml`](https://github.com/10per5/predoc/tree/main/editor/predep.toml) | `editor/public/assets/app.js` |
 
 The root [`predep.toml`](https://github.com/10per5/predoc/blob/main/predep.toml) ties them together via `[[include]]` directives and defines the top-level `build` and `build-docker` stage groups.
 
 Each subproject recipe uses Docker by default and falls back to native tools when available.
-
-### CLI
-
-Uses `cli/Dockerfile` (debian:trixie-slim, premake5 beta8, g++-15). Builds with C++23 and the vendored CLI11 header:
-
-1. `docker build -t predoc-cli cli/`
-2. `docker cp <container>:/build/bin/predoc cli/bin/`
-
-Falls back to `premake5 gmake && make` if premake5 is available natively.
 
 ### GUI
 
@@ -62,7 +52,6 @@ The Dockerfile is single-stage — the binary is extracted and runs on the host,
 ## Build Artifacts
 
 ```
-cli/bin/predoc                 # ~200KB — CLI binary (statically linked)
 gui/bin/predoc-gui             # ~1.2MB — GUI binary (links Qt6 at runtime)
 editor/public/assets/app.js  # Editor frontend JS (minified)
 editor/public/assets/app.css # Editor frontend CSS (minified)
@@ -73,4 +62,4 @@ ssg/
   themes/book/               # Hugo Book theme (downloaded on fetch-deps)
 ```
 
-These are the only files needed at runtime. Source files (`cli/src/`, `gui/src/`, `editor/src/`) and dev dependencies are not needed on the target machine.
+These are the only files needed at runtime. Source files (`gui/src/`, `editor/src/`) and dev dependencies are not needed on the target machine.

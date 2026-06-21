@@ -26,7 +26,7 @@ static void toast(saucer::smartview &wv, const std::string &msg)
         else
             escaped += c;
     }
-    auto js = "predocUI.showToast('" + escaped + "')";
+    auto js = "window.predocUI.showToast('" + escaped + "')";
     static_cast<saucer::webview &>(wv).execute(js.c_str());
 }
 

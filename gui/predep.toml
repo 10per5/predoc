@@ -15,13 +15,8 @@ type = "vendor"
 [[stages]]
 name = "gui-build"
 description = "Build GUI binary"
-type = "run"
 depends = ["gui-vendor"]
 outputs = ["root://bin/predoc-gui"]
-
-commands = [
-    "echo 'disabled for now'",
-]
 
 [[stages]]
 name = "gui-docker"

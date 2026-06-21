@@ -1,5 +1,5 @@
 import { html, render } from "lit-html"
-import { loadPrefs, savePrefs, type WikiPrefs } from "../../storage"
+import { loadPrefs, savePrefs } from "../../storage"
 
 function createOverlay(): HTMLDivElement {
   const existing = document.getElementById("predoc-dialog-overlay")
@@ -47,7 +47,7 @@ export function mountPrefsDialog(actions: PrefsDialogActions) {
       <h3>Preferences</h3>
       <label>
         <input type="checkbox" id="predoc-sticky-checkbox" ?checked=${prefs.stickyToolbar} />
-        Sticky toolbar (follows on scroll)
+        Auto-hide toolbar on scroll
       </label>
       <div class="predoc-prefs-actions">
         <button class="predoc-prefs-close">Close</button>

@@ -15,13 +15,17 @@ parsed_args parse_args(int argc, char **argv)
     app.add_option("--editor-root", args.editor_root,
                    "Serve frontend from <path>/public/ via app:// scheme "
                    "(mutually exclusive with --host/--port)");
-    app.add_option("--content-root", args.content_root,
-                   "Content root for the file-tree & markdown API");
+    app.add_option("content-root", args.content_root,
+                   "Content root path (first positional arg)");
     app.add_option("--live-port", args.live_port,
                    "Live preview server port (default: 5000)");
     app.add_option("--favicon", args.favicon, "Window icon path");
     app.add_flag("--disable-gpu", args.disable_gpu,
                  "Disable hardware acceleration");
+    app.add_flag("--no-ignore", args.no_ignore,
+                 "Do not respect .gitignore files when building file tree");
+    app.add_option("--depth", args.depth,
+                   "Directory scan depth limit (0 = unlimited)");
     app.add_flag("--debug", args.debug, "Verbose stderr logging");
 
     app.set_help_flag("--help,-h", "Show this help");
