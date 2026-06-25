@@ -1,4 +1,4 @@
-main = "editor-docker"
+main = "docker"
 
 [[stages]]
 name = "build-install"
@@ -8,7 +8,7 @@ binary = "bun"
 args = ["install"]
 
 [[stages]]
-name = "editor-build"
+name = "build"
 description = "Build editor static assets"
 type = "binary"
 binary = "bun"
@@ -17,7 +17,7 @@ outputs = ["root://public/"]
 args = ["run build"]
 
 [[stages]]
-name = "editor-docker"
+name = "docker"
 description = "Build editor static assets via Docker"
 type = "docker"
 outputs = ["root://public/"]

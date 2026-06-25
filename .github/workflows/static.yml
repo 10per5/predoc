@@ -35,6 +35,12 @@ jobs:
           baseurl: /predoc/
           editor-url: /predoc/editor-live
 
+      - name: Copy editor into site output
+        shell: bash
+        run: |
+          mkdir -p hugo-view/build/editor-live
+          cp -r editor/public/. hugo-view/build/editor-live
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

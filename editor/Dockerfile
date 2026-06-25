@@ -16,7 +16,9 @@ COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
 
 COPY src/ src/
-COPY static/ public/
+COPY lib/ lib/
+COPY static/ static/
+COPY *.ts ./
 RUN bun run build
 
 FROM scratch

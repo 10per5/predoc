@@ -1,6 +1,7 @@
 import { html, render } from "lit-html";
-import { editorSelfBase } from "../../config";
+import { editorSelfBase, liveUrlBase, isDev } from "../../config";
 import { liveIcon } from "../icons";
+import { buildEditorUrl } from "../../../lib/url";
 
 export interface PageNode {
   weight?: number;
@@ -45,15 +46,12 @@ export function mountSidebar(
   actions: SidebarActions,
   providerIcon?: string,
   providerLabel?: string,
+  providerType?: string,
 ) {
-  declare var LIVE_URL_BASE: string | undefined;
-  const isDev =
-    window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1";
   const basePath = editorSelfBase;
   const page = current === "_index" ? "" : `/${current}`;
-  const baseUrl = typeof LIVE_URL_BASE !== 'undefined' ? LIVE_URL_BASE : (isDev ? 'http://localhost:5000' : '');
-  const liveUrl = baseUrl ? `${baseUrl}${page}` : "";
+  const baseUrl = liveUrlBase || (isDev ? 'http://localhost:5000' : '');
+  const liveUrl = baseUrl ? `${baseUrl}${providerType === "localStorage" ? "" : page}` : "";
 
   function renderItems(items: TreeNode, prefix = "", depth = 0): unknown {
     const entries = Object.entries(items).sort(
@@ -115,7 +113,7 @@ export function mountSidebar(
           }}
         >
           <a
-            href="${basePath}${pagePath}"
+            href="${buildEditorUrl(basePath, pagePath)}"
             class="nav-link ${active ? "active" : ""}${name === "_index.md" &&
             !prefix
               ? " nav-link-home"

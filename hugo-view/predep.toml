@@ -1,4 +1,5 @@
-main = "hugo-docker"
+main = "docker"
+project = "hugo"
 
 [[stages]]
 name = "cache"
@@ -12,10 +13,15 @@ fetch-type = "binary"
 
 [[binary]]
 name = "hugo"
-url = "https://github.com/gohugoio/hugo/releases/download/v${VERSION}/hugo_extended_${VERSION}_${PLATFORM}-${CPU}.tar.gz"
+url = "https://github.com/gohugoio/hugo/releases/download/v${VERSION}/hugo_extended_${VERSION}_${PLATFORM}-${CPU}.${ARCHEXT}"
 extract = true
-version = "0.158.0"
-sha256 = "c2a724ac3c8e949fca56dd438b868b2128837754420c20a6e7ae345616c4e625"
+include = ["hugo"]
+version = "0.163.3"
+sha256 = "1234302ece1167cef2c252aaa69c89b4f0afc5851f1a30536d693e8e7fc4d1bf"
+
+[platform.win32.binary.hugo]
+include = ["hugo.exe"] # not implemented on PowerShell win32
+sha256 = "10ce84261773a52aa2dabb4f51b9fe86309592248dbeeef093c6b36b1dacf252"
 
 [[stages]]
 name = "hugo-theme"
@@ -33,7 +39,7 @@ version = "0.14.0"
 sha256 = "2332a2b3fb3ddff07ccd6e1eeca49df60401bba54d9617daa6fa5ee71199eb32"
 
 [[stages]]
-name = "hugo-build"
+name = "build"
 description = "Generate static site from content via Hugo"
 type = "binary"
 binary  = "hugo"
@@ -47,7 +53,7 @@ theme       = "book"
 destination = "build"
 
 [[stages]]
-name = "hugo-docker"
+name = "docker"
 description = "Generate static site via Docker"
 type = "docker"
 depends = []

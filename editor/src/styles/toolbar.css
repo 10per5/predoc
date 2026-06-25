@@ -1,0 +1,195 @@
+/* ── Toolbar Component ─────────────────────────────────────────────────
+ * 
+ * Application toolbar with buttons, provider badge, and view switcher
+ * Responsive layout adjustments for mobile and tablet
+ */
+
+.app-toolbar {
+  display: flex;
+  align-items: center;
+  height: 28px;
+  min-height: 28px;
+  padding: 0 1rem;
+  gap: 2px;
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  transition: top 0.12s;
+}
+
+.app-toolbar.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Mobile: toolbar wraps */
+@media (max-width: 767px) {
+  .app-toolbar {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 36px;
+    padding: 0.5rem 1rem;
+  }
+  
+  .toolbar-section {
+    margin-bottom: 0.25rem;
+  }
+  
+  .toolbar-spacer {
+    flex-basis: 100%;
+  }
+}
+
+/* ── Toolbar Buttons ───────────────────────────────────────────────── */
+
+.app-toolbar button {
+  height: 22px;
+  padding: 0 0.4rem;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.78rem;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+  color: var(--color-text-secondary);
+}
+
+.app-toolbar button:hover {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+}
+
+/* ── Provider Badge ────────────────────────────────────────────────── */
+
+.app-toolbar .toolbar-provider {
+  font-size: 0.78rem;
+  padding: 0 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  background: var(--color-bg-primary);
+}
+
+.app-toolbar .toolbar-provider:hover {
+  background: var(--color-bg-tertiary);
+}
+
+/* ── Save/Load Buttons ─────────────────────────────────────────────── */
+
+.app-toolbar .toolbar-save-btn,
+.app-toolbar .toolbar-load-btn {
+  font-size: 0.72rem;
+  padding: 0 0.35rem;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  background: #e7f3e8;
+  color: var(--color-text-secondary);
+}
+
+.app-toolbar .toolbar-save-btn:hover,
+.app-toolbar .toolbar-load-btn:hover {
+  background: #d4e8d6;
+}
+
+/* ── Separator ─────────────────────────────────────────────────────── */
+
+.toolbar-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--color-border);
+  margin: 0 0.25rem;
+  flex-shrink: 0;
+}
+
+/* ── Sections ──────────────────────────────────────────────────────── */
+
+.toolbar-section {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.toolbar-spacer {
+  flex: 1;
+}
+
+/* ── View Buttons ──────────────────────────────────────────────────── */
+
+.toolbar-view-btn {
+  font-size: 0.9rem !important;
+  padding: 0 0.3rem !important;
+  opacity: 0.5;
+}
+
+.toolbar-view-btn.active {
+  opacity: 1;
+  border-color: var(--color-border) !important;
+  background: var(--color-bg-primary) !important;
+}
+
+/* ── Flush Button ──────────────────────────────────────────────────── */
+
+.app-toolbar .flush-btn {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+  font-weight: 600;
+}
+
+.app-toolbar .flush-btn:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+}
+
+.app-toolbar .flush-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ── Dirty Counter ─────────────────────────────────────────────────── */
+
+.app-toolbar .dirty-counter {
+  font-size: 0.7rem;
+  color: var(--color-error);
+  margin-right: 0.25rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  line-height: 1.2;
+  text-align: center;
+  min-width: 0;
+}
+
+.app-toolbar .dirty-counter .dirty-count {
+  font-weight: 600;
+}
+
+.app-toolbar .dirty-counter .dirty-size {
+  font-size: 0.65rem;
+}
+
+.app-toolbar .dirty-counter.clickable {
+  color: var(--color-accent);
+  cursor: pointer;
+}
+
+.app-toolbar .dirty-counter.clickable:hover {
+  color: var(--color-accent-hover);
+  background: var(--color-bg-tertiary);
+}
+
+/* Responsive for tablet */
+@media (min-width: 768px) {
+  .app-toolbar {
+    height: 28px;
+    min-height: 28px;
+    padding: 0 1rem;
+    flex-wrap: nowrap;
+  }
+}

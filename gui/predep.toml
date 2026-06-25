@@ -1,4 +1,4 @@
-main = "gui-docker"
+main = "docker"
 
 [[vendor]]
 name = "CLI11"
@@ -8,22 +8,31 @@ dest = "root://vendor/"
 create_directory = true
 
 [[stages]]
-name = "gui-vendor"
+name = "vendor"
 description = "Download vendor dependencies"
 type = "vendor"
 
 [[stages]]
-name = "gui-build"
+name = "build"
 description = "Build GUI binary"
-depends = ["gui-vendor"]
+depends = ["vendor"]
 outputs = ["root://bin/predoc-gui"]
 
 [[stages]]
-name = "gui-docker"
-description = "Build GUI binary via Docker"
+name = "docker"
+description = "Build GUI binary via Docker (Linux)"
 type = "docker"
-depends = ["gui-vendor"]
 outputs = ["root://bin/predoc-gui"]
-recipe = "Dockerfile"
+recipe = "images/linux.Dockerfile"
+target = "/build/bin/predoc-gui"
+dest = "root://bin/"
+
+[platform.win32.stage.docker]
+recipe = "images/win32.Dockerfile"
+target = "/build/bin/predoc-gui.exe"
+dest = "root://bin/"
+
+[platform.darwin.stage.docker]
+recipe = "images/darwin.Dockerfile"
 target = "/build/bin/predoc-gui"
 dest = "root://bin/"

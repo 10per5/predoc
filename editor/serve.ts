@@ -1,5 +1,7 @@
+/// <reference types="bun" />
 import { existsSync, readFileSync, readdirSync, statSync, mkdirSync, rmSync, writeFileSync, copyFileSync } from "fs";
 import { join, extname, dirname } from "path";
+import { interpolateHtml } from "./lib/interpolate";
 
 const PORT = parseInt(process.env.PORT || "3000", 10);
 const HOST = process.env.HOST || "0.0.0.0";
@@ -10,6 +12,8 @@ const TREE_DEPTH = parseInt(process.env.TREE_DEPTH || "0", 10) || 0;
 const SCRIPT_DIR = dirname(new URL(import.meta.url).pathname);
 const EDITOR_DIR = join(SCRIPT_DIR, "public");
 const CONTENT_DIR = process.env.PREDOC_CONTENT || join(SCRIPT_DIR, "..", "content");
+
+const SELF_BASE = (process.env.EDITOR_SELF_BASE || "").replace(/\/+$/, "");
 
 const STATIC_DIR = join(SCRIPT_DIR, "static");
 
@@ -177,7 +181,11 @@ Bun.serve({
   hostname: HOST,
   async fetch(req: Request): Promise<Response> {
     const url = new URL(req.url);
-    const path = url.pathname;
+    let path = url.pathname;
+
+    if (SELF_BASE && path.startsWith(SELF_BASE)) {
+      path = path.slice(SELF_BASE.length) || "/";
+    }
 
     if (path === "/content" || path.startsWith("/content/")) {
       if (DISABLE_CONTENT_API) {
@@ -192,8 +200,9 @@ Bun.serve({
         return new Response(null, { status: 404 });
       }
 
-      if (req.method === "GET") {
+      if (req.method === "GET" || req.method === "HEAD") {
         if (!existsSync(target)) return new Response(null, { status: 404 });
+        if (req.method === "HEAD") return new Response(null, { status: 200 });
         const content = readFileSync(target);
         return new Response(content, {
           headers: { "Content-Type": "text/markdown" },
@@ -260,17 +269,29 @@ Bun.serve({
       return new Response("ok");
     }
 
-    const editorPath = join(EDITOR_DIR, path === "/" ? "index.html" : path);
-    if (existsSync(editorPath)) {
-      return new Response(readFileSync(editorPath), {
-        headers: { "Content-Type": contentType(editorPath) },
+    function metaInject(html: string): string {
+      return interpolateHtml(html);
+    }
+
+    function serveFile(filePath: string): Response | null {
+      if (!existsSync(filePath)) return null;
+      const raw = readFileSync(filePath);
+      const ct = contentType(filePath);
+      if (ct === "text/html") {
+        return new Response(metaInject(raw.toString("utf-8")), {
+          headers: { "Content-Type": ct },
+        });
+      }
+      return new Response(raw, {
+        headers: { "Content-Type": ct },
       });
     }
 
-    const fallback = join(EDITOR_DIR, "index.html");
-    return new Response(readFileSync(fallback), {
-      headers: { "Content-Type": contentType(fallback) },
-    });
+    const editorPath = join(EDITOR_DIR, path === "/" ? "index.html" : path);
+    const result = serveFile(editorPath) || serveFile(join(EDITOR_DIR, "index.html"));
+    if (result) return result;
+
+    return new Response("Not found", { status: 404 });
   },
 });
 

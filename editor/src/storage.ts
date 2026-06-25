@@ -46,6 +46,7 @@ export function saveStorage(storage: WikiStorage) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
 }
 
+/** Clear all cached storage data from localStorage. Useful when switching to/from localStorage provider. */
 export function clearStorage() {
   localStorage.removeItem(STORAGE_KEY);
 }

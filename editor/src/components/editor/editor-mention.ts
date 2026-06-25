@@ -3,7 +3,6 @@ import type { EditorView } from "@milkdown/kit/prose/view"
 import type { EditorState } from "@milkdown/kit/prose/state"
 import { editorViewCtx } from "@milkdown/kit/core"
 import type { Ctx } from "@milkdown/kit/ctx"
-import { getPageList, getPageTitles } from "../../pages"
 
 export class MentionView {
   provider: SlashProvider
@@ -13,6 +12,7 @@ export class MentionView {
   private activeIndex = 0
   private handleKeydown: (e: KeyboardEvent) => void
   private mentionFrom: number | null = null
+  private filterText = ""
 
   constructor(view: EditorView, ctx: Ctx) {
     this.view = view
@@ -57,49 +57,29 @@ export class MentionView {
 
     document.addEventListener("keydown", this.handleKeydown, true)
 
+    const self = this
     this.provider = new SlashProvider({
       content: this.content,
-      shouldShow: (v) => {
-        const { selection } = v.state
-        const { empty, $from } = selection
-        if (!empty || !v.editable) return false
-        const textBefore = $from.parent.textBetween(
-          Math.max(0, $from.parentOffset - 1),
-          $from.parentOffset,
+      shouldShow(view) {
+        const text = this.getContent(view, (node) =>
+          ["paragraph", "heading"].includes(node.type.name)
         )
-        return textBefore === "@"
+        if (text == null) return false
+        if (!text.startsWith("@")) return false
+        self.filterText = text.slice(1)
+        self.renderItems(self.filterText)
+        return true
       },
     })
 
     this.provider.onShow = () => {
       this.mentionFrom = this.view.state.selection.from
-      this.renderItems("")
     }
   }
 
   update(view: EditorView, prevState?: EditorState) {
     this.view = view
     this.provider.update(view, prevState)
-
-    const { selection } = view.state
-    const { empty, $from } = selection
-    if (!empty && this.content.dataset.show === "true") {
-      this.provider.hide()
-      return
-    }
-    if (empty && this.content.dataset.show === "true") {
-      const textBefore = $from.parent.textBetween(
-        Math.max(0, $from.parentOffset - 1),
-        $from.parentOffset,
-      )
-      if (textBefore === "@") {
-        this.renderItems("")
-      } else if (textBefore.startsWith("@") && textBefore.length > 1) {
-        this.renderItems(textBefore.slice(1))
-      } else {
-        this.provider.hide()
-      }
-    }
   }
 
   destroy() {
@@ -107,12 +87,18 @@ export class MentionView {
     this.provider.destroy()
   }
 
+  private pageList: string[] = []
+  private pageTitles: Record<string, string> = {}
+
+  setPages(pages: string[], titles: Record<string, string>) {
+    this.pageList = pages
+    this.pageTitles = titles
+  }
+
   private renderItems(filter: string) {
-    const pages = getPageList()
-    const titles = getPageTitles()
     const lowerFilter = filter.toLowerCase()
-    const matching = pages.filter(p => {
-      const title = titles[p] || p.replace(/\//g, " ").replace(/-/g, " ").replace(/\.md$/, "")
+    const matching = this.pageList.filter(p => {
+      const title = this.pageTitles[p] || p.replace(/\//g, " ").replace(/-/g, " ").replace(/\.md$/, "")
       return title.toLowerCase().includes(lowerFilter) || p.toLowerCase().includes(lowerFilter)
     })
 
@@ -123,7 +109,7 @@ export class MentionView {
     }
 
     this.content.innerHTML = matching.map(p => {
-      const title = titles[p] || p.replace(/\//g, " / ").replace(/-/g, " ").replace(/\.md$/, "")
+      const title = this.pageTitles[p] || p.replace(/\//g, " / ").replace(/-/g, " ").replace(/\.md$/, "")
       return `<div data-page="${p}" data-title="${title}">${title}</div>`
     }).join("")
 
@@ -135,13 +121,31 @@ export class MentionView {
 
   private insertLink(pagePath: string, title: string) {
     const view = this.milkdownCtx.get(editorViewCtx)
+    const nodeType = view.state.schema.nodes.hugoRef
 
-    if (this.mentionFrom != null && this.mentionFrom > 0) {
-      view.dispatch(view.state.tr.delete(this.mentionFrom - 1, this.mentionFrom))
+    const { from } = view.state.selection
+    const $pos = view.state.doc.resolve(from)
+    const textBefore = $pos.parent.textBetween(0, $pos.parentOffset, undefined, "\uFFFC")
+    const atIdx = textBefore.lastIndexOf("@")
+
+    if (!nodeType || atIdx === -1) {
+      if (this.mentionFrom != null && this.mentionFrom > 0) {
+        view.dispatch(view.state.tr.delete(this.mentionFrom - 1, this.mentionFrom))
+      }
+      const link = `[${title}](/${pagePath.replace(/\.md$/, "")}) `
+      view.dispatch(view.state.tr.insertText(link))
+      view.focus()
+      this.provider.hide()
+      return
     }
 
-    const link = `[${title}](/${pagePath.replace(/\.md$/, "")}) `
-    view.dispatch(view.state.tr.insertText(link))
+    const atPos = $pos.start() + atIdx
+    const node = nodeType.create({
+      path: pagePath.replace(/\.md$/, ""),
+      title,
+    })
+
+    view.dispatch(view.state.tr.replaceWith(atPos, from, node))
     view.focus()
     this.provider.hide()
   }

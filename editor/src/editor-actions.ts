@@ -1,7 +1,8 @@
 import { confirmDialog, promptDialog } from "./components/dialogs/dialog"
 import { serializeFrontmatter } from "./utils/frontmatter"
 import type { MetaPanelData } from "./components/panels/meta-panel"
-import { getProvider } from "./controllers/editor_controller"
+import { getProvider } from "./content/provider-registry"
+import { cache } from "./cache"
 
 export async function createPage(
   parentPath: string,
@@ -30,15 +31,14 @@ export async function createPage(
   const fullContent = `---\n${fmStr}\n---\n\n${body}`
   await provider.writeFile(fullPath, fullContent)
 
+  cache.setFrontmatter(fullPath, fmData)
   await loadSidebar()
   doNavigate(fullPath)
 }
 
 export async function deletePage(
   pagePath: string,
-  currentPath: string,
-  doNavigate: (path: string) => void,
-  loadSidebar: () => Promise<void>
+  afterDelete: () => void
 ): Promise<boolean> {
   const confirmed = await confirmDialog({
     title: "Delete page",
@@ -50,29 +50,22 @@ export async function deletePage(
 
   const provider = getProvider()
   await provider.deleteFile(pagePath)
-
-  if (currentPath === pagePath) {
-    doNavigate("_index")
-  } else {
-    await loadSidebar()
-  }
+  afterDelete()
   return true
 }
 
 export async function renamePage(
   pagePath: string,
-  currentPath: string,
-  doNavigate: (path: string) => void,
-  loadSidebar: () => Promise<void>
-): Promise<boolean> {
+  afterRename: (newPath: string | null) => void
+): Promise<void> {
   const name = prompt("New name:")
-  if (!name) return false
+  if (!name) return
 
   const slug = name
     .toLowerCase()
     .replace(/\s+/g, "-")
     .replace(/[^a-z0-9-]/g, "")
-  if (!slug) return false
+  if (!slug) return
 
   const parentDir = pagePath.includes("/")
     ? pagePath.substring(0, pagePath.lastIndexOf("/"))
@@ -81,31 +74,17 @@ export async function renamePage(
 
   const provider = getProvider()
   await provider.moveFile(pagePath, newPath)
-
-  if (currentPath === pagePath) {
-    doNavigate(newPath)
-  } else {
-    await loadSidebar()
-  }
-  return true
+  afterRename(newPath)
 }
 
 export async function movePage(
   from: string,
   to: string,
-  currentPath: string,
-  doNavigate: (path: string, pushHistory: boolean) => void,
-  loadSidebar: () => Promise<void>
-): Promise<boolean> {
-  if (from === to) return false
+  afterMove: () => void
+): Promise<void> {
+  if (from === to) return
 
   const provider = getProvider()
   await provider.moveFile(from, to)
-
-  if (currentPath === from) {
-    doNavigate(to, false)
-    window.history.replaceState({ path: to }, "", `/${to === "_index" ? "" : to}`)
-  }
-  await loadSidebar()
-  return true
+  afterMove()
 }

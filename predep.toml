@@ -1,4 +1,4 @@
-main = "build-docker"
+main = "docker"
 project = "predoc"
 
 [[include]]
@@ -15,19 +15,19 @@ name = "build"
 description = "Build all subprojects"
 type = "group"
 depends = [
-    "editor::editor-build",
-    "hugo-view::hugo-build",
-    "gui::gui-build",
+    "editor::build",
+    "hugo-view::build",
+    "gui::build",
 ]
 
 [[stages]]
-name = "build-docker"
+name = "docker"
 description = "Build all subprojects via Docker"
 type = "group"
 depends = [
-    "editor::editor-docker",
-    "hugo-view::hugo-docker",
-    "gui::gui-docker",
+    "editor::docker",
+    "hugo-view::docker",
+    "gui::docker",
 ]
 
 [[stages]]

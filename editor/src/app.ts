@@ -1,9 +1,24 @@
 import "@milkdown/theme-nord/style.css"
-import "./styles/global.css"
+
+/* Base styles and CSS variables */
+import "./styles/base.css"
+
+/* Layout structure */
+import "./styles/layout.css"
+
+/* Component styles */
+import "./styles/toolbar.css"
+import "./styles/editor.css"
+import "./styles/panels.css"
 import "./styles/milkdown.css"
+import "./styles/dialogs.css"
+
+/* Responsive adjustments (applied last for higher specificity) */
+import "./styles/responsive.css"
 
 import { Application } from "@hotwired/stimulus"
-import EditorController, { setProvider, setSessionStarted } from "./controllers/editor_controller"
+import EditorController, { setSessionStarted } from "./controllers/editor_controller"
+import { setProvider } from "./content/provider-registry"
 import { initToast } from "./components/toast/toast"
 import { createProvider } from "./content"
 

@@ -1,0 +1,435 @@
+import type { Ctx } from "@milkdown/kit/ctx"
+import type { EditorView } from "@milkdown/kit/prose/view"
+import type { EditorState } from "@milkdown/kit/prose/state"
+import { editorViewCtx, commandsCtx } from "@milkdown/kit/core"
+import { block, BlockProvider, blockConfig } from "@milkdown/kit/plugin/block"
+import { slashFactory, SlashProvider } from "@milkdown/kit/plugin/slash"
+import { paragraphSchema } from "@milkdown/kit/preset/commonmark"
+import {
+  wrapInHeadingCommand,
+  wrapInBulletListCommand,
+  wrapInOrderedListCommand,
+  wrapInBlockquoteCommand,
+  insertHrCommand,
+} from "@milkdown/kit/preset/commonmark"
+import { createTable } from "@milkdown/kit/preset/gfm"
+import { TextSelection } from "@milkdown/kit/prose/state"
+import type { Node } from "@milkdown/kit/prose/model"
+import { menuAPI, type MenuAPI } from "./menu-api"
+import {
+  plusIcon, menuIcon,
+  h1Icon, h2Icon, h3Icon,
+  bulletListIcon, orderedListIcon, quoteIcon, dividerIcon,
+  codeBlockIcon, tableIcon, todoListIcon,
+} from "../components/icons"
+
+const slash = slashFactory("predoc")
+
+type SlashItem = { cmd: string; label: string; icon: string; level?: number }
+const SLASH_ITEMS: SlashItem[] = [
+  { cmd: "heading", label: "Heading 1", icon: h1Icon, level: 1 },
+  { cmd: "heading", label: "Heading 2", icon: h2Icon, level: 2 },
+  { cmd: "heading", label: "Heading 3", icon: h3Icon, level: 3 },
+  { cmd: "bullet_list", label: "Bullet List", icon: bulletListIcon },
+  { cmd: "ordered_list", label: "Ordered List", icon: orderedListIcon },
+  { cmd: "todo_list", label: "Task List", icon: todoListIcon },
+  { cmd: "blockquote", label: "Blockquote", icon: quoteIcon },
+  { cmd: "thematic_break", label: "Divider", icon: dividerIcon },
+  { cmd: "code_block", label: "Code Block", icon: codeBlockIcon },
+  { cmd: "table", label: "Table", icon: tableIcon },
+]
+
+class BlockHandleView {
+  #content: HTMLElement
+  #provider: BlockProvider
+  #ctx: Ctx
+
+  constructor(ctx: Ctx) {
+    this.#ctx = ctx
+    const content = document.createElement("div")
+    content.className = "milkdown-block-handle"
+    content.innerHTML = `
+      <button class="block-handle-add" title="Add paragraph below">${plusIcon}</button>
+      <button class="block-handle-drag" title="Drag to move">${menuIcon}</button>
+    `
+    content.querySelector(".block-handle-add")?.addEventListener("pointerup", (e) => {
+      e.preventDefault()
+      this.onAdd()
+    })
+
+    this.#content = content
+    this.#provider = new BlockProvider({
+      ctx,
+      content,
+      getOffset: () => 16,
+      getPlacement: ({ active, blockDom }) => {
+        const dom = active.el
+        const domRect = dom.getBoundingClientRect()
+        const handleRect = blockDom.getBoundingClientRect()
+        const style = window.getComputedStyle(dom)
+        const paddingTop = Number.parseInt(style.paddingTop, 10) || 0
+        const paddingBottom = Number.parseInt(style.paddingBottom, 10) || 0
+        const height = domRect.height - paddingTop - paddingBottom
+        const handleHeight = handleRect.height
+        return handleHeight < height ? "left-start" : "left"
+      },
+      getPosition: ({ active, editorDom }) => {
+        const editorRect = editorDom.getBoundingClientRect()
+        const domRect = active.el.getBoundingClientRect()
+        const style = window.getComputedStyle(active.el)
+        const paddingTop = Number.parseInt(style.paddingTop, 10) || 0
+        const paddingBottom = Number.parseInt(style.paddingBottom, 10) || 0
+        return {
+          x: editorRect.x,
+          y: domRect.y + paddingTop,
+          width: 0,
+          height: domRect.height - paddingTop - paddingBottom,
+          top: domRect.y + paddingTop,
+          left: editorRect.x,
+          bottom: domRect.y + domRect.height - paddingBottom,
+          right: editorRect.x,
+        }
+      },
+    })
+    this.#provider.update()
+  }
+
+  update = () => { this.#provider.update() }
+
+  destroy = () => {
+    this.#provider.destroy()
+    this.#content.remove()
+  }
+
+  private onAdd = () => {
+    const ctx = this.#ctx
+    const view = ctx.get(editorViewCtx)
+    if (!view.hasFocus()) view.focus()
+    const active = this.#provider.active
+    if (!active) return
+    const $pos = active.$pos
+    const pos = $pos.pos + active.node.nodeSize
+    const tr = view.state.tr.insert(pos, paragraphSchema.type(ctx).create())
+    tr.setSelection(TextSelection.near(tr.doc.resolve(pos)))
+    view.dispatch(tr.scrollIntoView())
+    this.#provider.hide()
+    ctx.get(menuAPI.key as any).show(tr.selection.from)
+  }
+}
+
+class SlashView {
+  provider: SlashProvider
+  content: HTMLElement
+  private view: EditorView
+  private milkdownCtx: Ctx
+  private activeIndex = 0
+  private handleKeydown: (e: KeyboardEvent) => void
+  private filterText = ""
+  #programmaticPos: number | null = null
+  #programmaticActive = false
+
+  constructor(view: EditorView, ctx: Ctx) {
+    this.view = view
+    this.milkdownCtx = ctx
+    this.content = document.createElement("div")
+    this.content.className = "milkdown-slash"
+    this.content.dataset.show = "false"
+
+    this.content.addEventListener("pointerdown", (e) => {
+      const item = (e.target as HTMLElement).closest("[data-cmd]") as HTMLElement
+      if (!item) return
+      e.preventDefault()
+      this.execute(item)
+    })
+
+    this.handleKeydown = (e: KeyboardEvent) => {
+      if (this.content.dataset.show !== "true") return
+      const domItems = this.content.querySelectorAll<HTMLElement>("[data-cmd]")
+      if (domItems.length === 0) return
+      if (e.key === "ArrowDown") {
+        e.preventDefault(); e.stopPropagation()
+        this.activeIndex = (this.activeIndex + 1) % domItems.length
+        this.highlight(domItems)
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault(); e.stopPropagation()
+        this.activeIndex = (this.activeIndex - 1 + domItems.length) % domItems.length
+        this.highlight(domItems)
+      } else if (e.key === "Enter") {
+        e.preventDefault(); e.stopPropagation()
+        const domItem = domItems[this.activeIndex]
+        if (domItem) this.execute(domItem)
+      } else if (e.key === "Escape") {
+        e.preventDefault(); e.stopPropagation()
+        this.#programmaticActive = false
+        this.provider.hide()
+      }
+    }
+    document.addEventListener("keydown", this.handleKeydown, true)
+
+    const self = this
+    this.provider = new SlashProvider({
+      content: this.content,
+      debounce: 20,
+      shouldShow(view) {
+        if (typeof self.#programmaticPos === 'number') {
+          const maxSize = view.state.doc.nodeSize - 2
+          const validPos = Math.min(self.#programmaticPos, maxSize)
+          if (view.state.doc.resolve(validPos).node() !==
+              view.state.doc.resolve(view.state.selection.from).node()) {
+            self.#programmaticPos = null
+            return false
+          }
+          self.#programmaticPos = null
+          self.filterText = ""
+          self.renderItems()
+          return true
+        }
+        const text = this.getContent(view, (node) =>
+          ["paragraph", "heading"].includes(node.type.name)
+        )
+        if (text == null) return false
+        if (!text.startsWith("/")) return false
+        self.filterText = text.slice(1)
+        self.renderItems()
+        return true
+      },
+    })
+
+    this.provider.onShow = () => {
+      this.activeIndex = 0
+      const domItems = this.content.querySelectorAll<HTMLElement>("[data-cmd]")
+      this.highlight(domItems)
+    }
+
+    ctx.set(menuAPI.key as any, {
+      show: (pos: number) => this.showAt(pos),
+      hide: () => this.provider.hide(),
+    } as MenuAPI)
+  }
+
+  update(view: EditorView, prevState?: EditorState) {
+    this.view = view
+    this.provider.update(view, prevState)
+  }
+
+  destroy() {
+    document.removeEventListener("keydown", this.handleKeydown, true)
+    this.provider.destroy()
+  }
+
+  private showAt(pos: number) {
+    this.filterText = ""
+    this.renderItems()
+    this.#programmaticPos = pos
+    this.#programmaticActive = true
+    this.provider.show()
+  }
+
+  private renderItems() {
+    const filter = this.filterText.toLowerCase()
+    const filtered = filter
+      ? SLASH_ITEMS.filter((it) => it.label.toLowerCase().includes(filter))
+      : SLASH_ITEMS
+    this.content.innerHTML = filtered
+      .map(
+        (it) =>
+          `<div data-cmd="${it.cmd}" data-level="${it.level ?? ""}" class="slash-item">
+            <span class="slash-icon">${it.icon}</span>
+            <span class="slash-label">${it.label}</span>
+          </div>`,
+      )
+      .join("")
+  }
+
+  private execute(item: HTMLElement) {
+    const cmd = item.dataset.cmd!
+    const level = parseInt(item.dataset.level || "0")
+    const view = this.view
+    const isProgrammatic = this.#programmaticActive
+    this.#programmaticActive = false
+
+    const { selection } = view.state
+    const { $from } = selection
+    const textBefore = $from.parent.textBetween(
+      Math.max(0, $from.parentOffset - 500),
+      $from.parentOffset,
+    )
+    const slashPos = textBefore.lastIndexOf("/")
+    if (slashPos >= 0) {
+      const deleteFrom = $from.pos - ($from.parentOffset - slashPos)
+      view.dispatch(view.state.tr.delete(deleteFrom, $from.pos))
+    }
+
+    const { state } = view
+    const { schema } = state
+    const { $from: afterDel } = view.state.selection
+
+    if (afterDel.parent.content.size === 0) {
+      let parentType: string | null = null
+      let parentDepth = 0
+      for (let d = afterDel.depth; d > 0; d--) {
+        const node = afterDel.node(d)
+        if (node.type === schema.nodes.bullet_list ||
+            node.type === schema.nodes.ordered_list ||
+            node.type === schema.nodes.blockquote) {
+          parentType = node.type.name
+          parentDepth = d
+          break
+        }
+      }
+      const isHeading = afterDel.parent.type === schema.nodes.heading
+      if (parentType || isHeading) {
+        this.replaceBlock(cmd, level, view, parentType, parentDepth, isHeading)
+        return
+      }
+    }
+
+    if (cmd === "thematic_break") {
+      this.insertDivider(view)
+      view.focus()
+      return
+    }
+
+    const commands = this.milkdownCtx.get(commandsCtx)
+    if (cmd === "heading") commands.call(wrapInHeadingCommand.key, level)
+    else if (cmd === "bullet_list") commands.call(wrapInBulletListCommand.key)
+    else if (cmd === "ordered_list") commands.call(wrapInOrderedListCommand.key)
+    else if (cmd === "blockquote") commands.call(wrapInBlockquoteCommand.key)
+    else if (cmd === "todo_list") this.convertToTodoList(view)
+    else if (cmd === "code_block") this.convertToCodeBlock(view)
+    else if (cmd === "table") this.insertTable(view)
+    view.focus()
+  }
+
+  private replaceBlock(cmd: string, level: number, view: EditorView, parentType: string | null, parentDepth: number, isHeading: boolean) {
+    const { state, dispatch } = view
+    const { schema } = state
+    const { $from } = state.selection
+
+    if (cmd === "thematic_break") { this.insertBelow(cmd, level, view); return }
+    if (parentType === "bullet_list" && cmd === "ordered_list") {
+      const pos = $from.before(parentDepth)
+      const node = $from.node(parentDepth)
+      dispatch(state.tr.replaceWith(pos, pos + node.nodeSize, schema.nodes.ordered_list.create(null, node.content)))
+      return
+    }
+    if (parentType === "ordered_list" && cmd === "bullet_list") {
+      const pos = $from.before(parentDepth)
+      const node = $from.node(parentDepth)
+      dispatch(state.tr.replaceWith(pos, pos + node.nodeSize, schema.nodes.bullet_list.create(null, node.content)))
+      return
+    }
+    if (parentType === "blockquote" && cmd === "blockquote") return
+
+    if (cmd === "heading") {
+      const heading = schema.nodes.heading.create({ level })
+      const pos = parentType ? $from.before(parentDepth) : $from.before($from.depth)
+      dispatch(state.tr.replaceWith(pos, pos + (parentType ? $from.node(parentDepth) : $from.node($from.depth)).nodeSize, heading))
+      return
+    }
+
+    const pos = isHeading || parentType
+      ? $from.before(parentType ? parentDepth : $from.depth)
+      : $from.before($from.depth)
+    const block = parentType ? $from.node(parentType ? parentDepth : $from.depth) : $from.node($from.depth)
+    const para = schema.nodes.paragraph.create()
+    let newBlock: Node
+    if (cmd === "bullet_list") newBlock = schema.nodes.bullet_list.create(null, schema.nodes.list_item.create(null, para))
+    else if (cmd === "ordered_list") newBlock = schema.nodes.ordered_list.create(null, schema.nodes.list_item.create(null, para))
+    else newBlock = schema.nodes.blockquote.create(null, para)
+    dispatch(state.tr.replaceWith(pos, pos + block.nodeSize, newBlock))
+  }
+
+  private insertBelow(cmd: string, level: number, view: EditorView) {
+    const { state, dispatch } = view
+    const { schema } = state
+    const { $from } = state.selection
+    const afterPos = $from.after($from.depth)
+    if (cmd === "heading") {
+      const heading = schema.nodes.heading.create({ level })
+      const tr = state.tr.insert(afterPos, heading)
+      dispatch(tr.setSelection(TextSelection.create(tr.doc, afterPos + 1)))
+      return
+    }
+    if (cmd === "thematic_break") {
+      const hr = schema.nodes.hr.create()
+      const para = schema.nodes.paragraph.create()
+      const tr = state.tr.insert(afterPos, hr).insert(afterPos + 2, para)
+      dispatch(tr.setSelection(TextSelection.create(tr.doc, afterPos + 3)))
+      return
+    }
+    const para = schema.nodes.paragraph.create()
+    let newBlock: Node
+    if (cmd === "bullet_list") newBlock = schema.nodes.bullet_list.create(null, schema.nodes.list_item.create(null, para))
+    else if (cmd === "ordered_list") newBlock = schema.nodes.ordered_list.create(null, schema.nodes.list_item.create(null, para))
+    else newBlock = schema.nodes.blockquote.create(null, para)
+    const tr = state.tr.insert(afterPos, newBlock)
+    const selPos = cmd === "blockquote" ? afterPos + 2 : afterPos + 3
+    dispatch(tr.setSelection(TextSelection.create(tr.doc, selPos)))
+  }
+
+  private insertDivider(view: EditorView) {
+    const { state, dispatch } = view
+    const { schema } = state
+    const { $from } = state.selection
+    
+    const pos = $from.before($from.depth)
+    const blockSize = $from.node($from.depth).nodeSize
+    const hr = schema.nodes.hr.create()
+    const para = schema.nodes.paragraph.create()
+    const tr = state.tr.replaceWith(pos, pos + blockSize, [hr, para])
+    dispatch(tr.setSelection(TextSelection.create(tr.doc, pos + 2)).scrollIntoView())
+  }
+
+  private convertToTodoList(view: EditorView) {
+    const { state, dispatch } = view
+    const { $from } = state.selection
+    const para = state.schema.nodes.paragraph.create()
+    const listItem = state.schema.nodes.list_item.create({ checked: false }, para)
+    const bulletList = state.schema.nodes.bullet_list.create(null, listItem)
+    const pos = $from.before($from.depth)
+    dispatch(state.tr.replaceWith(pos, pos + $from.node($from.depth).nodeSize, bulletList).scrollIntoView())
+  }
+
+  private convertToCodeBlock(view: EditorView) {
+    const { state, dispatch } = view
+    const { $from } = state.selection
+    const codeBlock = state.schema.nodes.code_block.create({ language: "" })
+    const pos = $from.before($from.depth)
+    dispatch(state.tr.replaceWith(pos, pos + $from.node($from.depth).nodeSize, codeBlock).scrollIntoView())
+  }
+
+  private insertTable(view: EditorView) {
+    const { state, dispatch } = view
+    const { $from } = state.selection
+    const pos = $from.before($from.depth)
+    const tbl = createTable(this.milkdownCtx, 3, 3)
+    dispatch(state.tr.replaceWith(pos, pos + $from.node($from.depth).nodeSize, tbl).scrollIntoView())
+  }
+
+  private highlight(items: NodeListOf<HTMLElement>) {
+    for (let i = 0; i < items.length; i++) {
+      items[i].style.background = i === this.activeIndex ? "#e5e9f0" : ""
+    }
+  }
+}
+
+export function configureBlockEdit(ctx: Ctx) {
+  ctx.set(block.key, {
+    view: () => new BlockHandleView(ctx),
+  })
+  ctx.update(blockConfig.key, (prev) => ({
+    ...prev,
+    filterNodes: (pos) => {
+      for (let d = pos.depth; d > 0; d--) {
+        const node = pos.node(d)
+        if (node.type.name === "table" || node.type.name === "blockquote")
+          return false
+      }
+      return true
+    },
+  }))
+  ctx.set(slash.key, { view: (v: any) => new SlashView(v, ctx) })
+}
+
+export { block, slash, menuAPI }

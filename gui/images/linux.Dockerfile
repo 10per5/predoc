@@ -1,16 +1,16 @@
-# predoc-gui builder
+# predoc-gui linux builder
 #
-# Single-stage: produce the binary, extract via docker cp.
-# No runtime libs in the image — the binary dynamically links
-# Qt WebEngine from the host system at runtime.
+# Produces: /build/bin/predoc-gui  (Linux x86_64, Qt6 WebEngine backend)
 #
 # Usage:
-#   docker build -t predoc-gui .
-#   docker create --name tmp predoc-gui
-#   docker cp tmp:/opt/predoc-gui/bin/predoc-gui ./gui/bin/
+#   docker build -t predoc-gui:linux -f images/linux.Dockerfile .
+#   docker create --name tmp predoc-gui:linux
+#   docker cp tmp:/build/bin/predoc-gui ./bin/
 #   docker rm tmp
 
 FROM debian:trixie-slim AS builder
+
+# ── Layer 1: system dependencies (stable) ──────────────────────────────
 RUN apt-get update && apt-get install -y \
     build-essential \
     ninja-build \
@@ -26,35 +26,28 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/* \
     && ldconfig
 
-# Pull g++-15 from sid, pinned low so it doesn't displace trixie packages
-# elsewhere — only explicitly-named sid packages get installed.
+# ── Layer 2: g++-15 from sid (stable compiler pin) ────────────────────
 RUN echo "deb http://deb.debian.org/debian sid main" > /etc/apt/sources.list.d/sid.list \
     && printf 'Package: *\nPin: release a=sid\nPin-Priority: 100\n' > /etc/apt/preferences.d/sid.pref \
     && apt-get update \
     && apt-get install -y -t sid g++-15 \
     && rm -rf /var/lib/apt/lists/*
 
-ENV CC=gcc-15 CXX=g++-15
-ENV CXXFLAGS="-mno-direct-extern-access"
+ENV CC=gcc-15 CXX=g++-15 \
+    CXXFLAGS="-mno-direct-extern-access"
 
-# Install CMake 4.4.0-rc1 (required by Saucer 8.2.0) — use the prebuilt
-# binary release, since the source tarball doesn't ship a cmake binary.
+# ── Layer 3: CMake 4.4.0-rc1 (required by Saucer 8.2.0) ───────────────
 RUN wget -qO- \
     "https://github.com/Kitware/CMake/releases/download/v4.4.0-rc1/cmake-4.4.0-rc1-linux-x86_64.tar.gz" \
     | tar xz --strip-components=1 -C /usr/local
 
-# Install premake5 (not packaged in trixie's apt repos)
+# ── Layer 4: premake5 (not in trixie repos) ───────────────────────────
 RUN wget -qO- \
     "https://github.com/premake/premake-core/releases/download/v5.0.0-beta8/premake-5.0.0-beta8-linux.tar.gz" \
     | tar xz -C /usr/local/bin premake5 \
     && chmod +x /usr/local/bin/premake5
 
-# Build and install Saucer with Qt WebEngine backend
-# Cache mount preserves compiled objects and downloaded dependencies
-# (FetchContent) across repeated builds.  Source tree lives in
-# /deps/saucer-src (committed to the image layer); the cmake build
-# directory lives in the cache mount at /deps/saucer/build (persists
-# across layer invalidation).
+# ── Layer 5: Saucer + dependencies (busts on commit change) ───────────
 WORKDIR /deps
 RUN --mount=type=cache,target=/deps/saucer/build \
     if [ ! -d /deps/saucer-src/.git ]; then \
@@ -79,34 +72,34 @@ RUN --mount=type=cache,target=/deps/saucer/build \
     for d in /deps/saucer/build/_deps/*/include/; do \
     [ -d "$d" ] || continue; \
     cp -r "$d"/* /usr/local/include/ 2>/dev/null; \
-    done
-
-# Version-agnostic symlinks for installed headers
-RUN for d in /usr/local/include/*-*/; do \
+    done && \
+    for d in /usr/local/include/*-*/; do \
     base="${d%%-*}"; \
     base="${base%/}"; \
     base="${base##*/}"; \
     ln -sf "$d" "/usr/local/include/$base" 2>/dev/null; \
     done
 
-# Download predep (stage-resolver for vendor deps)
+# ── Layer 6: predep (stage-resolver for vendor deps) ──────────────────
 RUN curl -sL \
     https://github.com/10per5/predep/releases/download/v0.0.1/predep-linux-x86_64.tar.gz \
     -o /tmp/predep.tar.gz \
     && tar xzf /tmp/predep.tar.gz -C /usr/local/bin \
     && predep --help > /dev/null
 
-# Build predoc-gui — cache busts only on premake5.lua or src/ changes
+# ── Layer 7: vendor deps (busts only on predep.toml changes) ──────────
 WORKDIR /build
 COPY predep.toml ./
-RUN predep gui-vendor
+RUN predep vendor --privileged 540eeb513dc74a7b2aa7bbe014264b6e3a6e8855629300ae72cba3defb91d1b3 
 
+# ── Layer 8: predoc-gui binary (busts on premake5.lua or src/ changes) ──
 COPY premake5.lua ./
 COPY src/ src/
-ENV CXXFLAGS="-std=c++23 -mno-direct-extern-access"
-ENV LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu
+ENV CXXFLAGS="-std=c++23 -mno-direct-extern-access" \
+    LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu
 RUN premake5 gmake && make config=redist -j"$(nproc)" CXX=g++-15
 
+# ── Output stage ──────────────────────────────────────────────────────
 FROM scratch
 COPY --from=builder /build /build
 CMD ["true"]
