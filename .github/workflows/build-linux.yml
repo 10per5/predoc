@@ -165,7 +165,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: predoc-linux-x64-${{ steps.version.outputs.version }}
-          path: predoc-*.zip
+          path: predoc-*.tar.gz
           if-no-files-found: error
 
       - name: Create GitHub Release
