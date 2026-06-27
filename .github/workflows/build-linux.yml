@@ -25,6 +25,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache apt packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt
+          key: apt-trixie-qt6-20260411
+          restore-keys: apt-trixie-qt6-
+
       - name: Install system dependencies
         run: |
           apt-get update
