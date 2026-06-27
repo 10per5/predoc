@@ -62,7 +62,7 @@ static std::optional<config> resolve_config(const parsed_args &args)
         return std::nullopt;
     }
 
-    cfg.editor_root = fs::canonical(editor_root);
+    cfg.editor_root = fs::canonical(editor_root).string();
 
     auto index_html = fs::path(cfg.editor_root) / "index.html";
     if (!fs::exists(index_html))
@@ -103,7 +103,7 @@ static std::optional<config> resolve_config(const parsed_args &args)
         return std::nullopt;
     }
 
-    cfg.content_root = fs::canonical(content_root);
+    cfg.content_root = fs::canonical(content_root).string();
 
     cfg.editor_url = "app://_/";
     cfg.use_app_scheme = true;

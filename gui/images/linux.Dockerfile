@@ -48,36 +48,32 @@ RUN wget -qO- \
     && chmod +x /usr/local/bin/premake5
 
 # ── Layer 5: Saucer + dependencies (busts on commit change) ───────────
-WORKDIR /deps
-RUN --mount=type=cache,target=/deps/saucer/build \
-    if [ ! -d /deps/saucer-src/.git ]; then \
-    git clone https://github.com/saucer/saucer.git /deps/saucer-src; \
+WORKDIR /build/vendor
+RUN --mount=type=cache,target=/build/vendor/saucer/build \
+    if [ ! -d saucer-src/.git ]; then \
+    git clone https://github.com/saucer/saucer.git saucer-src; \
     fi && \
-    cd /deps/saucer-src && \
+    cd saucer-src && \
     git fetch --depth 1 origin 811cd2f8ee7044d7143fc8d36b9ceaaef878de39 && \
     git checkout 811cd2f8ee7044d7143fc8d36b9ceaaef878de39 && \
     sed -i 's|value_or({native::id\.data()})|value_or(decltype(native::argv){native::id.data()})|' src/qt.app.cpp && \
     grep -q 'decltype(native::argv){native::id.data()}' src/qt.app.cpp && \
     sed -i 's|return from({std::from_range, data()});|return from(vec(data().begin(), data().end()));|' src/stash.cpp && \
     grep -q 'return from(vec(data().begin(), data().end()));' src/stash.cpp && \
-    cmake -B /deps/saucer/build -G Ninja -S . \
+    cmake -B /build/vendor/saucer/build -G Ninja -S . \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=/usr/local \
+    -DCMAKE_INSTALL_PREFIX=/build/vendor/saucer \
     -DCMAKE_CXX_FLAGS="-mno-direct-extern-access" \
     -DSAUCER_USE_QTWEBENGINE=ON \
     -Dsaucer_backend=Qt && \
-    cmake --build /deps/saucer/build -j"$(nproc)" && \
-    cp -v /deps/saucer/build/libsaucer.a /deps/saucer/build/_deps/coco-build/libcoco.a /usr/local/lib/ && \
-    cmake --install /deps/saucer/build && \
-    for d in /deps/saucer/build/_deps/*/include/; do \
+    cmake --build /build/vendor/saucer/build -j"$(nproc)" && \
+    mkdir -p /build/vendor/saucer/lib /build/vendor/saucer/include && \
+    cp -v /build/vendor/saucer/build/libsaucer.a /build/vendor/saucer/lib/ && \
+    cp -v /build/vendor/saucer/build/_deps/coco-build/libcoco.a /build/vendor/saucer/lib/ 2>/dev/null && \
+    cp -r include/* /build/vendor/saucer/include/ && \
+    for d in /build/vendor/saucer/build/_deps/*/include/; do \
     [ -d "$d" ] || continue; \
-    cp -r "$d"/* /usr/local/include/ 2>/dev/null; \
-    done && \
-    for d in /usr/local/include/*-*/; do \
-    base="${d%%-*}"; \
-    base="${base%/}"; \
-    base="${base##*/}"; \
-    ln -sf "$d" "/usr/local/include/$base" 2>/dev/null; \
+    cp -r "$d"/* /build/vendor/saucer/include/ 2>/dev/null; \
     done
 
 # ── Layer 6: predep (stage-resolver for vendor deps) ──────────────────
@@ -90,7 +86,7 @@ RUN curl -sL \
 # ── Layer 7: vendor deps (busts only on predep.toml changes) ──────────
 WORKDIR /build
 COPY predep.toml ./
-RUN predep vendor --privileged 540eeb513dc74a7b2aa7bbe014264b6e3a6e8855629300ae72cba3defb91d1b3 
+RUN predep vendor --privileged c3e4dad31f63abc60f89e385b289c7077509f8abfc7acbb16601601b6b7f9d1e 
 
 # ── Layer 8: predoc-gui binary (busts on premake5.lua or src/ changes) ──
 COPY premake5.lua ./

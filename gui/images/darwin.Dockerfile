@@ -61,28 +61,26 @@ RUN wget -qO- \
     | tar xz -C /usr/local/bin premake5 \
     && chmod +x /usr/local/bin/premake5
 
-WORKDIR /deps
-RUN git clone https://github.com/saucer/saucer.git /deps/saucer-src && \
-    cd /deps/saucer-src && \
+WORKDIR /build/vendor
+RUN git clone https://github.com/saucer/saucer.git saucer-src && \
+    cd saucer-src && \
     git checkout 811cd2f8ee7044d7143fc8d36b9ceaaef878de39 && \
     sed -i 's|return from({std::from_range, data()});|return from(vec(data().begin(), data().end()));|' src/stash.cpp && \
-    cmake -B /deps/saucer/build -G Ninja -S . \
+    cmake -B /build/vendor/saucer-build -G Ninja -S . \
     -DCMAKE_TOOLCHAIN_FILE=/usr/local/osxcross/tools/osxcross.toolchain.cmake \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=/usr/local \
+    -DCMAKE_INSTALL_PREFIX=/build/vendor/saucer \
     -Dsaucer_backend=WebKit \
     -Dsaucer_no_compiler_version_check=ON \
     -Dsaucer_prefer_remote=ON \
-    && cmake --build /deps/saucer/build -j"$(nproc)" \
-    && cp -v /deps/saucer/build/libsaucer.a /deps/saucer/build/_deps/coco-build/libcoco.a /usr/local/lib/ \
-    && cmake --install /deps/saucer/build \
-    && for d in /deps/saucer/build/_deps/*/include/; do \
+    && cmake --build /build/vendor/saucer-build -j"$(nproc)" \
+    && mkdir -p /build/vendor/saucer/lib /build/vendor/saucer/include \
+    && cp -v /build/vendor/saucer-build/libsaucer.a /build/vendor/saucer/lib/ \
+    && cp -v /build/vendor/saucer-build/_deps/coco-build/libcoco.a /build/vendor/saucer/lib/ 2>/dev/null \
+    && cp -r include/* /build/vendor/saucer/include/ \
+    && for d in /build/vendor/saucer-build/_deps/*/include/; do \
     [ -d "$d" ] || continue; \
-    cp -r "$d"/* /usr/local/include/ 2>/dev/null; \
-    done \
-    && for d in /usr/local/include/*-*/; do \
-    base="${d%%-*}"; base="${base%/}"; base="${base##*/}"; \
-    ln -sf "$d" "/usr/local/include/$base" 2>/dev/null; \
+    cp -r "$d"/* /build/vendor/saucer/include/ 2>/dev/null; \
     done
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -90,7 +88,7 @@ RUN git clone https://github.com/saucer/saucer.git /deps/saucer-src && \
 # ═══════════════════════════════════════════════════════════════════════
 FROM toolchain AS builder
 
-COPY --from=saucer-builder /usr/local /usr/local
+COPY --from=saucer-builder /build /build
 
 # premake5 (for the build stage)
 RUN wget -qO- \
@@ -107,7 +105,7 @@ RUN curl -sL \
 
 WORKDIR /build
 COPY predep.toml ./
-RUN predep vendor --privileged 540eeb513dc74a7b2aa7bbe014264b6e3a6e8855629300ae72cba3defb91d1b3 
+RUN predep vendor --privileged c3e4dad31f63abc60f89e385b289c7077509f8abfc7acbb16601601b6b7f9d1e 
 
 COPY premake5.lua ./
 COPY src/ src/
@@ -118,8 +116,8 @@ COPY src/ src/
 RUN premake5 gmake --os=macosx \
     && make config=redist -j"$(nproc)" \
     CC=o64-clang CXX=o64-clang++ \
-    CXXFLAGS="-std=c++23 -I/usr/local/include -target x86_64-apple-macos14.0" \
-    LDFLAGS="-L/usr/local/lib -framework Cocoa -framework WebKit -framework CoreImage" \
+    CXXFLAGS="-std=c++23 -I/build/vendor/saucer/include -target x86_64-apple-macos14.0" \
+    LDFLAGS="-L/build/vendor/saucer/lib -framework Cocoa -framework WebKit -framework CoreImage" \
     LIBS="-lsaucer -lcoco"
 
 # ═══════════════════════════════════════════════════════════════════════

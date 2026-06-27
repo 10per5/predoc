@@ -35,9 +35,9 @@ name = "package"
 description = "Assemble release archive"
 type = "package"
 bundle = "predoc"
-depends = ["build"]
+# depends = ["build"]
 artifacts = [
-    { source = "root://gui/bin/predoc-gui", dest = "predoc-gui" },
+    { source = "root://gui/bin/predoc-gui", dest = "predoc-gui", binary = true },
     { source = "root://editor/public", dest = "editor" },
 ]
 
