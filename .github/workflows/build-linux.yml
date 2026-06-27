@@ -2,8 +2,7 @@ name: Build Linux GUI
 
 on:
   push:
-    # branches: ["main"]
-    branches: ["**"]
+    branches: ["main"]
   workflow_dispatch:
 
 defaults:
@@ -17,6 +16,8 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: debian:trixie-slim
     permissions:
       contents: write
 
@@ -25,11 +26,8 @@ jobs:
 
       - name: Install system dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y software-properties-common
-          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-          sudo apt-get install -y \
-            g++-15 \
+          apt-get update
+          apt-get install -y \
             build-essential \
             ninja-build \
             git \
@@ -41,8 +39,11 @@ jobs:
             libadwaita-1-dev \
             ca-certificates \
             curl
-          echo "CC=gcc-15" >> $GITHUB_ENV
-          echo "CXX=g++-15" >> $GITHUB_ENV
+          echo "deb http://deb.debian.org/debian sid main" > /etc/apt/sources.list.d/sid.list
+          printf 'Package: *\nPin: release a=sid\nPin-Priority: 100\n' > /etc/apt/preferences.d/sid.pref
+          apt-get update
+          apt-get install -y -t sid g++-15
+          ldconfig
 
       - name: Cache CMake
         id: cache-cmake
@@ -54,9 +55,9 @@ jobs:
       - name: Install CMake
         if: steps.cache-cmake.outputs.cache-hit != 'true'
         run: |
-          sudo mkdir -p /usr/local/cmake
+          mkdir -p /usr/local/cmake
           wget -qO- 'https://github.com/Kitware/CMake/releases/download/v4.4.0-rc1/cmake-4.4.0-rc1-linux-x86_64.tar.gz' \
-            | sudo tar xz --strip-components=1 -C /usr/local/cmake
+            | tar xz --strip-components=1 -C /usr/local/cmake
 
       - name: Add CMake to PATH
         run: echo "/usr/local/cmake/bin" >> $GITHUB_PATH
@@ -117,10 +118,14 @@ jobs:
           predep --help > /dev/null
 
       - name: Build predoc-gui
+        env:
+          CC: gcc-15
+          CXX: g++-15
+          CXXFLAGS: "-std=c++23 -mno-direct-extern-access"
         run: |
           predep vendor
-          CC=gcc-15 CXX=g++-15 premake5 gmake
-          make config=redist -j "$(nproc)" CXX=g++-15 CXXFLAGS="-std=c++23 -mno-direct-extern-access"
+          premake5 gmake
+          make config=redist -j "$(nproc)"
         working-directory: gui
 
       - name: Install bun
@@ -148,12 +153,12 @@ jobs:
           fi
           echo "version=$ver" >> $GITHUB_OUTPUT
 
-      # - name: Upload artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: predoc-linux-x64-${{ steps.version.outputs.version }}
-      #     path: predoc-*.zip
-      #     if-no-files-found: error
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: predoc-linux-x64-${{ steps.version.outputs.version }}
+          path: predoc-*.zip
+          if-no-files-found: error
 
       - name: Create GitHub Release
         if: steps.version.outputs.version != 'dev'
