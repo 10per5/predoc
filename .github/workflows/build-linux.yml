@@ -2,7 +2,8 @@ name: Build Linux GUI
 
 on:
   push:
-    branches: ["main"]
+    # branches: ["main"]
+    branches: ["**"]
   workflow_dispatch:
 
 defaults:
