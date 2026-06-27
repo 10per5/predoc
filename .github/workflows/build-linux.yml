@@ -2,7 +2,7 @@ name: Build Linux GUI
 
 on:
   push:
-    # # branches: ["main"]
+    # branches: ["main"]
     branches: ["**"]
   workflow_dispatch:
 
@@ -156,17 +156,17 @@ jobs:
         run: |
           ver="dev"
           msg="${{ github.event.head_commit.message }}"
-          if [[ "$msg" =~ ^build\(v([0-9]+\.[0-9]+\.[0-9]+)(p[0-9]+)?\)$ ]]; then
+          if [[ "$msg" =~ ^build\(v([0-9]+\.[0-9]+\.[0-9]+)(?:p[0-9]+)?\) ]]; then
             ver="v${BASH_REMATCH[1]}"
           fi
           echo "version=$ver" >> $GITHUB_OUTPUT
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: predoc-linux-x64-${{ steps.version.outputs.version }}
-          path: predoc-*.tar.gz
-          if-no-files-found: error
+      # - name: Upload artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: predoc-linux-x64-${{ steps.version.outputs.version }}
+      #     path: predoc-*.tar.gz
+      #     if-no-files-found: error
 
       - name: Create GitHub Release
         if: steps.version.outputs.version != 'dev'
