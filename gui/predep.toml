@@ -15,6 +15,7 @@ type = "vendor"
 [[stages]]
 name = "build"
 description = "Build GUI binary"
+type = "premake5"
 depends = ["vendor"]
 outputs = ["root://bin/predoc-gui"]
 
