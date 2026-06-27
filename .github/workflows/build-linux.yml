@@ -124,8 +124,7 @@ jobs:
           CXX: g++-15
           CXXFLAGS: "-std=c++23 -mno-direct-extern-access"
         run: |
-          predep vendor
-          premake5 gmake
+          predep --privileged c3e4dad31f63abc60f89e385b289c7077509f8abfc7acbb16601601b6b7f9d1e build 
           make config=redist -j "$(nproc)"
         working-directory: gui
 
