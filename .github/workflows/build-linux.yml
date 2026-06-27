@@ -39,7 +39,8 @@ jobs:
             libgtk-4-dev \
             libadwaita-1-dev \
             ca-certificates \
-            curl
+            curl \
+            unzip
           echo "deb http://deb.debian.org/debian sid main" > /etc/apt/sources.list.d/sid.list
           printf 'Package: *\nPin: release a=sid\nPin-Priority: 100\n' > /etc/apt/preferences.d/sid.pref
           apt-get update
