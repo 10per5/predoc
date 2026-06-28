@@ -9,4 +9,4 @@ Welcome to the Style section. Below are the guides for this category:
 
 ## Topics
 
-{{< table-of-content >}}
+{{< table-of-directory >}}
