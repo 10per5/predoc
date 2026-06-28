@@ -296,6 +296,7 @@ export class EditorService {
           ...prev,
           onUpload: uploadImage,
           proxyDomURL: (url: string) => {
+            if (!url) return url;
             if (url.startsWith("data:") || url.startsWith("http") || url.startsWith("blob:")) return url;
             if (url.startsWith("/uploads/")) return url;
             if (url.startsWith("predoc-image:")) {

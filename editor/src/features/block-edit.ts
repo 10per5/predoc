@@ -29,6 +29,7 @@ import {
   codeBlockIcon,
   tableIcon,
   todoListIcon,
+  imageIcon,
 } from "../components/icons";
 
 const slash = slashFactory("predoc");
@@ -45,6 +46,7 @@ const SLASH_ITEMS: SlashItem[] = [
   { cmd: "thematic_break", label: "Divider", icon: dividerIcon },
   { cmd: "code_block", label: "Code Block", icon: codeBlockIcon },
   { cmd: "table", label: "Table", icon: tableIcon },
+  { cmd: "image", label: "Image", icon: imageIcon },
 ];
 
 class BlockHandleView {
@@ -315,6 +317,11 @@ class SlashView {
       view.focus();
       return;
     }
+    if (cmd === "image") {
+      this.insertImage(view);
+      view.focus();
+      return;
+    }
 
     const commands = this.milkdownCtx.get(commandsCtx);
     if (cmd === "heading") commands.call(wrapInHeadingCommand.key, level);
@@ -340,7 +347,7 @@ class SlashView {
     const { schema } = state;
     const { $from } = state.selection;
 
-    if (cmd === "thematic_break") {
+    if (cmd === "thematic_break" || cmd === "image") {
       this.insertBelow(cmd, level, view);
       return;
     }
@@ -428,6 +435,15 @@ class SlashView {
       dispatch(tr.setSelection(TextSelection.create(tr.doc, afterPos + 3)));
       return;
     }
+    if (cmd === "image") {
+      const img = schema.nodes["image-block"]?.create({ src: "", caption: "", ratio: 1 });
+      const para = schema.nodes.paragraph.create();
+      if (img) {
+        const tr = state.tr.insert(afterPos, img).insert(afterPos + 2, para);
+        dispatch(tr.setSelection(TextSelection.create(tr.doc, afterPos + 3)));
+      }
+      return;
+    }
     const para = schema.nodes.paragraph.create();
     let newBlock: Node;
     if (cmd === "bullet_list")
@@ -458,6 +474,22 @@ class SlashView {
     const tr = state.tr.replaceWith(pos, pos + blockSize, [hr, para]);
     dispatch(
       tr.setSelection(TextSelection.create(tr.doc, pos + 2)).scrollIntoView(),
+    );
+  }
+
+  private insertImage(view: EditorView) {
+    const { state, dispatch } = view;
+    const { schema } = state;
+    const { $from } = state.selection;
+
+    const pos = $from.before($from.depth);
+    const blockSize = $from.node($from.depth).nodeSize;
+    const img = schema.nodes["image-block"]?.create({ src: "", caption: "", ratio: 1 });
+    const para = schema.nodes.paragraph.create();
+    if (!img) return;
+    const tr = state.tr.replaceWith(pos, pos + blockSize, [img, para]);
+    dispatch(
+      tr.setSelection(TextSelection.create(tr.doc, pos + 1)).scrollIntoView(),
     );
   }
 

@@ -224,6 +224,7 @@ async function handleUpload(req: Request, ctx: ServerContext): Promise<Response 
 function handleUploads(relPath: string, ctx: ServerContext): Response | null {
   const filePath = join(ctx.contentDir, relPath);
   if (!existsSync(filePath)) return null;
+  if (statSync(filePath).isDirectory()) return null;
   const raw = readFileSync(filePath);
   return new Response(raw, {
     headers: { "Content-Type": contentType(filePath) },
