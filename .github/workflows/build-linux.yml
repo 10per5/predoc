@@ -175,3 +175,10 @@ jobs:
           tag_name: ${{ steps.version.outputs.version }}
           name: ${{ steps.version.outputs.version }}
           files: predoc-*.tar.gz
+          generate_release_notes: false
+          body: |
+            ## Release ${{ steps.version.outputs.version }}
+            This release was automatically triggered by commit: ${{ github.sha }}
+
+            ### Changes:
+            - [View commit history for this release](https://github.com/10per5/predoc/commits/${{ github.ref_name }})
