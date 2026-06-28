@@ -1,6 +1,7 @@
-import type { ContentProvider, TreeNode } from "./provider"
+import type { ContentProvider, TreeNode, ImageEntry } from "./provider"
 
 const STORAGE_PREFIX = "predoc:"
+const IMAGE_PREFIX = "predoc:image:"
 
 export class LocalStorageProvider implements ContentProvider {
   readonly name = "localStorage"
@@ -70,5 +71,62 @@ export class LocalStorageProvider implements ContentProvider {
 
   async getServerTime(_path: string): Promise<number | null> {
     return null
+  }
+
+  private async fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+  }
+
+  async uploadImage(file: File, _dir: string): Promise<string> {
+    const ext = file.name.includes(".") ? file.name.split(".").pop()! : "png"
+    const name = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+    const base64 = await this.fileToBase64(file)
+    localStorage.setItem(IMAGE_PREFIX + name, base64)
+    return `predoc-image:${name}`
+  }
+
+  async listImages(_dir: string, refs?: boolean): Promise<ImageEntry[]> {
+    const entries: ImageEntry[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && key.startsWith(IMAGE_PREFIX)) {
+        const name = key.slice(IMAGE_PREFIX.length)
+        const base64 = localStorage.getItem(key)!
+        const usedIn = refs ? this.findRefs(name) : []
+        entries.push({ name, url: base64, storageUrl: `predoc-image:${name}`, usedIn })
+      }
+    }
+    return entries
+  }
+
+  resolveImageUrl(url: string): string | undefined {
+    if (url.startsWith("predoc-image:")) {
+      const name = url.slice("predoc-image:".length)
+      return localStorage.getItem(IMAGE_PREFIX + name) || undefined
+    }
+    return undefined
+  }
+
+  private findRefs(imageName: string): string[] {
+    const refs: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && key.startsWith(STORAGE_PREFIX) && key.endsWith(".md")) {
+        const content = localStorage.getItem(key)
+        if (content && content.includes(`predoc-image:${imageName}`)) {
+          refs.push(key.slice(STORAGE_PREFIX.length))
+        }
+      }
+    }
+    return refs
+  }
+
+  async deleteImage(name: string, _dir: string): Promise<void> {
+    localStorage.removeItem(IMAGE_PREFIX + name)
   }
 }

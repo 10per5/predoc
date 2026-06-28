@@ -38,13 +38,16 @@ export async function exportToZip(): Promise<void> {
   showToast(`Exported ${count} file${count > 1 ? "s" : ""}`)
 }
 
-export interface ZipFileEntry {
+export interface ZipEntry {
   relPath: string
   content: string
+}
+
+export interface ZipFileEntry extends ZipEntry {
   exists: boolean
 }
 
-export async function pickAndParseZip(): Promise<ZipFileEntry[] | null> {
+export async function pickAndParseZip(): Promise<ZipEntry[] | null> {
   const input = document.createElement("input")
   input.type = "file"
   input.accept = ".zip"
@@ -67,13 +70,12 @@ export async function pickAndParseZip(): Promise<ZipFileEntry[] | null> {
     return null
   }
 
-  const entries: ZipFileEntry[] = []
+  const entries: ZipEntry[] = []
 
   for (const [relPath, content] of Object.entries(extracted)) {
     if (!relPath.endsWith(".md")) continue
     const text = strFromU8(content)
-    const exists = localStorage.getItem(STORAGE_PREFIX + relPath) !== null
-    entries.push({ relPath, content: text, exists })
+    entries.push({ relPath, content: text })
   }
 
   if (entries.length === 0) {
@@ -82,13 +84,4 @@ export async function pickAndParseZip(): Promise<ZipFileEntry[] | null> {
   }
 
   return entries
-}
-
-export function writeZipEntries(entries: ZipFileEntry[]): number {
-  let count = 0
-  for (const entry of entries) {
-    localStorage.setItem(STORAGE_PREFIX + entry.relPath, entry.content)
-    count++
-  }
-  return count
 }

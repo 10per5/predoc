@@ -1,9 +1,10 @@
-import type { ContentProvider, TreeNode } from "./provider"
+import type { ContentProvider, TreeNode, ImageEntry } from "./provider"
 import { stripFrontmatter } from "../utils/frontmatter"
 
 export class FileSystemProvider implements ContentProvider {
   readonly name = "fs"
   private dirHandle: FileSystemDirectoryHandle | null = null
+  private imageUrlCache = new Map<string, string>()
 
   async init(): Promise<void> {
     if (this.dirHandle) return
@@ -137,5 +138,129 @@ export class FileSystemProvider implements ContentProvider {
     } catch {
       return null
     }
+  }
+
+  private async ensureImageDir(dir: string): Promise<FileSystemDirectoryHandle> {
+    if (!this.dirHandle) await this.init()
+    const parts = dir.split("/").filter(Boolean)
+    let current: FileSystemDirectoryHandle = this.dirHandle!
+    for (const part of parts) {
+      current = await current.getDirectoryHandle(part, { create: true })
+    }
+    return await current.getDirectoryHandle("image", { create: true })
+  }
+
+  async uploadImage(file: File, dir: string): Promise<string> {
+    const ext = file.name.includes(".") ? file.name.split(".").pop()! : "png"
+    const name = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+    const relPath = `image/${name}`
+    const imageDir = await this.ensureImageDir(dir)
+    const fileHandle = await imageDir.getFileHandle(name, { create: true })
+    const writable = await fileHandle.createWritable()
+    await writable.write(file)
+    await writable.close()
+    const blobUrl = URL.createObjectURL(file)
+    this.imageUrlCache.set(relPath, blobUrl)
+    return relPath
+  }
+
+  resolveImageUrl(url: string): string | undefined {
+    return this.imageUrlCache.get(url)
+  }
+
+  async listImages(dir: string, refs?: boolean): Promise<ImageEntry[]> {
+    let imageDir: FileSystemDirectoryHandle
+    try {
+      imageDir = await this.ensureImageDir(dir)
+    } catch {
+      return []
+    }
+    const entries: ImageEntry[] = []
+    const imageNames: string[] = []
+
+    for await (const entry of imageDir.values()) {
+      if (entry.kind !== "file") continue
+      const name = entry.name
+      const ext = name.includes(".") ? name.split(".").pop()!.toLowerCase() : ""
+      if (!["png", "jpg", "jpeg", "gif", "svg", "webp", "bmp", "ico"].includes(ext)) continue
+      imageNames.push(name)
+    }
+
+    imageNames.sort()
+
+    const scanDir = dir ? dir : ""
+    const mdFiles = refs ? await this.collectMdFiles(scanDir) : []
+
+    for (const name of imageNames) {
+      const storageUrl = `image/${name}`
+      let displayUrl = this.imageUrlCache.get(storageUrl)
+      if (!displayUrl) {
+        try {
+          const imageDir = await this.ensureImageDir(dir)
+          const fileHandle = await imageDir.getFileHandle(name)
+          const file = await fileHandle.getFile()
+          displayUrl = URL.createObjectURL(file)
+          this.imageUrlCache.set(storageUrl, displayUrl)
+        } catch {
+          displayUrl = ""
+        }
+      }
+      const usedIn = refs ? this.findRefsInFiles(name, mdFiles) : []
+      entries.push({ name, url: displayUrl, storageUrl, usedIn })
+    }
+
+    return entries
+  }
+
+  private async collectMdFiles(dir: string): Promise<Map<string, string>> {
+    const result = new Map<string, string>()
+    if (!this.dirHandle) await this.init()
+
+    async function walk(
+      handle: FileSystemDirectoryHandle,
+      prefix: string,
+      skipImage: boolean,
+      out: Map<string, string>,
+    ) {
+      for await (const entry of handle.values()) {
+        if (entry.name.startsWith(".")) continue
+        if (entry.kind === "directory") {
+          if (skipImage && entry.name === "image") continue
+          await walk(entry as FileSystemDirectoryHandle, prefix ? `${prefix}/${entry.name}` : entry.name, skipImage, out)
+        } else if (entry.name.endsWith(".md")) {
+          const file = await (entry as FileSystemFileHandle).getFile()
+          const text = await file.text()
+          const rel = prefix ? `${prefix}/${entry.name}` : entry.name
+          out.set(rel, text)
+        }
+      }
+    }
+
+    let handle = this.dirHandle!
+    if (dir) {
+      const parts = dir.split("/").filter(Boolean)
+      for (const part of parts) {
+        handle = await handle.getDirectoryHandle(part)
+      }
+    }
+    await walk(handle, dir, true, result)
+    return result
+  }
+
+  private findRefsInFiles(imageName: string, files: Map<string, string>): string[] {
+    const refs: string[] = []
+    for (const [relPath, content] of files) {
+      if (content.includes(imageName)) {
+        refs.push(relPath)
+      }
+    }
+    return refs
+  }
+
+  async deleteImage(name: string, dir: string): Promise<void> {
+    try {
+      const imageDir = await this.ensureImageDir(dir)
+      await imageDir.removeEntry(name)
+    } catch {}
   }
 }

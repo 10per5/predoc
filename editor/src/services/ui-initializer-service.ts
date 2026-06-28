@@ -21,6 +21,7 @@ export interface UIInitializeOptions {
   onViewChange?: (view: ViewType) => void;
   onSave?: () => void;
   onLoad?: () => void;
+  onImageManager?: () => void;
   onToggleSidebar?: () => void;
   onToggleMetaPanel?: () => void;
   onMetaPanelChange?: (data: any) => void;
@@ -54,6 +55,7 @@ export class UIInitializerService {
       onViewChange: options.onViewChange,
       onSave: options.onSave,
       onLoad: options.onLoad,
+      onImageManager: options.onImageManager,
       onToggleSidebar: options.onToggleSidebar,
       onToggleMetaPanel: options.onToggleMetaPanel,
     });
@@ -108,9 +110,9 @@ export class UIInitializerService {
   /**
    * Update dirty counter in topbar
    */
-  public updateDirtyCounter(count: number, totalBytes: number): void {
-    this.topbar?.updateCounter(count, totalBytes);
-    this.topbar?.setDirtyState(count > 0);
+  public updateDirtyCounter(count: number, totalBytes: number, pendingCount: number = 0): void {
+    this.topbar?.updateCounter(count, totalBytes, pendingCount);
+    this.topbar?.setDirtyState(count > 0 || pendingCount > 0);
   }
 
   /**

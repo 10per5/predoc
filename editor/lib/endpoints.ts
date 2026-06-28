@@ -230,6 +230,84 @@ function handleUploads(relPath: string, ctx: ServerContext): Response | null {
   });
 }
 
+const IMAGE_EXTS = new Set([".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".bmp", ".ico"]);
+
+function handleListImages(req: Request, ctx: ServerContext): Response | null {
+  const url = new URL(req.url);
+  const docDir = url.searchParams.get("dir") || "";
+  const refs = url.searchParams.get("refs") === "true";
+  const imageDir = docDir ? join(ctx.contentDir, docDir, "image") : join(ctx.contentDir, "image");
+
+  if (!existsSync(imageDir)) {
+    return new Response(JSON.stringify({ images: [] }), {
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const names = readdirSync(imageDir)
+    .filter((n) => IMAGE_EXTS.has(extname(n).toLowerCase()))
+    .sort();
+
+  const images = names.map((name) => {
+    const entry: { name: string; url: string; usedIn?: string[] } = {
+      name,
+      url: docDir ? `/uploads/${docDir}/image/${name}` : `/uploads/${name}`,
+    };
+    if (refs) {
+      entry.usedIn = findImageRefs(ctx.contentDir, docDir, name);
+    }
+    return entry;
+  });
+
+  return new Response(JSON.stringify({ images }), {
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+function findImageRefs(contentDir: string, docDir: string, imageName: string): string[] {
+  const refs: string[] = [];
+  const scanDir = docDir ? join(contentDir, docDir) : contentDir;
+  if (!existsSync(scanDir)) return refs;
+
+  function scan(dir: string) {
+    for (const entry of readdirSync(dir)) {
+      const full = join(dir, entry);
+      if (entry.startsWith(".")) continue;
+      if (statSync(full).isDirectory()) {
+        if (entry === "image") continue; // skip image dirs to avoid infinite loops
+        scan(full);
+      } else if (entry.endsWith(".md")) {
+        const content = readFileSync(full, "utf-8");
+        if (content.includes(imageName)) {
+          const rel = full.replace(contentDir, "").replace(/^\//, "");
+          refs.push(rel);
+        }
+      }
+    }
+  }
+  scan(scanDir);
+  return refs;
+}
+
+function handleDeleteImage(req: Request, path: string, ctx: ServerContext): Response | null {
+  const name = path.slice("/api/images/".length);
+  if (!name) return new Response("Missing image name", { status: 400 });
+
+  const url = new URL(req.url);
+  const docDir = url.searchParams.get("dir") || "";
+  const imageDir = docDir ? join(ctx.contentDir, docDir, "image") : join(ctx.contentDir, "image");
+  const target = join(imageDir, name);
+
+  if (!existsSync(target)) {
+    return new Response("Not found", { status: 404 });
+  }
+
+  rmSync(target, { force: true });
+  return new Response(JSON.stringify({ ok: true }), {
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
 async function handleMove(req: Request, ctx: ServerContext): Promise<Response | null> {
   const { from, to } = await req.json();
   const src = join(ctx.contentDir, from.replace(/^\//, ""));
@@ -283,6 +361,14 @@ export async function handleApiRoutes(
 
   if (path === "/api/move" && req.method === "POST") {
     return handleMove(req, ctx);
+  }
+
+  if (path === "/api/images" && req.method === "GET") {
+    return handleListImages(req, ctx);
+  }
+
+  if (path.startsWith("/api/images/") && req.method === "DELETE") {
+    return handleDeleteImage(req, path, ctx);
   }
 
   return null;

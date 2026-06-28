@@ -6,6 +6,7 @@ export interface FileMenuCallbacks {
   onViewChange: (view: ViewType) => void
   onSave?: () => void
   onLoad?: () => void
+  onImageManager?: () => void
 }
 
 export interface FileMenuAPI {
@@ -51,6 +52,11 @@ export function mountFileMenu(
             <span class="check">✓</span>
           </div>
         </div>
+      </div>
+      <div class="menu-sep"></div>
+      <div class="menu-item" @click=${() => { callbacks.onImageManager?.(); close() }}>
+        <span class="menu-item-icon">🖼</span>
+        <span class="menu-item-label">Image Manager</span>
       </div>
       <div class="menu-sep"></div>
       <div class="menu-item" @click=${() => { callbacks.onSave?.(); close() }}>

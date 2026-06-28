@@ -1,10 +1,11 @@
 import { confirmDialog, promptDialog } from "./components/dialogs/dialog"
 import { serializeFrontmatter } from "./utils/frontmatter"
 import type { MetaPanelData } from "./components/panels/meta-panel"
-import { getProvider } from "./content/provider-registry"
 import { cache } from "./cache"
+import type { CacheManagementService } from "./services/cache-management-service"
 
 export async function createPage(
+  cacheService: CacheManagementService,
   parentPath: string,
   doNavigate: (path: string) => void,
   loadSidebar: () => Promise<void>
@@ -26,35 +27,37 @@ export async function createPage(
   const fmData: MetaPanelData = { title: name, weight: 100 }
   const fmStr = serializeFrontmatter(fmData)
   const body = `# ${name}\n\n`
+  const content = `---\n${fmStr}\n---\n\n${body}`
 
-  const provider = getProvider()
-  const fullContent = `---\n${fmStr}\n---\n\n${body}`
-  await provider.writeFile(fullPath, fullContent)
-
+  cacheService.queueCreate(fullPath, content)
   cache.setFrontmatter(fullPath, fmData)
+  cache.cacheBody(fullPath, body)
+  cache.setBaseline(fullPath, body)
+
   await loadSidebar()
   doNavigate(fullPath)
 }
 
 export async function deletePage(
+  cacheService: CacheManagementService,
   pagePath: string,
   afterDelete: () => void
 ): Promise<boolean> {
   const confirmed = await confirmDialog({
     title: "Delete page",
-    message: `Are you sure you want to delete "${pagePath}"? This cannot be undone.`,
+    message: `Are you sure you want to delete "${pagePath}"? This operation must be flushed to take effect.`,
     confirmLabel: "Delete",
     cancelLabel: "Cancel",
   })
   if (!confirmed) return false
 
-  const provider = getProvider()
-  await provider.deleteFile(pagePath)
+  cacheService.queueDelete(pagePath)
   afterDelete()
   return true
 }
 
 export async function renamePage(
+  cacheService: CacheManagementService,
   pagePath: string,
   afterRename: (newPath: string | null) => void
 ): Promise<void> {
@@ -72,19 +75,17 @@ export async function renamePage(
     : ""
   const newPath = parentDir ? `${parentDir}/${slug}` : slug
 
-  const provider = getProvider()
-  await provider.moveFile(pagePath, newPath)
+  cacheService.queueRename(pagePath, newPath)
   afterRename(newPath)
 }
 
 export async function movePage(
+  cacheService: CacheManagementService,
   from: string,
   to: string,
   afterMove: () => void
 ): Promise<void> {
   if (from === to) return
-
-  const provider = getProvider()
-  await provider.moveFile(from, to)
+  cacheService.queueMove(from, to)
   afterMove()
 }

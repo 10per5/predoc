@@ -11,11 +11,26 @@ import { ViewManagementService } from "../services/view-management-service";
 import { NavigationService } from "../services/navigation-service";
 import { getProvider, getProviderDisplayInfo } from "../content/provider-registry";
 import { cache } from "../cache";
-import { exportToZip, pickAndParseZip, writeZipEntries } from "../utils/zip";
+import type { TreeNode } from "../content/provider";
+import { exportToZip, pickAndParseZip } from "../utils/zip";
+import type { ZipEntry, ZipFileEntry } from "../utils/zip";
 import { mountImportZipDialog } from "../components/dialogs/import-zip-dialog";
+import { mountImageManagerDialog } from "../components/dialogs/image-manager-dialog";
 import { showToast } from "../components/toast/toast";
 import { loadPrefs } from "../storage";
 import { PathService } from "../services/path-service";
+
+function flattenTree(node: TreeNode, prefix = ""): string[] {
+  const paths: string[] = []
+  for (const [key, value] of Object.entries(node)) {
+    if (value === null || (typeof value === "object" && "weight" in value)) {
+      paths.push(prefix + key.replace(/\.md$/, ""))
+    } else if (typeof value === "object") {
+      paths.push(...flattenTree(value as TreeNode, prefix + key + "/"))
+    }
+  }
+  return paths
+}
 
 let sessionStarted = 0;
 
@@ -52,10 +67,11 @@ export default class extends Controller {
 
     this.cacheService = new CacheManagementService({
       getCurrentContent: () => this.editorService.getCurrentContent(),
-      onDirtyCountChanged: (count, bytes) => {
-        this.topbar?.updateCounter(count, bytes);
-        this.topbar?.setDirtyState(count > 0);
+      onDirtyCountChanged: (count, bytes, pendingCount) => {
+        this.topbar?.updateCounter(count, bytes, pendingCount);
+        this.topbar?.setDirtyState(count > 0 || (pendingCount ?? 0) > 0);
       },
+      onFlushComplete: () => this.loadSidebar(),
       onNavigate: (path) => this.navService?.navigate(path),
       onContentReload: (path, body) => this.editorService.ensureEditor(body),
     });
@@ -91,6 +107,7 @@ export default class extends Controller {
       },
       onUpdateUI: () => this.cacheService?.updateDirtyCounter(),
     });
+    this.navService.setCacheService(this.cacheService);
     this.navService.setCurrentPath(initialPath);
 
     this.viewService.initialize();
@@ -110,26 +127,37 @@ export default class extends Controller {
         onViewChange: (view) => this.viewService.getViewManager().switchTo(view),
         onSave: () => exportToZip().then(() => this.loadSidebar()),
         onLoad: async () => {
-          if (getProvider().name === "remote") {
-            showToast("Import from zip is not available in server mode");
-            return;
-          }
-          const entries = await pickAndParseZip();
-          if (!entries) return;
+          const rawEntries = await pickAndParseZip();
+          if (!rawEntries) return;
+
+          const provider = getProvider();
+          const tree = await provider.getTree();
+          const existing = new Set(flattenTree(tree));
+
+          const entries: ZipFileEntry[] = rawEntries.map((e: ZipEntry) => ({
+            ...e,
+            exists: existing.has(e.relPath.replace(/\.md$/, "")),
+          }));
+
           mountImportZipDialog(
             entries,
             async (result) => {
-              const count = writeZipEntries(result.selected);
-              if (count === 0) return;
+              if (result.selected.length === 0) return;
+              const paths = result.selected.map((e: ZipFileEntry) => e.relPath.replace(/\.md$/, ""));
+              await Promise.all(paths.map((path: string) => {
+                const entry = rawEntries.find((r: ZipEntry) => r.relPath.replace(/\.md$/, "") === path);
+                return entry ? provider.writeFile(path, entry.content) : Promise.resolve();
+              }));
               cache.clearAll();
               cache.sync();
               await this.loadSidebar();
               await this.editorService.loadContent(initialPath, (data) => this.metaPanel?.update(data));
-              showToast(`Imported ${count} file${count > 1 ? "s" : ""}`);
+              showToast(`Imported ${result.selected.length} file${result.selected.length > 1 ? "s" : ""}`);
             },
             () => {},
           );
         },
+        onImageManager: () => mountImageManagerDialog(),
         onToggleSidebar: () => this.uiService.toggleSidebar(),
         onToggleMetaPanel: () => this.uiService.toggleMetaPanel(),
       }

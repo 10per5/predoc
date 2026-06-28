@@ -3,6 +3,7 @@
  * 
  * Manages file caching, dirty tracking, and file synchronization
  * Handles flushing changes and discarding edits
+ * Owns pending sidebar operations (create/delete/rename/move)
  */
 
 import { stripFrontmatter, serializeFrontmatter } from "../utils/frontmatter";
@@ -10,12 +11,15 @@ import { mountChangesDialog, type ChangesDialogData } from "../components/dialog
 import { confirmDialog } from "../components/dialogs/dialog";
 import { cache } from "../cache";
 import { getProvider } from "../content/provider-registry";
+import { commitAllPendingImages, replacePendingUrls } from "./image-config";
+import { applyPendingOps, type PendingOp } from "../utils/tree";
+import type { TreeNode } from "../components/panels/sidebar";
 
 export interface CacheCallbacks {
   getCurrentContent?: () => string;
   onFlushComplete?: () => void;
   onDiscardComplete?: () => void;
-  onDirtyCountChanged?: (count: number, bytes: number) => void;
+  onDirtyCountChanged?: (count: number, bytes: number, pendingCount: number) => void;
   onNavigate?: (path: string) => void;
   onContentReload?: (path: string, content: string) => Promise<void>;
 }
@@ -23,34 +27,62 @@ export interface CacheCallbacks {
 export class CacheManagementService {
   private callbacks: CacheCallbacks;
   private currentPath: string = "";
+  private pendingOps: PendingOp[] = [];
 
   constructor(callbacks: CacheCallbacks = {}) {
     this.callbacks = callbacks;
   }
 
-  /**
-   * Set current path context
-   */
   setCurrentPath(path: string): void {
     this.currentPath = path;
   }
 
-  /**
-   * Update dirty counter UI
-   */
+  // ── Pending Operations ──
+
+  queueCreate(path: string, content: string): void {
+    this.pendingOps.push({ type: "create", path, content });
+  }
+
+  queueDelete(path: string): void {
+    this.pendingOps.push({ type: "delete", path });
+  }
+
+  queueRename(from: string, to: string): void {
+    this.pendingOps.push({ type: "rename", from, to });
+  }
+
+  queueMove(from: string, to: string): void {
+    this.pendingOps.push({ type: "move", from, to });
+  }
+
+  getPendingOps(): PendingOp[] {
+    return this.pendingOps;
+  }
+
+  getPendingOpsCount(): number {
+    return this.pendingOps.length;
+  }
+
+  clearPendingOps(): void {
+    this.pendingOps = [];
+  }
+
+  applyPendingOpsToTree(tree: TreeNode): TreeNode {
+    return applyPendingOps(tree, this.pendingOps);
+  }
+
+  // ── Dirty-state counters ──
+
   updateDirtyCounter(): void {
     let totalBytes = 0;
     for (const path of cache.getDirtyPaths()) {
       totalBytes += cache.getBodyDelta(path);
     }
     const count = cache.getDirtyCount();
-    this.callbacks.onDirtyCountChanged?.(count, totalBytes);
+    this.callbacks.onDirtyCountChanged?.(count, totalBytes, this.pendingOps.length);
   }
 
-  /**
-   * Get current dirty state
-   */
-  getDirtyState(): { count: number; bytes: number } {
+  getDirtyState(): { count: number; bytes: number; pendingCount: number } {
     let totalBytes = 0;
     for (const path of cache.getDirtyPaths()) {
       totalBytes += cache.getBodyDelta(path);
@@ -58,19 +90,56 @@ export class CacheManagementService {
     return {
       count: cache.getDirtyCount(),
       bytes: totalBytes,
+      pendingCount: this.pendingOps.length,
     };
   }
 
-  /**
-   * Flush all dirty files to provider
-   */
+  // ── Execute pending ops against the provider ──
+
+  private async executePendingOps(): Promise<void> {
+    if (this.pendingOps.length === 0) return;
+    const provider = getProvider();
+
+    for (const op of this.pendingOps) {
+      try {
+        switch (op.type) {
+          case "create":
+            await provider?.writeFile(op.path, op.content);
+            break;
+          case "delete":
+            await provider?.deleteFile?.(op.path);
+            break;
+          case "rename":
+            await provider?.moveFile?.(op.from, op.to);
+            break;
+          case "move":
+            await provider?.moveFile?.(op.from, op.to);
+            break;
+        }
+      } catch (error) {
+        console.error(`Failed to execute pending op ${op.type} ${"path" in op ? op.path : op.from}:`, error);
+      }
+    }
+
+    this.pendingOps = [];
+  }
+
+  // ── Flush ──
+
   async flushDirtyFiles(): Promise<void> {
     const dirtyPaths = cache.getDirtyPaths();
-    if (dirtyPaths.length === 0) return;
+    if (dirtyPaths.length === 0 && this.pendingOps.length === 0) return;
 
     const currentMd = this.callbacks.getCurrentContent?.() || "";
     const provider = getProvider();
 
+    // 1. Commit all pending images first
+    const imageUrlMap = await commitAllPendingImages();
+
+    // 2. Execute pending ops (create/delete/rename/move)
+    await this.executePendingOps();
+
+    // 3. Write dirty files
     for (const path of dirtyPaths) {
       let body: string;
 
@@ -87,12 +156,15 @@ export class CacheManagementService {
         }
       }
 
+      if (imageUrlMap.size > 0) {
+        body = replacePendingUrls(body, imageUrlMap);
+      }
+
       const fmData = cache.getFrontmatter(path);
       const fullContent = fmData
         ? `---\n${serializeFrontmatter(fmData)}\n---\n\n${body}`
         : body;
 
-      // Check for server-side modifications
       if (path === this.currentPath) {
         const serverTime = cache.getServerTime(path);
         if (serverTime) {
@@ -120,9 +192,8 @@ export class CacheManagementService {
     this.callbacks.onFlushComplete?.();
   }
 
-  /**
-   * Discard changes for a file
-   */
+  // ── Discard ──
+
   async discardFileChanges(pagePath: string): Promise<void> {
     const confirmed = await confirmDialog({
       title: "Discard changes",
@@ -150,16 +221,36 @@ export class CacheManagementService {
     this.callbacks.onDiscardComplete?.();
   }
 
-  /**
-   * Handle dirty click - show changes dialog
-   */
+  // ── Changes dialog ──
+
   async handleDirtyClick(): Promise<void> {
     const dirtyPaths = cache.getDirtyPaths();
-    if (dirtyPaths.length === 0) return;
+    if (dirtyPaths.length === 0 && this.pendingOps.length === 0) return;
 
     const provider = getProvider();
     const changes: ChangesDialogData[] = [];
 
+    // Pending ops section
+    for (const op of this.pendingOps) {
+      let label = "";
+      switch (op.type) {
+        case "create":
+          label = `Create: ${op.path}`;
+          break;
+        case "delete":
+          label = `Delete: ${op.path}`;
+          break;
+        case "rename":
+          label = `Rename: ${op.from} → ${op.to}`;
+          break;
+        case "move":
+          label = `Move: ${op.from} → ${op.to}`;
+          break;
+      }
+      changes.push({ isPendingOp: true, opLabel: label });
+    }
+
+    // Dirty files section
     for (const path of dirtyPaths) {
       let md = cache.reconstructContent(path);
 
@@ -211,6 +302,7 @@ export class CacheManagementService {
           for (const p of paths) {
             cache.clearPath(p);
           }
+          this.clearPendingOps();
           cache.sync();
           this.updateDirtyCounter();
 

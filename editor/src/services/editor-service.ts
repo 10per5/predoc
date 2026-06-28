@@ -57,6 +57,7 @@ import { toggleSourceMode, applySourceContent } from "../editor-source";
 import { getProvider } from "../content/provider-registry";
 import { stripFrontmatter } from "../utils/frontmatter";
 import { setCurrentDocDir, uploadImage } from "./image-config";
+import { imageRegistry } from "./image-registry";
 
 export interface EditorServiceConfig {
   onContentChange?: (content: string) => void;
@@ -141,7 +142,15 @@ export class EditorService {
     try {
       const provider = getProvider();
       const raw = await provider?.readFile(path);
-      if (!raw) return "# New Page\n\nStart writing...";
+      if (!raw) {
+        const cachedBody = cache.getBody(path);
+        if (cachedBody) {
+          const fm = cache.getFrontmatter(path);
+          if (fm) onMetaUpdate?.(fm);
+          return cachedBody;
+        }
+        return "# New Page\n\nStart writing...";
+      }
 
       const { frontmatter, body } = stripFrontmatter(raw);
       const serverTime = await provider?.getServerTime(path);
@@ -286,8 +295,19 @@ export class EditorService {
           ...prev,
           onUpload: uploadImage,
           proxyDomURL: (url: string) => {
-            if (url.startsWith("data:") || url.startsWith("http")) return url;
+            if (url.startsWith("data:") || url.startsWith("http") || url.startsWith("blob:")) return url;
             if (url.startsWith("/uploads/")) return url;
+            if (url.startsWith("predoc-image:")) {
+              const name = url.slice("predoc-image:".length);
+              return localStorage.getItem("predoc:image:" + name) || url;
+            }
+            if (url.startsWith("pending-image:")) {
+              const blobUrl = imageRegistry.getBlobUrl(url.slice("pending-image:".length));
+              if (blobUrl) return blobUrl;
+            }
+            const provider = getProvider();
+            const resolved = provider.resolveImageUrl?.(url);
+            if (resolved) return resolved;
             return `/uploads/${self.currentPathDir()}/${url}`;
           },
         }));

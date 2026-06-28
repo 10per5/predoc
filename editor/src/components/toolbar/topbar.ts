@@ -19,7 +19,7 @@ import {
 import { mountFileMenu } from "./file-menu"
 
 export interface TopbarAPI {
-  updateCounter(count: number, totalBytes: number): void
+  updateCounter(count: number, totalBytes: number, pendingCount?: number): void
   setDirtyState(hasDirty: boolean): void
   setProviderBadge(icon: string, label: string): void
   setProviderType(type: string): void
@@ -36,6 +36,7 @@ export function mountTopbar(
     onViewChange: (view: ViewType) => void
     onSave?: () => void
     onLoad?: () => void
+    onImageManager?: () => void
     onToggleSidebar?: () => void
     onToggleMetaPanel?: () => void
   },
@@ -136,25 +137,33 @@ export function mountTopbar(
         onViewChange: callbacks.onViewChange,
         onSave: callbacks.onSave,
         onLoad: callbacks.onLoad,
+        onImageManager: callbacks.onImageManager,
       })
     : null
 
   return {
-    updateCounter(count: number, totalBytes: number) {
+    updateCounter(count: number, totalBytes: number, pendingCount: number = 0) {
       const el = document.getElementById(counterId)
       if (!el) return
-      if (count === 0) {
+      if (count === 0 && pendingCount === 0) {
         el.textContent = ""
         el.classList.toggle("clickable", false)
         return
       }
-      const sign = totalBytes >= 0 ? "+" : "-"
-      const abs = Math.abs(totalBytes)
-      const size = abs < 1024
-        ? `${sign}${abs} B`
-        : `${sign}${(abs / 1024).toFixed(1)} KB`
-      const color = totalBytes > 0 ? colors.green : totalBytes < 0 ? colors.danger : 'inherit'
-      el.innerHTML = `<div class="dirty-count">${count} unsaved</div><div class="dirty-size" style="color:${color}">${size}</div>`
+      const parts: string[] = []
+      if (count > 0) {
+        const sign = totalBytes >= 0 ? "+" : "-"
+        const abs = Math.abs(totalBytes)
+        const size = abs < 1024
+          ? `${sign}${abs} B`
+          : `${sign}${(abs / 1024).toFixed(1)} KB`
+        const color = totalBytes > 0 ? colors.green : totalBytes < 0 ? colors.danger : 'inherit'
+        parts.push(`<span>${count} unsaved</span><span style="color:${color};font-size:0.7rem;margin-left:4px">${size}</span>`)
+      }
+      if (pendingCount > 0) {
+        parts.push(`<span style="color:#856404;font-size:0.7rem">${pendingCount} pending</span>`)
+      }
+      el.innerHTML = `<div style="display:flex;gap:6px;align-items:center">${parts.join('<span style="color:#ccc">|</span>')}</div>`
       el.classList.toggle("clickable", true)
     },
     setDirtyState(hasDirty: boolean) {

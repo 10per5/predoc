@@ -16,6 +16,7 @@ import { showToast } from "../components/toast/toast";
 import { cache } from "../cache";
 import { editorSelfBase } from "../config";
 import { pushPath, replacePath } from "../../lib/url";
+import type { CacheManagementService } from "./cache-management-service";
 
 export interface NavigationCallbacks {
   onBeforeNavigate?: (path: string) => void;
@@ -35,9 +36,14 @@ export class NavigationService {
   private loading: boolean = false;
   private emptyTreePrompted: boolean = false;
   private callbacks: NavigationCallbacks;
+  private cacheService!: CacheManagementService;
 
   constructor(callbacks: NavigationCallbacks = {}) {
     this.callbacks = callbacks;
+  }
+
+  setCacheService(service: CacheManagementService): void {
+    this.cacheService = service;
   }
 
   /**
@@ -121,10 +127,13 @@ export class NavigationService {
         return;
       }
 
+      // Apply pending operations to the tree for display
+      const displayTree = this.cacheService.applyPendingOpsToTree(sidebarCache);
+
       const actions: SidebarActions = {
         onNavigate: (path) => onNavigate(path),
         onNewPage: (parentPath) =>
-          createPage(parentPath, (p) => onNavigate(p), () => this.loadSidebar(onNavigate, onUpdateMention)),
+          createPage(this.cacheService, parentPath, (p) => onNavigate(p), () => this.loadSidebar(onNavigate, onUpdateMention)),
         onDelete: (path) => this.deletePage(path, onNavigate),
         onRename: (path) => this.renamePage(path, onNavigate),
         onMove: (from, to) => this.movePage(from, to, onNavigate),
@@ -132,10 +141,10 @@ export class NavigationService {
       };
 
       const pdi = getProviderDisplayInfo(provider.name);
-      mountSidebar(sidebarEl, sidebarCache, this.currentPath, actions, pdi.icon, pdi.label, provider.name);
+      mountSidebar(sidebarEl, displayTree, this.currentPath, actions, pdi.icon, pdi.label, provider.name);
       setupNavListeners((path: string) => onNavigate(path));
 
-      const pages = collectPageList(sidebarCache);
+      const pages = collectPageList(displayTree);
       onUpdateMention?.(pages, {});
     } catch (error) {
       console.error("Failed to load sidebar:", error);
@@ -175,7 +184,7 @@ export class NavigationService {
    * Delete a page
    */
   async deletePage(pagePath: string, onNavigate: (path: string) => void): Promise<void> {
-    await deletePage(pagePath, () => {
+    await deletePage(this.cacheService, pagePath, () => {
       cache.clearPath(pagePath);
       cache.sync();
 
@@ -187,6 +196,7 @@ export class NavigationService {
 
       this.callbacks.onPageDeleted?.();
       this.callbacks.onUpdateUI?.();
+      this.cacheService.updateDirtyCounter();
     });
   }
 
@@ -194,7 +204,7 @@ export class NavigationService {
    * Rename a page
    */
   async renamePage(pagePath: string, onNavigate: (path: string) => void): Promise<void> {
-    await renamePage(pagePath, (newPath) => {
+    await renamePage(this.cacheService, pagePath, (newPath) => {
       if (newPath == null) return;
 
       cache.clearPath(pagePath);
@@ -208,6 +218,7 @@ export class NavigationService {
 
       this.callbacks.onPageRenamed?.();
       this.callbacks.onUpdateUI?.();
+      this.cacheService.updateDirtyCounter();
     });
   }
 
@@ -215,7 +226,7 @@ export class NavigationService {
    * Move a page
    */
   async movePage(from: string, to: string, onNavigate: (path: string) => void): Promise<void> {
-    await movePage(from, to, () => {
+    await movePage(this.cacheService, from, to, () => {
       cache.clearPath(from);
       cache.sync();
 
@@ -227,6 +238,7 @@ export class NavigationService {
       this.callbacks.onPageMoved?.();
       this.callbacks.onSidebarReload?.();
       this.callbacks.onUpdateUI?.();
+      this.cacheService.updateDirtyCounter();
     });
   }
 
