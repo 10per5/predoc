@@ -19,6 +19,7 @@ import { mountImageManagerDialog } from "../components/dialogs/image-manager-dia
 import { showToast } from "../components/toast/toast";
 import { loadPrefs } from "../storage";
 import { PathService } from "../services/path-service";
+import { imageRegistry } from "../services/image-registry";
 
 function flattenTree(node: TreeNode, prefix = ""): string[] {
   const paths: string[] = []
@@ -48,6 +49,7 @@ export default class extends Controller {
   private navService!: NavigationService;
   private topbar!: TopbarAPI;
   private metaPanel!: MetaPanelAPI;
+  private onBeforeUnload: (() => void) | null = null;
 
   async connect() {
     const initialPath = this.data.get("path")
@@ -56,10 +58,17 @@ export default class extends Controller {
     this.uiService = UIService.getInstance();
     this.uiInitializer = new UIInitializerService();
 
+    // Restore pending images from IndexedDB (recreates blob URLs)
+    try { await imageRegistry.restoreFromStorage() } catch {}
+
+    let syncTimer: ReturnType<typeof setTimeout> | null = null
+
     this.editorService = new EditorService({
       onContentChange: (content) => {
         cache.setBody(this.navService.getCurrentPath(), content);
         this.cacheService?.updateDirtyCounter();
+        if (syncTimer) clearTimeout(syncTimer)
+        syncTimer = setTimeout(() => cache.sync(), 500)
       },
       onDirtyChange: () => this.cacheService?.updateDirtyCounter(),
     });
@@ -72,10 +81,15 @@ export default class extends Controller {
         this.topbar?.setDirtyState(count > 0 || (pendingCount ?? 0) > 0);
       },
       onFlushComplete: () => this.loadSidebar(),
+      onSidebarReload: () => this.loadSidebar(),
       onNavigate: (path) => this.navService?.navigate(path),
       onContentReload: (path, body) => this.editorService.ensureEditor(body),
     });
     this.cacheService.setCurrentPath(initialPath);
+
+    // Sync to localStorage before page unload
+    this.onBeforeUnload = () => { cache.sync() }
+    window.addEventListener("beforeunload", this.onBeforeUnload)
 
     this.toolbarService = new ToolbarService({ stickyToolbar: loadPrefs().stickyToolbar });
     this.toolbarService.initialize();
@@ -181,6 +195,7 @@ export default class extends Controller {
   }
 
   disconnect() {
+    if (this.onBeforeUnload) window.removeEventListener("beforeunload", this.onBeforeUnload)
     this.toolbarService?.destroy();
     this.uiService?.destroy();
     this.editorService?.destroy();

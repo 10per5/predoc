@@ -5,6 +5,7 @@ export class FileSystemProvider implements ContentProvider {
   readonly name = "fs"
   private dirHandle: FileSystemDirectoryHandle | null = null
   private imageUrlCache = new Map<string, string>()
+  private currentDir: string = ""
 
   async init(): Promise<void> {
     if (this.dirHandle) return
@@ -28,7 +29,7 @@ export class FileSystemProvider implements ContentProvider {
           out[entry.name] = children
         }
       } else if (entry.name.endsWith(".md")) {
-        const file = await entry.getFile()
+        const file = await (entry as FileSystemFileHandle).getFile()
         const text = await file.text()
         const match = text.match(/^---\n([\s\S]*?)\n---/)
         if (match) {
@@ -160,15 +161,21 @@ export class FileSystemProvider implements ContentProvider {
     await writable.write(file)
     await writable.close()
     const blobUrl = URL.createObjectURL(file)
-    this.imageUrlCache.set(relPath, blobUrl)
+    this.imageUrlCache.set(`${dir}/${relPath}`, blobUrl)
     return relPath
   }
 
   resolveImageUrl(url: string): string | undefined {
-    return this.imageUrlCache.get(url)
+    const exact = this.imageUrlCache.get(url)
+    if (exact) return exact
+    if (this.currentDir) {
+      return this.imageUrlCache.get(`${this.currentDir}/${url}`)
+    }
+    return undefined
   }
 
   async listImages(dir: string, refs?: boolean): Promise<ImageEntry[]> {
+    this.currentDir = dir
     let imageDir: FileSystemDirectoryHandle
     try {
       imageDir = await this.ensureImageDir(dir)
@@ -189,18 +196,22 @@ export class FileSystemProvider implements ContentProvider {
     imageNames.sort()
 
     const scanDir = dir ? dir : ""
-    const mdFiles = refs ? await this.collectMdFiles(scanDir) : []
+    const mdFiles = refs ? await this.collectMdFiles(scanDir) : new Map<string, string>()
 
     for (const name of imageNames) {
       const storageUrl = `image/${name}`
-      let displayUrl = this.imageUrlCache.get(storageUrl)
+      const cacheKey = `${dir}/${storageUrl}`
+      let displayUrl = this.imageUrlCache.get(cacheKey)
+      if (!displayUrl) {
+        displayUrl = this.imageUrlCache.get(storageUrl)
+      }
       if (!displayUrl) {
         try {
           const imageDir = await this.ensureImageDir(dir)
           const fileHandle = await imageDir.getFileHandle(name)
           const file = await fileHandle.getFile()
           displayUrl = URL.createObjectURL(file)
-          this.imageUrlCache.set(storageUrl, displayUrl)
+          this.imageUrlCache.set(cacheKey, displayUrl)
         } catch {
           displayUrl = ""
         }

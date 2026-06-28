@@ -1,7 +1,7 @@
 import { html, render } from "lit-html";
 import { editorSelfBase, liveUrlBase, isDev } from "../../config";
 import { liveIcon } from "../icons";
-import { buildEditorUrl } from "../../../lib/url";
+import { buildEditorUrl } from "../../utils/url";
 
 export interface PageNode {
   weight?: number;

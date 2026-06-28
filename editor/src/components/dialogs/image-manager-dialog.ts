@@ -1,8 +1,21 @@
 import { html, render } from "lit-html"
-import { listImages, deleteImage, getCurrentDocDir } from "../../services/image-config"
+import { listImages, deleteImage, getCurrentDocDir, getAllImages } from "../../services/image-config"
 import { showToast } from "../toast/toast"
 
-function showMiniWindow(title: string, body: unknown, actions: unknown): { overlay: HTMLElement; close: () => void } {
+export async function mountImageManagerDialog(): Promise<void> {
+  const dir = getCurrentDocDir()
+
+  // Fetch data first, then render once — avoids stale "Loading…" text
+  let entries: Awaited<ReturnType<typeof listImages>> = []
+  let loadError: string | null = null
+  try {
+    entries = await listImages(true)
+  } catch (e: any) {
+    loadError = e.message
+  }
+
+  const allEntries = getAllImages()
+
   const overlayId = "predoc-image-mgr-" + Math.random().toString(36).slice(2)
   const overlay = document.createElement("div")
   overlay.id = overlayId
@@ -19,63 +32,15 @@ function showMiniWindow(title: string, body: unknown, actions: unknown): { overl
     overlay.remove()
   }
 
-  const tmpl = html`
-    <style>
-      .predoc-window { background:#fff;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.2);display:flex;flex-direction:column;max-height:80vh;min-width:520px;max-width:600px; }
-      .predoc-window-header { padding:1rem 1.5rem 0;font-size:1.1rem;font-weight:600;flex-shrink:0; }
-      .predoc-window-body { padding:0.5rem 1.5rem;overflow-y:auto;flex:1; }
-      .predoc-window-actions { display:flex;gap:0.5rem;justify-content:flex-end;padding:0.75rem 1.5rem 1rem;flex-shrink:0; }
-      .predoc-btn { padding:0.4rem 1.2rem;border-radius:4px;cursor:pointer;font-size:0.9rem;border:1px solid #d8dee9;background:#fff;color:#4c566a; }
-      .predoc-btn:hover { background:#e5e9f0; }
-    </style>
-    <div class="predoc-window" @click=${(e: MouseEvent) => e.stopPropagation()}>
-      <div class="predoc-window-header">${title}</div>
-      <div class="predoc-window-body">${body}</div>
-      <div class="predoc-window-actions">${actions}</div>
-    </div>
-  `
-
-  render(tmpl, overlay)
-
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) close()
-  })
-
-  overlay.querySelectorAll(".predoc-window-actions .predoc-btn").forEach(btn => {
-    btn.addEventListener("click", close)
-  })
-
-  return { overlay, close }
-}
-
-export async function mountImageManagerDialog(): Promise<void> {
-  const dir = getCurrentDocDir()
   const title = dir
     ? html`Image Manager <span style="font-weight:400;font-size:0.9rem;color:#888">— ${dir}</span>`
     : "Image Manager"
 
-  const { overlay, close } = showMiniWindow(
-    title,
-    html`<div style="padding:1rem;text-align:center;color:#888">Loading images…</div>`,
-    html`<button class="predoc-btn">Close</button>`,
-  )
-
-  let entries: Awaited<ReturnType<typeof listImages>> = []
-  try {
-    entries = await listImages(true)
-  } catch (e: any) {
-    const body = overlay.querySelector(".predoc-window-body")
-    if (body) body.innerHTML = `<div style="padding:1rem;text-align:center;color:#bf616a">${e.message}</div>`
-    return
-  }
-
-  if (entries.length === 0) {
-    const body = overlay.querySelector(".predoc-window-body")
-    if (body) body.innerHTML = `<div style="padding:1rem;text-align:center;color:#888">No images in this directory</div>`
-    return
-  }
-
-  const bodyTmpl = html`
+  const bodyTmpl = loadError
+    ? html`<div style="padding:1rem;text-align:center;color:#bf616a">${loadError}</div>`
+    : allEntries.length === 0
+    ? html`<div style="padding:1rem;text-align:center;color:#888">No images in this directory</div>`
+    : html`
     <style>
       .img-row {
         display: flex; align-items: stretch; gap: 12px;
@@ -102,13 +67,13 @@ export async function mountImageManagerDialog(): Promise<void> {
       .img-actions button:hover { background: #e5e9f0; }
       .img-actions button.danger:hover { background: #bf616a; color: #fff; border-color: #bf616a; }
     </style>
-    ${entries.map((entry, idx) => html`
+    ${allEntries.map((entry, idx) => html`
       <div class="img-row" data-idx="${idx}">
         <div class="img-thumb">
           <img src="${entry.url}" alt="${entry.name}" @error=${(e: Event) => { (e.target as HTMLImageElement).style.display = "none" }}>
         </div>
         <div class="img-info">
-          <div class="img-name">${entry.name}</div>
+          <div class="img-name">${entry.name}${entry.pending ? html` <span style="color:#856404;font-size:0.7rem">(pending)</span>` : ""}</div>
           <div class="img-used">
             ${entry.usedIn.length > 0 ? html`
               Used in:
@@ -127,45 +92,68 @@ export async function mountImageManagerDialog(): Promise<void> {
     `)}
   `
 
-  const bodyEl = overlay.querySelector(".predoc-window-body")
-  if (bodyEl) render(bodyTmpl, bodyEl)
+  const tmpl = html`
+    <style>
+      .predoc-window { background:#fff;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.2);display:flex;flex-direction:column;max-height:80vh;min-width:520px;max-width:600px; }
+      .predoc-window-header { padding:1rem 1.5rem 0;font-size:1.1rem;font-weight:600;flex-shrink:0; }
+      .predoc-window-body { padding:0.5rem 1.5rem;overflow-y:auto;flex:1; }
+      .predoc-window-actions { display:flex;gap:0.5rem;justify-content:flex-end;padding:0.75rem 1.5rem 1rem;flex-shrink:0; }
+      .predoc-btn { padding:0.4rem 1.2rem;border-radius:4px;cursor:pointer;font-size:0.9rem;border:1px solid #d8dee9;background:#fff;color:#4c566a; }
+      .predoc-btn:hover { background:#e5e9f0; }
+    </style>
+    <div class="predoc-window" @click=${(e: MouseEvent) => e.stopPropagation()}>
+      <div class="predoc-window-header">${title}</div>
+      <div class="predoc-window-body">${bodyTmpl}</div>
+      <div class="predoc-window-actions"><button class="predoc-btn">Close</button></div>
+    </div>
+  `
 
-  overlay.querySelectorAll('[data-action="review"]').forEach(btn => {
-    btn.addEventListener("click", () => {
-      const url = (btn as HTMLElement).dataset.url
-      if (url) window.open(url, "_blank")
-    })
+  render(tmpl, overlay)
+
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) close()
   })
 
-  overlay.querySelectorAll('[data-action="delete"]').forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const name = (btn as HTMLElement).dataset.name
-      if (!name) return
-      if (!confirm(`Delete "${name}"?`)) return
-      try {
-        await deleteImage(name)
-        const row = btn.closest(".img-row") as HTMLElement
-        row.remove()
-        const remaining = overlay.querySelectorAll(".img-row").length
-        if (remaining === 0) {
-          showToast("All images deleted")
-          close()
-        }
-        showToast(`Deleted ${name}`)
-      } catch (e: any) {
-        showToast(`Failed to delete: ${e.message}`)
-      }
-    })
-  })
+  overlay.querySelector(".predoc-window-actions .predoc-btn")?.addEventListener("click", close)
 
-  overlay.querySelectorAll('[data-action="copy"]').forEach(btn => {
-    btn.addEventListener("click", () => {
-      const storage = (btn as HTMLElement).dataset.storage
-      if (!storage) return
-      const embed = `![](${storage})`
-      navigator.clipboard.writeText(embed).then(() => {
-        showToast("Copied to clipboard")
+  if (!loadError && allEntries.length > 0) {
+    overlay.querySelectorAll('[data-action="review"]').forEach(btn => {
+      btn.addEventListener("click", () => {
+        const url = (btn as HTMLElement).dataset.url
+        if (url) window.open(url, "_blank")
       })
     })
-  })
+
+    overlay.querySelectorAll('[data-action="delete"]').forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const name = (btn as HTMLElement).dataset.name
+        if (!name) return
+        if (!confirm(`Delete "${name}"?`)) return
+        try {
+          await deleteImage(name)
+          const row = btn.closest(".img-row") as HTMLElement
+          row.remove()
+          const remaining = overlay.querySelectorAll(".img-row").length
+          if (remaining === 0) {
+            showToast("All images deleted")
+            close()
+          }
+          showToast(`Deleted ${name}`)
+        } catch (e: any) {
+          showToast(`Failed to delete: ${e.message}`)
+        }
+      })
+    })
+
+    overlay.querySelectorAll('[data-action="copy"]').forEach(btn => {
+      btn.addEventListener("click", () => {
+        const storage = (btn as HTMLElement).dataset.storage
+        if (!storage) return
+        const embed = `![](${storage})`
+        navigator.clipboard.writeText(embed).then(() => {
+          showToast("Copied to clipboard")
+        })
+      })
+    })
+  }
 }

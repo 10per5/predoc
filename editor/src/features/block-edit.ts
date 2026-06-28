@@ -125,7 +125,7 @@ class BlockHandleView {
     tr.setSelection(TextSelection.near(tr.doc.resolve(pos)));
     view.dispatch(tr.scrollIntoView());
     this.#provider.hide();
-    ctx.get(menuAPI.key as any).show(tr.selection.from);
+    (ctx.get(menuAPI.key) as any).show(tr.selection.from);
   };
 }
 
@@ -205,7 +205,7 @@ class SlashView {
           self.renderItems();
           return true;
         }
-        const text = this.getContent(view, (node) =>
+        const text = (this as any).getContent(view, (node: any) =>
           ["paragraph", "heading"].includes(node.type.name),
         );
         if (text == null) return false;

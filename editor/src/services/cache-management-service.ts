@@ -14,12 +14,14 @@ import { getProvider } from "../content/provider-registry";
 import { commitAllPendingImages, replacePendingUrls } from "./image-config";
 import { applyPendingOps, type PendingOp } from "../utils/tree";
 import type { TreeNode } from "../components/panels/sidebar";
+import { savePendingOps, loadPendingOps, clearPendingOpsStorage } from "../storage";
 
 export interface CacheCallbacks {
   getCurrentContent?: () => string;
   onFlushComplete?: () => void;
   onDiscardComplete?: () => void;
   onDirtyCountChanged?: (count: number, bytes: number, pendingCount: number) => void;
+  onSidebarReload?: () => void;
   onNavigate?: (path: string) => void;
   onContentReload?: (path: string, content: string) => Promise<void>;
 }
@@ -31,28 +33,40 @@ export class CacheManagementService {
 
   constructor(callbacks: CacheCallbacks = {}) {
     this.callbacks = callbacks;
+    const saved = loadPendingOps<PendingOp[]>()
+    if (Array.isArray(saved) && saved.length > 0) {
+      this.pendingOps = saved
+    }
   }
 
   setCurrentPath(path: string): void {
     this.currentPath = path;
   }
 
+  private persistPendingOps(): void {
+    savePendingOps(this.pendingOps)
+  }
+
   // ── Pending Operations ──
 
   queueCreate(path: string, content: string): void {
     this.pendingOps.push({ type: "create", path, content });
+    this.persistPendingOps()
   }
 
   queueDelete(path: string): void {
     this.pendingOps.push({ type: "delete", path });
+    this.persistPendingOps()
   }
 
   queueRename(from: string, to: string): void {
     this.pendingOps.push({ type: "rename", from, to });
+    this.persistPendingOps()
   }
 
   queueMove(from: string, to: string): void {
     this.pendingOps.push({ type: "move", from, to });
+    this.persistPendingOps()
   }
 
   getPendingOps(): PendingOp[] {
@@ -65,6 +79,7 @@ export class CacheManagementService {
 
   clearPendingOps(): void {
     this.pendingOps = [];
+    clearPendingOpsStorage()
   }
 
   applyPendingOpsToTree(tree: TreeNode): TreeNode {
@@ -122,6 +137,7 @@ export class CacheManagementService {
     }
 
     this.pendingOps = [];
+    clearPendingOpsStorage()
   }
 
   // ── Flush ──
@@ -305,6 +321,7 @@ export class CacheManagementService {
           this.clearPendingOps();
           cache.sync();
           this.updateDirtyCounter();
+          this.callbacks.onSidebarReload?.();
 
           if (paths.includes(this.currentPath)) {
             const raw = (await provider?.readFile(this.currentPath)) || "";

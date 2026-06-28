@@ -15,7 +15,7 @@ import { mountProviderDialog } from "../components/dialogs/provider-dialog";
 import { showToast } from "../components/toast/toast";
 import { cache } from "../cache";
 import { editorSelfBase } from "../config";
-import { pushPath, replacePath } from "../../lib/url";
+import { pushPath, replacePath } from "../utils/url";
 import type { CacheManagementService } from "./cache-management-service";
 
 export interface NavigationCallbacks {

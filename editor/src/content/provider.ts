@@ -1,4 +1,6 @@
-export type TreeNode = Record<string, null | { weight: number } | TreeNode>
+export interface TreeNode {
+  [key: string]: null | { weight: number } | TreeNode
+}
 
 export interface ImageEntry {
   name: string

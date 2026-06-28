@@ -50,9 +50,9 @@ export class UIInitializerService {
           },
         });
       },
-      onDirtyClick: options.onDirtyClick,
-      onChangeProvider: options.onChangeProvider,
-      onViewChange: options.onViewChange,
+      onDirtyClick: options.onDirtyClick ?? undefined,
+      onChangeProvider: options.onChangeProvider ?? (() => {}),
+      onViewChange: options.onViewChange ?? (() => {}),
       onSave: options.onSave,
       onLoad: options.onLoad,
       onImageManager: options.onImageManager,

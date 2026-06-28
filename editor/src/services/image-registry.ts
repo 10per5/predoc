@@ -1,3 +1,5 @@
+import { savePendingImage, loadAllPendingImages, removePendingImageById, clearAllPendingImages } from "./pending-images-db"
+
 interface PendingImage {
   id: string
   file: File
@@ -17,12 +19,27 @@ class ImageRegistry {
   private knownByDir = new Map<string, KnownImage[]>()
   private counter = 0
 
-  addPending(file: File, dir: string): string {
+  async restoreFromStorage(): Promise<void> {
+    const records = await loadAllPendingImages()
+    for (const r of records) {
+      const blobUrl = URL.createObjectURL(r.file)
+      const list = this.pendingByDir.get(r.dir) || []
+      list.push({ id: r.id, file: r.file, blobUrl, dir: r.dir })
+      this.pendingByDir.set(r.dir, list)
+      if (r.id.startsWith("pi-")) {
+        const num = parseInt(r.id.slice(3), 10)
+        if (num > this.counter) this.counter = num
+      }
+    }
+  }
+
+  async addPending(file: File, dir: string): Promise<string> {
     const id = `pi-${++this.counter}`
     const blobUrl = URL.createObjectURL(file)
     const list = this.pendingByDir.get(dir) || []
     list.push({ id, file, blobUrl, dir })
     this.pendingByDir.set(dir, list)
+    try { await savePendingImage({ id, dir, file }) } catch {}
     return blobUrl
   }
 
@@ -53,28 +70,33 @@ class ImageRegistry {
       const url = await upload(p.file, dir)
       urlMap.set(p.blobUrl, url)
       URL.revokeObjectURL(p.blobUrl)
+      try { await removePendingImageById(p.id) } catch {}
     }
     this.pendingByDir.delete(dir)
     return urlMap
   }
 
-  removePending(id: string): boolean {
+  async removePending(id: string): Promise<boolean> {
     for (const [dir, list] of this.pendingByDir) {
       const idx = list.findIndex(p => p.id === id)
       if (idx !== -1) {
         URL.revokeObjectURL(list[idx].blobUrl)
         list.splice(idx, 1)
         if (list.length === 0) this.pendingByDir.delete(dir)
+        try { await removePendingImageById(id) } catch {}
         return true
       }
     }
     return false
   }
 
-  removeAllForDir(dir: string): void {
+  async removeAllForDir(dir: string): Promise<void> {
     const list = this.pendingByDir.get(dir)
     if (list) {
-      list.forEach(p => URL.revokeObjectURL(p.blobUrl))
+      for (const p of list) {
+        URL.revokeObjectURL(p.blobUrl)
+        try { await removePendingImageById(p.id) } catch {}
+      }
       this.pendingByDir.delete(dir)
     }
   }

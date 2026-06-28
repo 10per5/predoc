@@ -1,5 +1,6 @@
 const STORAGE_KEY = "predoc-storage";
 const PREFS_KEY = "predoc-prefs";
+const PENDING_OPS_KEY = "predoc-pending-ops";
 
 export interface WikiStorage {
   patches: [string, string][];
@@ -49,6 +50,22 @@ export function loadStorage(): WikiStorage {
 
 export function saveStorage(storage: WikiStorage) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
+}
+
+export function savePendingOps(ops: unknown[]): void {
+  try { localStorage.setItem(PENDING_OPS_KEY, JSON.stringify(ops)) } catch {}
+}
+
+export function loadPendingOps<T = unknown[]>(): T {
+  try {
+    const raw = localStorage.getItem(PENDING_OPS_KEY)
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return [] as unknown as T
+}
+
+export function clearPendingOpsStorage(): void {
+  localStorage.removeItem(PENDING_OPS_KEY)
 }
 
 /** Clear all cached storage data from localStorage. Useful when switching to/from localStorage provider. */

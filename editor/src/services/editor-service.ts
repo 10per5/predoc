@@ -86,6 +86,7 @@ export class EditorService {
       ? path.substring(0, path.lastIndexOf("/"))
       : "";
     setCurrentDocDir(dir);
+    getProvider().listImages?.(dir, false).catch(() => {});
   }
 
   /**
@@ -238,7 +239,7 @@ export class EditorService {
         ctx.update(dropIndicatorConfig.key, () => ({
           class: "predoc-drop-cursor",
           width: 4,
-          color: false,
+          color: false as const,
         }));
 
         ctx.update(remarkStringifyOptionsCtx, (prev) => ({
