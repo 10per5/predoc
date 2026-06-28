@@ -1,0 +1,64 @@
+.milkdown-slash {
+  position: absolute;
+  z-index: 100;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  min-width: 220px;
+}
+
+.milkdown-slash[data-show="false"] {
+  display: none;
+}
+
+.milkdown-slash[data-show="true"] {
+  display: block;
+}
+
+@media (max-width: 767px) {
+  .milkdown-slash {
+    min-width: 200px;
+    max-width: calc(100vw - 2rem);
+    font-size: var(--font-size-small);
+  }
+}
+
+.slash-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.slash-item:hover,
+.slash-item:focus {
+  background: var(--color-bg-tertiary);
+}
+
+@media (max-width: 767px) {
+  .slash-item {
+    padding: 8px 10px;
+  }
+}
+
+.slash-icon {
+  display: flex;
+  align-items: center;
+  width: 20px;
+  height: 20px;
+}
+
+.slash-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.slash-label {
+  color: #3b4252;
+}
