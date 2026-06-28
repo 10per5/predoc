@@ -117,6 +117,10 @@
   gap: 2px;
 }
 
+.toolbar-section-left {
+  position: relative;
+}
+
 .toolbar-spacer {
   flex: 1;
 }

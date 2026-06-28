@@ -1,6 +1,5 @@
 .milkdown-block-handle {
   position: absolute;
-  z-index: 200;
   display: flex;
   gap: 2px;
   cursor: grab;

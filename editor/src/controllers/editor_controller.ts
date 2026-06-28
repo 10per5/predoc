@@ -63,7 +63,10 @@ export default class extends Controller {
     this.toolbarService.initialize();
 
     this.viewService = new ViewManagementService(
-      { onSourceMode: () => this.editorService.isSourceMode() },
+      {
+        onSourceMode: () => this.editorService.isSourceMode(),
+        onViewChanged: (view) => this.topbar?.setView(view),
+      },
       sessionStarted
     );
 
