@@ -143,7 +143,7 @@ jobs:
 
       - name: Build editor
         run: |
-          predep --privileged 8b3575cc6ee390d2d388ac0677de168f511c3bbd0c9e9568378fde7db86c0622 build
+          predep --privileged 2fccfa440e3a112b6e31c6ae4a9360e50304d4cd2cac6cab9d732998a0ad727a build
         working-directory: editor
 
       - name: Package via predep
@@ -176,4 +176,4 @@ jobs:
           tag_name: ${{ steps.version.outputs.version }}
           name: ${{ steps.version.outputs.version }}
           files: predoc-windows-x86_64.zip
-          generate_release_notes: true
+          generate_release_notes: false

@@ -14,7 +14,7 @@ type = "binary"
 binary = "bun"
 depends = ["build-install"]
 outputs = ["root://public/"]
-args = ["run build"]
+args = ["run", "build"]
 
 [[stages]]
 name = "docker"

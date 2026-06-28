@@ -86,7 +86,7 @@ RUN curl -sL \
 # ── Layer 7: vendor deps (busts only on predep.toml changes) ──────────
 WORKDIR /build
 COPY predep.toml ./
-RUN predep vendor --privileged c3e4dad31f63abc60f89e385b289c7077509f8abfc7acbb16601601b6b7f9d1e 
+RUN predep vendor --privileged 4dcd8fa19807b4e88036493f79f5520ccb2e2356388454164b77062cef2f4751 
 
 # ── Layer 8: predoc-gui binary (busts on premake5.lua or src/ changes) ──
 COPY premake5.lua ./

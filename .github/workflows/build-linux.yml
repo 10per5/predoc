@@ -1,0 +1,183 @@
+name: Build Linux GUI
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  SAUCER_DIR: vendor/saucer
+  SAUCER_COMMIT: 811cd2f8ee7044d7143fc8d36b9ceaaef878de39
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: debian:trixie-slim
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache apt packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt
+          key: apt-trixie-qt6-20260411
+          restore-keys: apt-trixie-qt6-
+
+      - name: Install system dependencies
+        run: |
+          apt-get update
+          apt-get install -y \
+            build-essential \
+            ninja-build \
+            git \
+            pkg-config \
+            wget \
+            qt6-base-dev \
+            qt6-webengine-dev \
+            libgtk-4-dev \
+            libadwaita-1-dev \
+            ca-certificates \
+            curl \
+            unzip
+          echo "deb http://deb.debian.org/debian sid main" > /etc/apt/sources.list.d/sid.list
+          printf 'Package: *\nPin: release a=sid\nPin-Priority: 100\n' > /etc/apt/preferences.d/sid.pref
+          apt-get update
+          apt-get install -y -t sid g++-15
+          ldconfig
+
+      - name: Cache CMake
+        id: cache-cmake
+        uses: actions/cache@v4
+        with:
+          path: /usr/local/cmake
+          key: cmake-4.4.0-rc1-linux
+
+      - name: Install CMake
+        if: steps.cache-cmake.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p /usr/local/cmake
+          wget -qO- 'https://github.com/Kitware/CMake/releases/download/v4.4.0-rc1/cmake-4.4.0-rc1-linux-x86_64.tar.gz' \
+            | tar xz --strip-components=1 -C /usr/local/cmake
+
+      - name: Add CMake to PATH
+        run: echo "/usr/local/cmake/bin" >> $GITHUB_PATH
+
+      - name: Install premake5
+        run: |
+          wget -qO- 'https://github.com/premake/premake-core/releases/download/v5.0.0-beta8/premake-5.0.0-beta8-linux.tar.gz' \
+            | tar xz -C /usr/local/bin premake5
+          chmod +x /usr/local/bin/premake5
+
+      - name: Cache Saucer source
+        id: cache-saucer-src
+        uses: actions/cache@v4
+        with:
+          path: /tmp/saucer-src
+          key: saucer-src-${{ env.SAUCER_COMMIT }}
+
+      - name: Cache Saucer build
+        id: cache-saucer
+        uses: actions/cache@v4
+        with:
+          path: gui/${{ env.SAUCER_DIR }}
+          key: saucer-linux-${{ env.SAUCER_COMMIT }}-${{ env.SAUCER_DIR }}
+
+      - name: Build Saucer
+        if: steps.cache-saucer.outputs.cache-hit != 'true'
+        run: |
+          if [ ! -d /tmp/saucer-src/.git ]; then
+            git clone https://github.com/saucer/saucer.git /tmp/saucer-src
+          fi
+          cd /tmp/saucer-src
+          git fetch --depth 1 origin $SAUCER_COMMIT
+          git checkout $SAUCER_COMMIT
+          sed -i 's|value_or({native::id\.data()})|value_or(decltype(native::argv){native::id.data()})|' src/qt.app.cpp
+          grep -q 'decltype(native::argv){native::id.data()}' src/qt.app.cpp
+          sed -i 's|return from({std::from_range, data()});|return from(vec(data().begin(), data().end()));|' src/stash.cpp
+          grep -q 'return from(vec(data().begin(), data().end()));' src/stash.cpp
+          absSaucerDir="$GITHUB_WORKSPACE/gui/$SAUCER_DIR"
+          cmake -B /tmp/saucer-build -G Ninja -S . \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$absSaucerDir" \
+            -DCMAKE_CXX_FLAGS="-mno-direct-extern-access" \
+            -DSAUCER_USE_QTWEBENGINE=ON \
+            -Dsaucer_backend=Qt
+          cmake --build /tmp/saucer-build -j "$(nproc)"
+          mkdir -p "$absSaucerDir/lib" "$absSaucerDir/include"
+          cp -v /tmp/saucer-build/libsaucer.a "$absSaucerDir/lib/"
+          cp -v /tmp/saucer-build/_deps/coco-build/libcoco.a "$absSaucerDir/lib/" 2>/dev/null
+          cp -r /tmp/saucer-src/include/* "$absSaucerDir/include/"
+          for d in /tmp/saucer-build/_deps/*/include/; do
+            [ -d "$d" ] && cp -r "$d"/* "$absSaucerDir/include/" 2>/dev/null
+          done
+
+      - name: Install predep
+        run: |
+          wget -qO- 'https://github.com/10per5/predep/releases/download/v0.0.1/predep-linux-x86_64.tar.gz' \
+            | tar xz -C /usr/local/bin
+          predep --help > /dev/null
+
+      - name: Build predoc-gui
+        env:
+          CC: gcc-15
+          CXX: g++-15
+          CXXFLAGS: "-std=c++23 -mno-direct-extern-access"
+        run: |
+          predep --privileged 4dcd8fa19807b4e88036493f79f5520ccb2e2356388454164b77062cef2f4751 build 
+          make config=redist -j "$(nproc)"
+        working-directory: gui
+
+      - name: Install bun
+        run: |
+          curl -fsSL https://bun.sh/install.sh | bash
+          echo "$HOME/.bun/bin" >> $GITHUB_PATH
+
+      - name: Build editor
+        run: |
+          predep --privileged 2fccfa440e3a112b6e31c6ae4a9360e50304d4cd2cac6cab9d732998a0ad727a build
+        working-directory: editor
+
+      - name: Package via predep
+        run: |
+          predep --privileged 942aeb72b04c747d837d96bd218a9fde88482254c32cb39be613d05bf28d3dc2 package
+        working-directory: ${{ github.workspace }}
+
+      - name: Read version
+        id: version
+        run: |
+          msg="${{ github.event.head_commit.message }}"
+          ver=$(echo "$msg" | grep -oP 'v[0-9]+\.[0-9]+\.[0-9]+(?=p[0-9]+|$)' | head -n 1)
+          if [ -z "$ver" ]; then
+            ver="dev"
+          fi
+          echo "version=$ver" >> $GITHUB_OUTPUT
+
+      # - name: Upload artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: predoc-linux-x64-${{ steps.version.outputs.version }}
+      #     path: predoc-*.tar.gz
+      #     if-no-files-found: error
+
+      - name: Create GitHub Release
+        if: steps.version.outputs.version != 'dev'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: ${{ steps.version.outputs.version }}
+          files: predoc-*.tar.gz
+          generate_release_notes: false
+          body: |
+            ## Release ${{ steps.version.outputs.version }}
+            This release was automatically triggered by commit: ${{ github.sha }}
+
+            ### Changes:
+            - [View commit history for this release](https://github.com/10per5/predoc/commits/${{ github.ref_name }})
