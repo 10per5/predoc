@@ -176,4 +176,4 @@ jobs:
           tag_name: ${{ steps.version.outputs.version }}
           name: ${{ steps.version.outputs.version }}
           files: predoc-windows-x86_64.zip
-          generate_release_notes: true
+          generate_release_notes: false
