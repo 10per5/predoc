@@ -31,6 +31,7 @@ import {
   todoListIcon,
   imageIcon,
 } from "../components/icons";
+import { getAllImages, uploadImage, listImages } from "../services/image-config";
 
 const slash = slashFactory("predoc");
 
@@ -141,6 +142,9 @@ class SlashView {
   private filterText = "";
   #programmaticPos: number | null = null;
   #programmaticActive = false;
+  #imageSlashStart: number = -1;
+  #editState: { type: "create" } | { type: "edit"; pos: number; src: string } | null = null;
+  #imageMode = false;
 
   constructor(view: EditorView, ctx: Ctx) {
     this.view = view;
@@ -185,6 +189,11 @@ class SlashView {
         this.provider.hide();
       }
     };
+    view.dom.addEventListener("predoc:edit-image", ((e: CustomEvent) => {
+      const { pos, src } = e.detail;
+      this.openImageEditor(pos, src);
+    }) as EventListener);
+
     document.addEventListener("keydown", this.handleKeydown, true);
 
     const self = this;
@@ -192,21 +201,26 @@ class SlashView {
       content: this.content,
       debounce: 20,
       shouldShow(view) {
-        if (typeof self.#programmaticPos === "number") {
-          const maxSize = view.state.doc.nodeSize - 2;
-          const validPos = Math.min(self.#programmaticPos, maxSize);
-          if (
-            view.state.doc.resolve(validPos).node() !==
-            view.state.doc.resolve(view.state.selection.from).node()
-          ) {
+          if (typeof self.#programmaticPos === "number") {
+            const maxSize = view.state.doc.nodeSize - 2;
+            const validPos = Math.min(self.#programmaticPos, maxSize);
+            if (
+              view.state.doc.resolve(validPos).node() !==
+              view.state.doc.resolve(view.state.selection.from).node()
+            ) {
+              self.#programmaticPos = null;
+              self.#imageMode = false;
+              return false;
+            }
             self.#programmaticPos = null;
-            return false;
+            if (self.#imageMode) {
+              self.#imageMode = false;
+              return true;
+            }
+            self.filterText = "";
+            self.renderItems();
+            return true;
           }
-          self.#programmaticPos = null;
-          self.filterText = "";
-          self.renderItems();
-          return true;
-        }
         const text = (this as any).getContent(view, (node: any) =>
           ["paragraph", "heading"].includes(node.type.name),
         );
@@ -274,6 +288,55 @@ class SlashView {
     const isProgrammatic = this.#programmaticActive;
     this.#programmaticActive = false;
 
+    // Image picker commands
+    if (cmd === "image-select") {
+      const url = item.dataset.url || "";
+      if (url) this.confirmImageUrl(url);
+      return;
+    }
+    if (cmd === "image-url-submit") {
+      const input = this.content.querySelector(".slash-url-input") as HTMLInputElement;
+      const url = input?.value.trim() || "";
+      if (url) this.confirmImageUrl(url);
+      return;
+    }
+    if (cmd === "image-cancel") {
+      this.#editState = null;
+      this.provider.hide();
+      this.view.focus();
+      return;
+    }
+    if (cmd === "image-remove") {
+      if (this.#editState?.type === "edit") {
+        const { state, dispatch } = this.view;
+        const pos = this.#editState.pos;
+        const node = state.doc.nodeAt(pos);
+        if (node) {
+          dispatch(state.tr.delete(pos, pos + node.nodeSize));
+        }
+      }
+      this.#editState = null;
+      this.provider.hide();
+      this.view.focus();
+      return;
+    }
+
+    // Handle slash image command: show picker instead of inserting empty block
+    if (cmd === "image") {
+      const { $from } = view.state.selection;
+      const textBefore = $from.parent.textBetween(
+        Math.max(0, $from.parentOffset - 500),
+        $from.parentOffset,
+      );
+      const slashPos = textBefore.lastIndexOf("/");
+      this.#imageSlashStart = slashPos >= 0 ? $from.pos - ($from.parentOffset - slashPos) : -1;
+      this.#editState = { type: "create" };
+      this.#programmaticActive = true;
+      this.#programmaticPos = $from.pos;
+      this.renderImagePicker();
+      return;
+    }
+
     const { selection } = view.state;
     const { $from } = selection;
     const textBefore = $from.parent.textBetween(
@@ -314,11 +377,6 @@ class SlashView {
 
     if (cmd === "thematic_break") {
       this.insertDivider(view);
-      view.focus();
-      return;
-    }
-    if (cmd === "image") {
-      this.insertImage(view);
       view.focus();
       return;
     }
@@ -478,19 +536,138 @@ class SlashView {
   }
 
   private insertImage(view: EditorView) {
-    const { state, dispatch } = view;
-    const { schema } = state;
-    const { $from } = state.selection;
+    this.#editState = { type: "create" };
+    this.renderImagePicker();
+  }
 
+  private openImageEditor(pos: number, src: string) {
+    this.#editState = { type: "edit", pos, src };
+    this.renderImagePicker();
+    const { state, dispatch } = this.view;
+    const tr = state.tr.setSelection(TextSelection.create(state.doc, pos));
+    dispatch(tr);
+  }
+
+  private renderImagePicker() {
+    const editState = this.#editState;
+    const currentSrc = editState?.type === "edit" ? editState.src : "";
+    const html = `
+      <div class="slash-image-picker">
+        <div class="slash-image-suggestions" data-area="suggestions">
+          <div class="slash-image-empty">Loading\u2026</div>
+        </div>
+        <div class="slash-url-row">
+          <input class="slash-url-input" type="text" placeholder="Paste image URL\u2026" value="${currentSrc}">
+          <button class="slash-url-btn" data-cmd="image-url-submit">OK</button>
+          <button class="slash-url-btn slash-cancel-btn" data-cmd="image-cancel">Cancel</button>
+          ${editState?.type === "edit" ? '<button class="slash-url-btn slash-remove-btn" data-cmd="image-remove">Remove</button>' : ''}
+        </div>
+        <div class="slash-upload-row">
+          <label class="slash-upload-label">
+            Upload from computer
+            <input type="file" accept="image/*" class="slash-upload-input" hidden>
+          </label>
+        </div>
+      </div>
+    `;
+    this.content.innerHTML = html;
+    this.#imageMode = true;
+    const es = this.#editState;
+    const pos = es?.type === "edit"
+      ? es.pos
+      : (this.#imageSlashStart >= 0 ? this.#imageSlashStart : this.view.state.selection.from);
+    this.#programmaticPos = pos;
+    this.#programmaticActive = true;
+
+    const coords = this.view.coordsAtPos(pos);
+    if (coords) {
+      this.content.style.left = `${coords.left}px`;
+      this.content.style.top = `${coords.bottom + 4}px`;
+    }
+    this.provider.show();
+
+    const uploadInput = this.content.querySelector(".slash-upload-input") as HTMLInputElement;
+    if (uploadInput) {
+      uploadInput.addEventListener("change", () => {
+        const file = uploadInput.files?.[0];
+        if (file) this.triggerImageUpload(file);
+      });
+    }
+
+    const urlInput = this.content.querySelector(".slash-url-input") as HTMLInputElement;
+    if (urlInput) {
+      urlInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          e.stopPropagation();
+          this.confirmImageUrl(urlInput.value.trim());
+        }
+      });
+      urlInput.focus();
+      urlInput.select();
+    }
+
+    listImages().catch(() => {}).then(() => {
+      this.renderImageSuggestions();
+    });
+  }
+
+  private renderImageSuggestions() {
+    const el = this.content.querySelector("[data-area='suggestions']");
+    if (!el) return;
+    const allImages = getAllImages();
+    el.innerHTML = allImages.slice(0, 3).map(img => `
+      <div class="slash-image-item" data-cmd="image-select" data-url="${img.url}">
+        <img src="${img.url}" />
+        <span>${img.name}</span>
+        ${img.pending ? '<span class="slash-image-pending">(pending)</span>' : ''}
+      </div>
+    `).join('') || '<div class="slash-image-empty">No images yet</div>';
+  }
+
+  private confirmImageUrl(url: string) {
+    const view = this.view;
+    const { state, dispatch } = view;
+
+    if (this.#editState?.type === "edit") {
+      const pos = this.#editState.pos;
+      const node = state.doc.nodeAt(pos);
+      if (node) {
+        dispatch(state.tr.setNodeMarkup(pos, null, { ...node.attrs, src: url }));
+      }
+      this.#editState = null;
+      this.provider.hide();
+      view.focus();
+      return;
+    }
+
+    const img = state.schema.nodes["image-block"]?.create({ src: url, caption: "", ratio: 1 });
+    const para = state.schema.nodes.paragraph.create();
+    if (!img) return;
+
+    let tr = state.tr;
+    if (this.#imageSlashStart >= 0) {
+      const currentPos = state.selection.$from.pos;
+      tr = tr.delete(this.#imageSlashStart, currentPos);
+    }
+
+    const { $from } = tr.selection;
     const pos = $from.before($from.depth);
     const blockSize = $from.node($from.depth).nodeSize;
-    const img = schema.nodes["image-block"]?.create({ src: "", caption: "", ratio: 1 });
-    const para = schema.nodes.paragraph.create();
-    if (!img) return;
-    const tr = state.tr.replaceWith(pos, pos + blockSize, [img, para]);
-    dispatch(
-      tr.setSelection(TextSelection.create(tr.doc, pos + 1)).scrollIntoView(),
-    );
+    tr = tr.replaceWith(pos, pos + blockSize, [img, para]);
+    tr = tr.setSelection(TextSelection.create(tr.doc, pos + 1));
+    dispatch(tr.scrollIntoView());
+
+    this.#editState = null;
+    this.#imageSlashStart = -1;
+    this.provider.hide();
+    view.focus();
+  }
+
+  private triggerImageUpload(file: File) {
+    uploadImage(file).then((url) => {
+      this.confirmImageUrl(url);
+    });
   }
 
   private convertToTodoList(view: EditorView) {

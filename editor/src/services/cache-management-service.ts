@@ -11,7 +11,8 @@ import { mountChangesDialog, type ChangesDialogData } from "../components/dialog
 import { confirmDialog } from "../components/dialogs/dialog";
 import { cache } from "../cache";
 import { getProvider } from "../content/provider-registry";
-import { commitAllPendingImages, replacePendingUrls } from "./image-config";
+import { commitAllPendingImages, replacePendingUrls, getCurrentDocDir } from "./image-config";
+import { imageRegistry } from "./image-registry";
 import { applyPendingOps, type PendingOp } from "../utils/tree";
 import type { TreeNode } from "../components/panels/sidebar";
 import { savePendingOps, loadPendingOps, clearPendingOpsStorage } from "../storage";
@@ -319,6 +320,7 @@ export class CacheManagementService {
             cache.clearPath(p);
           }
           this.clearPendingOps();
+          await imageRegistry.removeAllForDir(getCurrentDocDir());
           cache.sync();
           this.updateDirtyCounter();
           this.callbacks.onSidebarReload?.();

@@ -92,6 +92,10 @@ export function getAllImages(): (ImageEntry & { pending?: boolean })[] {
 }
 
 export async function deleteImage(name: string): Promise<void> {
+  if (name.startsWith("pi-")) {
+    await imageRegistry.removePending(name)
+    return
+  }
   const provider = getProvider()
   if (provider.deleteImage) {
     return provider.deleteImage(name, currentDocDir)

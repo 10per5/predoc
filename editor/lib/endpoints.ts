@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, readdirSync, statSync, mkdirSync, rmSync, writeFileSync } from "fs";
-import { join, extname, dirname } from "path";
+import { join, extname, dirname, relative, resolve } from "path";
+import { sanitizeImageName } from "../src/utils/sanitize";
 
 export interface ServerContext {
   contentDir: string;
@@ -27,6 +28,13 @@ const MIME: Record<string, string> = {
 function contentType(path: string): string {
   const ext = extname(path);
   return MIME[ext] || "application/octet-stream";
+}
+
+function resolveWithin(target: string, base: string): string | null {
+  const resolved = resolve(target);
+  const rel = relative(base, resolved);
+  if (rel.startsWith("..")) return null;
+  return resolved;
 }
 
 function extractWeight(filePath: string): number | undefined {
@@ -152,9 +160,10 @@ function buildTree(
 // ── Content API ──────────────────────────────────────────────────────────
 
 async function handleContent(req: Request, relPath: string, ctx: ServerContext): Promise<Response | null> {
-  const filePath = join(ctx.contentDir, relPath);
-  const hasExt = !!extname(filePath);
-  const target = hasExt ? filePath : filePath + ".md";
+  const basePath = resolveWithin(join(ctx.contentDir, relPath), ctx.contentDir);
+  if (!basePath) return new Response(null, { status: 403 });
+  const hasExt = !!extname(basePath);
+  const target = hasExt ? basePath : basePath + ".md";
 
   if (!target.endsWith(".md")) {
     return new Response(null, { status: 404 });
@@ -206,25 +215,32 @@ async function handleUpload(req: Request, ctx: ServerContext): Promise<Response 
 
   if (!file) return new Response("No file", { status: 400 });
 
-  const ext = extname(file.name) || ".png";
-  const name = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
-  const targetDir = docDir ? join(ctx.contentDir, docDir, "image") : join(ctx.contentDir, "image");
+  const rawTargetDir = docDir ? join(ctx.contentDir, docDir, "image") : join(ctx.contentDir, "image");
+  const targetDir = resolveWithin(rawTargetDir, ctx.contentDir);
+  if (!targetDir) return new Response("Forbidden", { status: 403 });
+
+  const name = sanitizeImageName(file.name);
   const targetPath = join(targetDir, name);
 
   mkdirSync(targetDir, { recursive: true });
   const buf = await file.arrayBuffer();
   writeFileSync(targetPath, new Uint8Array(buf));
 
-  const url = docDir ? `image/${name}` : `/uploads/${name}`;
+  const url = docDir ? `image/${name}` : `/uploads/image/${name}`;
   return new Response(JSON.stringify({ url }), {
     headers: { "Content-Type": "application/json" },
   });
 }
 
 function handleUploads(relPath: string, ctx: ServerContext): Response | null {
-  const filePath = join(ctx.contentDir, relPath);
-  if (!existsSync(filePath)) return null;
-  if (statSync(filePath).isDirectory()) return null;
+  const filePath = resolveWithin(join(ctx.contentDir, relPath), ctx.contentDir);
+  if (!filePath) return new Response(null, { status: 403 });
+  const ext = extname(filePath).toLowerCase();
+  if (!IMAGE_EXTS.has(ext)) return new Response(null, { status: 403 });
+  if (!filePath.includes("/image/") && !filePath.endsWith("/image"))
+    return new Response(null, { status: 403 });
+  if (!existsSync(filePath)) return new Response(null, { status: 404 });
+  if (statSync(filePath).isDirectory()) return new Response(null, { status: 403 });
   const raw = readFileSync(filePath);
   return new Response(raw, {
     headers: { "Content-Type": contentType(filePath) },
@@ -237,7 +253,11 @@ function handleListImages(req: Request, ctx: ServerContext): Response | null {
   const url = new URL(req.url);
   const docDir = url.searchParams.get("dir") || "";
   const refs = url.searchParams.get("refs") === "true";
-  const imageDir = docDir ? join(ctx.contentDir, docDir, "image") : join(ctx.contentDir, "image");
+  const imageDir = resolveWithin(
+    docDir ? join(ctx.contentDir, docDir, "image") : join(ctx.contentDir, "image"),
+    ctx.contentDir
+  );
+  if (!imageDir) return new Response("Forbidden", { status: 403 });
 
   if (!existsSync(imageDir)) {
     return new Response(JSON.stringify({ images: [] }), {
@@ -252,10 +272,10 @@ function handleListImages(req: Request, ctx: ServerContext): Response | null {
   const images = names.map((name) => {
     const entry: { name: string; url: string; usedIn?: string[] } = {
       name,
-      url: docDir ? `/uploads/${docDir}/image/${name}` : `/uploads/${name}`,
+      url: `/uploads/${join(docDir, "image", name)}`,
     };
     if (refs) {
-      entry.usedIn = findImageRefs(ctx.contentDir, docDir, name);
+      entry.usedIn = findImageRefs(ctx.contentDir, imageDir, name);
     }
     return entry;
   });
@@ -265,9 +285,9 @@ function handleListImages(req: Request, ctx: ServerContext): Response | null {
   });
 }
 
-function findImageRefs(contentDir: string, docDir: string, imageName: string): string[] {
+function findImageRefs(contentDir: string, imageDir: string, imageName: string): string[] {
   const refs: string[] = [];
-  const scanDir = docDir ? join(contentDir, docDir) : contentDir;
+  const scanDir = dirname(imageDir);
   if (!existsSync(scanDir)) return refs;
 
   function scan(dir: string) {
@@ -297,7 +317,10 @@ function handleDeleteImage(req: Request, path: string, ctx: ServerContext): Resp
   const url = new URL(req.url);
   const docDir = url.searchParams.get("dir") || "";
   const imageDir = docDir ? join(ctx.contentDir, docDir, "image") : join(ctx.contentDir, "image");
-  const target = join(imageDir, name);
+  const imageBase = resolveWithin(imageDir, ctx.contentDir);
+  if (!imageBase) return new Response("Forbidden", { status: 403 });
+  const target = resolveWithin(join(imageBase, name), ctx.contentDir);
+  if (!target) return new Response("Forbidden", { status: 403 });
 
   if (!existsSync(target)) {
     return new Response("Not found", { status: 404 });
@@ -311,11 +334,12 @@ function handleDeleteImage(req: Request, path: string, ctx: ServerContext): Resp
 
 async function handleMove(req: Request, ctx: ServerContext): Promise<Response | null> {
   const { from, to } = await req.json();
-  const src = join(ctx.contentDir, from.replace(/^\//, ""));
-  const dst = join(ctx.contentDir, to.replace(/^\//, ""));
-
+  const src = resolveWithin(join(ctx.contentDir, from.replace(/^\//, "")), ctx.contentDir);
+  const dst = resolveWithin(join(ctx.contentDir, to.replace(/^\//, "")), ctx.contentDir);
+  if (!src || !dst) return new Response("Forbidden", { status: 403 });
+  if (!src.endsWith(".md") || !dst.endsWith(".md"))
+    return new Response("Forbidden", { status: 403 });
   if (!existsSync(src)) return new Response("Source not found", { status: 404 });
-  if (existsSync(dst)) return new Response("Destination exists", { status: 409 });
 
   mkdirSync(dirname(dst), { recursive: true });
   const text = readFileSync(src, "utf-8");

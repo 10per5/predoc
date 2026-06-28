@@ -1,5 +1,6 @@
 import type { ContentProvider, TreeNode, ImageEntry } from "./provider"
 import { stripFrontmatter } from "../utils/frontmatter"
+import { sanitizeImageName } from "../utils/sanitize"
 
 export class FileSystemProvider implements ContentProvider {
   readonly name = "fs"
@@ -152,8 +153,7 @@ export class FileSystemProvider implements ContentProvider {
   }
 
   async uploadImage(file: File, dir: string): Promise<string> {
-    const ext = file.name.includes(".") ? file.name.split(".").pop()! : "png"
-    const name = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+    const name = sanitizeImageName(file.name)
     const relPath = `image/${name}`
     const imageDir = await this.ensureImageDir(dir)
     const fileHandle = await imageDir.getFileHandle(name, { create: true })
