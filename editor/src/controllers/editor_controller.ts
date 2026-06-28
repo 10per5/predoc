@@ -11,7 +11,9 @@ import { ViewManagementService } from "../services/view-management-service";
 import { NavigationService } from "../services/navigation-service";
 import { getProvider, getProviderDisplayInfo } from "../content/provider-registry";
 import { cache } from "../cache";
-import { exportToZip, importFromZip } from "../utils/zip";
+import { exportToZip, pickAndParseZip, writeZipEntries } from "../utils/zip";
+import { mountImportZipDialog } from "../components/dialogs/import-zip-dialog";
+import { showToast } from "../components/toast/toast";
 import { loadPrefs } from "../storage";
 import { PathService } from "../services/path-service";
 
@@ -108,12 +110,25 @@ export default class extends Controller {
         onViewChange: (view) => this.viewService.getViewManager().switchTo(view),
         onSave: () => exportToZip().then(() => this.loadSidebar()),
         onLoad: async () => {
-          const count = await importFromZip();
-          if (count === 0) return;
-          cache.clearAll();
-          cache.sync();
-          await this.loadSidebar();
-          await this.editorService.loadContent(initialPath, (data) => this.metaPanel?.update(data));
+          if (getProvider().name === "remote") {
+            showToast("Import from zip is not available in server mode");
+            return;
+          }
+          const entries = await pickAndParseZip();
+          if (!entries) return;
+          mountImportZipDialog(
+            entries,
+            async (result) => {
+              const count = writeZipEntries(result.selected);
+              if (count === 0) return;
+              cache.clearAll();
+              cache.sync();
+              await this.loadSidebar();
+              await this.editorService.loadContent(initialPath, (data) => this.metaPanel?.update(data));
+              showToast(`Imported ${count} file${count > 1 ? "s" : ""}`);
+            },
+            () => {},
+          );
         },
         onToggleSidebar: () => this.uiService.toggleSidebar(),
         onToggleMetaPanel: () => this.uiService.toggleMetaPanel(),
