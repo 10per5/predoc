@@ -9,16 +9,21 @@ export interface WikiStorage {
   baselines?: [string, string][];
 }
 
+export type ImageStorageMode = "file" | "base64"
+
 export interface WikiPrefs {
   stickyToolbar: boolean;
+  imageStorageMode: ImageStorageMode;
 }
+
+const DEFAULTS: WikiPrefs = { stickyToolbar: true, imageStorageMode: "file" };
 
 export function loadPrefs(): WikiPrefs {
   try {
     const raw = localStorage.getItem(PREFS_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) return { ...DEFAULTS, ...JSON.parse(raw) };
   } catch {}
-  return { stickyToolbar: true };
+  return { ...DEFAULTS };
 }
 
 export function savePrefs(prefs: WikiPrefs) {

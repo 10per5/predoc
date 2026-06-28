@@ -63,19 +63,34 @@
 
 ---
 
-## Phase 2 — Larger features (stretch)
+## ✅ Phase 2 — Larger features — PARTIAL
 
 ### 2a. Shortcode type colors
 - CSS classes for mermaid, katex, tabs, figure, hint
 - Zero plugin changes — regex already captures all types
 
-### 2b. Table blocks
-- Drag handles, row/col add/delete
-- From Crepe `feature/table/`
+### ✅ 2b. Table blocks (Crepe `feature/table/`)
+- `tableBlock` from `@milkdown/kit/component/table-block` registered in editor
+- Drag handles for rows/cols, reorder by drag-and-drop
+- Add row/col buttons at boundaries, delete rows/cols
+- Column alignment (left/center/right) per column
+- SVG icon buttons for all table controls via `renderButton` config
+- CSS styles in `milkdown.css`
 
-### 2c. Image insertion
-- Upload + drag/drop + paste → image-block node
-- From Crepe `feature/image-block/`
+### ✅ 2c. Image insertion (Crepe `feature/image-block/`)
+- `imageBlockComponent` from `@milkdown/kit/component/image-block` registered
+- Upload via file picker or paste link; drag-and-drop image files
+- Image preview with caption input and resize handle
+- **Two storage modes** (configurable in Preferences):
+  - **File mode**: saves PNG/images to `<doc-dir>/image/` folder via `POST /api/upload`
+  - **Base64 mode**: embeds images as data URLs directly in the document
+- `proxyDomURL` resolves relative paths for editor preview via `/uploads/` route
+- `onUpload` handler dispatches to server or reads as base64 depending on pref
+- Server endpoints extracted to `lib/endpoints.ts`:
+  - `POST /api/upload` — multipart file upload, saves to `<content>/<dir>/image/`
+  - `GET /uploads/*` — serves saved images from content directory
+- Image storage mode toggle in Preferences dialog
+- CSS styles in `milkdown.css`
 
 ### 2d. LaTeX math
 - KaTeX inline `$...$` and block math
