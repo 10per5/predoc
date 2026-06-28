@@ -17,6 +17,7 @@ import { cache } from "../cache";
 import { editorSelfBase } from "../config";
 import { pushPath, replacePath } from "../utils/url";
 import type { CacheManagementService } from "./cache-management-service";
+import type { PendingOp } from "../utils/tree";
 
 export interface NavigationCallbacks {
   onBeforeNavigate?: (path: string) => void;
@@ -127,8 +128,10 @@ export class NavigationService {
         return;
       }
 
-      // Apply pending operations to the tree for display
+      // Build display tree with pending ops applied
       const displayTree = this.cacheService.applyPendingOpsToTree(sidebarCache);
+      const pendingOps: PendingOp[] = this.cacheService.getPendingOps();
+      const dirtyPaths = cache.getDirtyPaths();
 
       const actions: SidebarActions = {
         onNavigate: (path) => onNavigate(path),
@@ -141,7 +144,7 @@ export class NavigationService {
       };
 
       const pdi = getProviderDisplayInfo(provider.name);
-      mountSidebar(sidebarEl, displayTree, this.currentPath, actions, pdi.icon, pdi.label, provider.name);
+      mountSidebar(sidebarEl, displayTree, this.currentPath, actions, pdi.icon, pdi.label, provider.name, pendingOps, dirtyPaths, sidebarCache);
       setupNavListeners((path: string) => onNavigate(path));
 
       const pages = collectPageList(displayTree);

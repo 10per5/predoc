@@ -9,8 +9,6 @@ type: docs
 
 [![GitHub](https://img.shields.io/badge/GitHub-View%20on%20GitHub-181717?style=for-the-badge\&logo=github)](https://github.com/10per5/predoc)
 
-![1.00](/uploads/1782686295707-l4ns89.png)
-
 ***
 
 A two-layer wiki: edit markdown in a live WYSIWYG editor, export as a static site via Hugo.

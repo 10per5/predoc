@@ -60,6 +60,7 @@ export class LocalStorageProvider implements ContentProvider {
 
   async deleteFile(path: string): Promise<void> {
     localStorage.removeItem(STORAGE_PREFIX + path + ".md")
+    this.removeOrphanedImages()
   }
 
   async moveFile(from: string, to: string): Promise<void> {
@@ -128,5 +129,22 @@ export class LocalStorageProvider implements ContentProvider {
 
   async deleteImage(name: string, _dir: string): Promise<void> {
     localStorage.removeItem(IMAGE_PREFIX + name)
+  }
+
+  private removeOrphanedImages(): void {
+    const imageKeys: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && key.startsWith(IMAGE_PREFIX)) {
+        imageKeys.push(key)
+      }
+    }
+    for (const key of imageKeys) {
+      const name = key.slice(IMAGE_PREFIX.length)
+      const refs = this.findRefs(name)
+      if (refs.length === 0) {
+        localStorage.removeItem(key)
+      }
+    }
   }
 }

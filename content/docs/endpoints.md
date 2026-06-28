@@ -137,7 +137,10 @@ The reference scan (`refs=true`) searches `.md` files in the given directory for
 
 ### Conventions
 
-- Return `null` for unhandled paths so the caller can fall through to static files or 404
-- Error status codes: `400` bad input, `404` not found, `409` conflict, `405` wrong method
-- Always join paths with `join(ctx.contentDir, ...)` to prevent directory traversal
-- Zero npm dependencies — use `req.json()` and `req.formData()` from the Web API, `fs` and `path` from the runtime
+* Return `null` for unhandled paths so the caller can fall through to static files or 404
+
+* Error status codes: `400` bad input, `404` not found, `409` conflict, `405` wrong method
+
+* Always join paths with `join(ctx.contentDir, ...)` to prevent directory traversal
+
+* Zero npm dependencies — use `req.json()` and `req.formData()` from the Web API, `fs` and `path` from the runtime

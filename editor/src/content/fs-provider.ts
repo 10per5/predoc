@@ -79,6 +79,7 @@ export class FileSystemProvider implements ContentProvider {
   async deleteFile(path: string): Promise<void> {
     if (!this.dirHandle) await this.init()
     const parts = path.split("/").filter(Boolean)
+    const dir = parts.slice(0, -1).join("/")
     let current: FileSystemDirectoryHandle = this.dirHandle!
     for (let i = 0; i < parts.length - 1; i++) {
       current = await current.getDirectoryHandle(parts[i])
@@ -86,6 +87,7 @@ export class FileSystemProvider implements ContentProvider {
     const fileName = parts[parts.length - 1] + ".md"
     await current.removeEntry(fileName)
     await this.cleanupEmptyParents(current, parts.slice(0, -1))
+    await this.removeOrphanedImages(dir)
   }
 
   private async cleanupEmptyParents(dir: FileSystemDirectoryHandle, parts: string[]): Promise<void> {
@@ -273,5 +275,22 @@ export class FileSystemProvider implements ContentProvider {
       const imageDir = await this.ensureImageDir(dir)
       await imageDir.removeEntry(name)
     } catch {}
+  }
+
+  private async removeOrphanedImages(dir: string): Promise<void> {
+    let imageDir: FileSystemDirectoryHandle
+    try {
+      imageDir = await this.ensureImageDir(dir)
+    } catch {
+      return
+    }
+    const mdFiles = await this.collectMdFiles(dir)
+    for await (const entry of imageDir.values()) {
+      if (entry.kind !== "file") continue
+      const refs = this.findRefsInFiles(entry.name, mdFiles)
+      if (refs.length === 0) {
+        try { await imageDir.removeEntry(entry.name) } catch {}
+      }
+    }
   }
 }

@@ -207,6 +207,24 @@ export class CacheManagementService {
     cache.sync();
     this.updateDirtyCounter();
     this.callbacks.onFlushComplete?.();
+
+    // 4. Clean up orphaned images — images that no longer appear in any document
+    this.cleanupOrphanedImages(dirtyPaths, provider).catch(() => {});
+  }
+
+  private async cleanupOrphanedImages(dirtyPaths: string[], provider: any): Promise<void> {
+    const dirs = new Set(dirtyPaths.map(p => p.includes("/") ? p.substring(0, p.lastIndexOf("/")) : ""));
+    for (const dir of dirs) {
+      if (!provider.listImages || !provider.deleteImage) continue;
+      try {
+        const images = await provider.listImages(dir, true);
+        for (const img of images) {
+          if (img.usedIn.length === 0) {
+            await provider.deleteImage(img.name, dir);
+          }
+        }
+      } catch {}
+    }
   }
 
   // ── Discard ──

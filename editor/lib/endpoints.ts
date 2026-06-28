@@ -157,6 +157,21 @@ function buildTree(
   return result;
 }
 
+function removeOrphanedImages(docRelPath: string, ctx: ServerContext): void {
+  const imageDir = docRelPath ? join(ctx.contentDir, docRelPath, "image") : join(ctx.contentDir, "image");
+  if (!existsSync(imageDir)) return;
+  for (const name of readdirSync(imageDir)) {
+    if (!IMAGE_EXTS.has(extname(name).toLowerCase())) continue;
+    const refs = findImageRefs(ctx.contentDir, imageDir, name);
+    if (refs.length === 0) {
+      rmSync(join(imageDir, name), { force: true });
+    }
+  }
+  if (readdirSync(imageDir).length === 0) {
+    rmSync(imageDir, { force: true });
+  }
+}
+
 // ── Content API ──────────────────────────────────────────────────────────
 
 async function handleContent(req: Request, relPath: string, ctx: ServerContext): Promise<Response | null> {
@@ -182,6 +197,8 @@ async function handleContent(req: Request, relPath: string, ctx: ServerContext):
     const text = await req.text();
     mkdirSync(dirname(target), { recursive: true });
     writeFileSync(target, text, "utf-8");
+    // Remove orphaned images after content update
+    try { removeOrphanedImages(dirname(path), ctx); } catch {}
     return new Response("ok");
   }
 
@@ -195,6 +212,8 @@ async function handleContent(req: Request, relPath: string, ctx: ServerContext):
       rmSync(dir, { force: true });
       dir = dirname(dir);
     }
+    // Remove orphaned images
+    try { removeOrphanedImages(dirname(path), ctx); } catch {}
     return new Response("ok");
   }
 

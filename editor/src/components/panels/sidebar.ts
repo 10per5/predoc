@@ -2,6 +2,7 @@ import { html, render } from "lit-html";
 import { editorSelfBase, liveUrlBase, isDev } from "../../config";
 import { liveIcon } from "../icons";
 import { buildEditorUrl } from "../../utils/url";
+import type { PendingOp } from "../../utils/tree";
 
 export interface PageNode {
   weight?: number;
@@ -47,14 +48,77 @@ export function mountSidebar(
   providerIcon?: string,
   providerLabel?: string,
   providerType?: string,
+  pendingOps?: PendingOp[],
+  dirtyPaths?: string[],
+  rawTree?: TreeNode,
 ) {
   const basePath = editorSelfBase;
   const page = current === "_index" ? "" : `/${current}`;
   const baseUrl = liveUrlBase || (isDev ? 'http://localhost:5000' : '');
   const liveUrl = baseUrl ? `${baseUrl}${providerType === "localStorage" ? "" : page}` : "";
 
-  function renderItems(items: TreeNode, prefix = "", depth = 0): unknown {
-    const entries = Object.entries(items).sort(
+  const pendingDeleteSet = new Set(
+    pendingOps?.filter(o => o.type === "delete").map(o => o.path) ?? []
+  );
+  const pendingRenameFromSet = new Set(
+    pendingOps?.filter(o => o.type === "rename").map(o => o.from) ?? []
+  );
+  const pendingRenameToMap = new Map(
+    pendingOps?.filter(o => o.type === "rename").map(o => [o.from, o.to]) ?? []
+  );
+  const pendingCreateSet = new Set(
+    pendingOps?.filter(o => o.type === "create").map(o => o.path) ?? []
+  );
+  const dirtySet = new Set(dirtyPaths ?? []);
+
+  function pendingClass(name: string, prefix: string): string {
+    const parts = prefix ? `${prefix}/${name}` : name;
+    const pagePath = parts.replace(/\.md$/, "");
+    const classes: string[] = [];
+    if (pendingDeleteSet.has(pagePath)) classes.push("pending-delete");
+    if (pendingRenameFromSet.has(pagePath)) classes.push("pending-rename");
+    if (pendingCreateSet.has(pagePath)) classes.push("pending-create");
+    if (dirtySet.has(pagePath)) classes.push("pending-unsaved");
+    return classes.length > 0 ? " " + classes.join(" ") : "";
+  }
+
+  function pendingLabelSuffix(name: string, prefix: string): unknown {
+    const parts = prefix ? `${prefix}/${name}` : name;
+    const pagePath = parts.replace(/\.md$/, "");
+    const result: unknown[] = [];
+    if (pendingDeleteSet.has(pagePath)) {
+      result.push(html`<span class="pending-badge pending-badge-delete">delete</span>`);
+    }
+    if (pendingRenameFromSet.has(pagePath)) {
+      const to = pendingRenameToMap.get(pagePath);
+      if (to) {
+        result.push(html`<span class="pending-badge pending-badge-rename">→ ${to.split("/").pop()}</span>`);
+      }
+    }
+    if (pendingCreateSet.has(pagePath)) {
+      result.push(html`<span class="pending-badge pending-badge-create">new</span>`);
+    }
+    if (dirtySet.has(pagePath)) {
+      result.push(html`<span class="pending-badge pending-badge-unsaved">unsaved</span>`);
+    }
+    return result;
+  }
+
+  function renderItems(items: TreeNode, prefix = "", depth = 0, rawSubtree?: TreeNode): unknown {
+    // Merge raw tree items back in so pending deletes / renames remain visible
+    const display: TreeNode = { ...items };
+    if (rawSubtree) {
+      for (const [name, val] of Object.entries(rawSubtree)) {
+        const full = prefix ? `${prefix}/${name}` : name;
+        const pagePath = full.replace(/\.md$/, "");
+        if (pendingDeleteSet.has(pagePath) || pendingRenameFromSet.has(pagePath)) {
+          if (!(name in display)) {
+            display[name] = val;
+          }
+        }
+      }
+    }
+    const entries = Object.entries(display).sort(
       ([nameA, valA], [nameB, valB]) => {
         if (nameA === "_index.md") return -1;
         if (nameB === "_index.md") return 1;
@@ -98,8 +162,8 @@ export function mountSidebar(
             .replace(/-/g, " ")
             .replace(/^\w/, (c) => c.toUpperCase());
         }
-        return html` <div
-          class="nav-item"
+          return html` <div
+          class="nav-item${pendingClass(name, prefix)}"
           draggable="true"
           data-nav-path="${pagePath}"
           @dragstart=${(e: DragEvent) => {
@@ -117,13 +181,13 @@ export function mountSidebar(
             class="nav-link ${active ? "active" : ""}${name === "_index.md" &&
             !prefix
               ? " nav-link-home"
-              : ""}"
+              : ""}${pendingClass(name, prefix)}"
             @click=${(e: Event) => {
               e.preventDefault();
               actions.onNavigate(pagePath);
             }}
           >
-            ${label}
+            ${label}${pendingLabelSuffix(name, prefix)}
           </a>
           <button
             class="nav-more"
@@ -137,7 +201,9 @@ export function mountSidebar(
         </div>`;
       }
       const childrenDepth = depth + 1;
-      const children = renderItems(val as TreeNode, path, childrenDepth);
+      const rawEntry = rawSubtree?.[name];
+      const rawChild = rawEntry && typeof rawEntry === "object" && !("weight" in rawEntry) ? rawEntry as TreeNode : undefined;
+      const children = renderItems(val as TreeNode, path, childrenDepth, rawChild);
       const label = name
         .replace(/-/g, " ")
         .replace(/^\w/, (c) => c.toUpperCase());
@@ -182,7 +248,7 @@ export function mountSidebar(
             `
           : html``}
         <div class="sidebar-inner">
-          ${treeEmpty ? html`<div class="sidebar-empty">No files</div>` : renderItems(tree)}
+          ${treeEmpty ? html`<div class="sidebar-empty">No files</div>` : renderItems(tree, "", 0, rawTree)}
           <button
             class="nav-new-page"
             @click=${() => actions.onNewPage("docs")}

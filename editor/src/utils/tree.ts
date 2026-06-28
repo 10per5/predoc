@@ -19,7 +19,7 @@ export type PendingOp =
   | { type: "rename"; from: string; to: string }
   | { type: "move"; from: string; to: string }
 
-function setPath(tree: TreeNode, path: string): void {
+export function setPath(tree: TreeNode, path: string): void {
   const parts = path.split("/")
   let node = tree
   for (let i = 0; i < parts.length; i++) {

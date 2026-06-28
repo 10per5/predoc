@@ -652,8 +652,9 @@ class SlashView {
     }
 
     const { $from } = tr.selection;
-    const pos = $from.before($from.depth);
-    const blockSize = $from.node($from.depth).nodeSize;
+    const depth = $from.depth;
+    const pos = depth > 0 ? $from.before(depth) : $from.pos;
+    const blockSize = depth > 0 ? $from.node(depth).nodeSize : 0;
     tr = tr.replaceWith(pos, pos + blockSize, [img, para]);
     tr = tr.setSelection(TextSelection.create(tr.doc, pos + 1));
     dispatch(tr.scrollIntoView());
