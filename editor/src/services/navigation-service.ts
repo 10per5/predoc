@@ -6,7 +6,7 @@
  */
 
 import { stripFrontmatter } from "../utils/frontmatter";
-import { createPage, deletePage, renamePage, movePage } from "../editor-actions";
+import { createNewItem, deletePage, renamePage, movePage } from "../editor-actions";
 import { setupNavListeners, collectPageList } from "../features/navigation";
 import { getProvider, setProvider, cacheKeyForProvider, getProviderDisplayInfo } from "../content/provider-registry";
 import { createProviderByType } from "../content";
@@ -18,6 +18,16 @@ import { editorSelfBase } from "../config";
 import { pushPath, replacePath } from "../utils/url";
 import type { CacheManagementService } from "./cache-management-service";
 import type { PendingOp } from "../utils/tree";
+
+function existsInTree(tree: TreeNode, mdPath: string): boolean {
+  const parts = mdPath.split("/");
+  let node: TreeNode | null | undefined = tree;
+  for (const part of parts) {
+    if (!node || typeof node !== "object") return false;
+    node = node[part] as TreeNode | null | undefined;
+  }
+  return node !== undefined;
+}
 
 export interface NavigationCallbacks {
   onBeforeNavigate?: (path: string) => void;
@@ -135,8 +145,8 @@ export class NavigationService {
 
       const actions: SidebarActions = {
         onNavigate: (path) => onNavigate(path),
-        onNewPage: (parentPath) =>
-          createPage(this.cacheService, parentPath, (p) => onNavigate(p), () => this.loadSidebar(onNavigate, onUpdateMention)),
+        onNewItem: (parentPath) =>
+          createNewItem(this.cacheService, parentPath, (p) => onNavigate(p), () => this.loadSidebar(onNavigate, onUpdateMention)),
         onDelete: (path) => this.deletePage(path, onNavigate),
         onRename: (path) => this.renamePage(path, onNavigate),
         onMove: (from, to) => this.movePage(from, to, onNavigate),
@@ -222,6 +232,18 @@ export class NavigationService {
       this.callbacks.onPageRenamed?.();
       this.callbacks.onUpdateUI?.();
       this.cacheService.updateDirtyCounter();
+    }, async (slug, parentDir) => {
+      if (slug === "_index") {
+        const provider = getProvider();
+        const tree = await provider?.getTree();
+        if (tree) {
+          const targetPath = parentDir ? `${parentDir}/_index.md` : "_index.md";
+          if (existsInTree(tree, targetPath)) {
+            return `"_index.md" already exists in this directory.`;
+          }
+        }
+      }
+      return null;
     });
   }
 

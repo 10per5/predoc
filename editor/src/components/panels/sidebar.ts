@@ -14,7 +14,7 @@ export interface TreeNode {
 
 export interface SidebarActions {
   onNavigate: (path: string) => void;
-  onNewPage: (parentPath: string) => void;
+  onNewItem: (parentPath: string) => void;
   onDelete: (path: string) => void;
   onRename: (path: string) => void;
   onMove: (from: string, to: string) => void;
@@ -151,11 +151,7 @@ export function mountSidebar(
         if (name === "_index.md") {
           label = !prefix
             ? "Home"
-            : prefix
-                .split("/")
-                .pop()!
-                .replace(/-/g, " ")
-                .replace(/^\w/, (c) => c.toUpperCase());
+            : "Index";
         } else {
           label = name
             .replace(/\.md$/, "")
@@ -251,9 +247,9 @@ export function mountSidebar(
           ${treeEmpty ? html`<div class="sidebar-empty">No files</div>` : renderItems(tree, "", 0, rawTree)}
           <button
             class="nav-new-page"
-            @click=${() => actions.onNewPage("docs")}
+            @click=${() => actions.onNewItem("docs")}
           >
-            + New Page
+            + New
           </button>
         </div>
         <div class="sidebar-footer">
@@ -294,7 +290,7 @@ function showMenu(
   menu.style.top = `${rect.bottom + 4}px`;
   menu.style.left = `${rect.left}px`;
   menu.innerHTML = `
-    <div data-action="new">New Page</div>
+    <div data-action="new">New…</div>
     <div data-action="rename">Rename</div>
     <div data-action="delete">Delete</div>
   `;
@@ -306,7 +302,7 @@ function showMenu(
     closeMenu();
     switch (item.dataset.action) {
       case "new":
-        actions.onNewPage(pagePath);
+        actions.onNewItem(pagePath);
         break;
       case "rename":
         actions.onRename(pagePath);
