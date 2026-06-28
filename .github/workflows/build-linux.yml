@@ -154,10 +154,10 @@ jobs:
       - name: Read version
         id: version
         run: |
-          ver="dev"
           msg="${{ github.event.head_commit.message }}"
-          if [[ "$msg" =~ ^build\(v([0-9]+\.[0-9]+\.[0-9]+)(?:p[0-9]+)?\).* ]]; then
-            ver="v${BASH_REMATCH[1]}"
+          ver=$(echo "$msg" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+(p[0-9]+)?' | head -n 1 | tr -d '[:space:]')
+          if [ -z "$ver" ]; then
+            ver="dev"
           fi
           echo "version=$ver" >> $GITHUB_OUTPUT
 
