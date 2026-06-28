@@ -4,6 +4,9 @@ import { liveIcon } from "../icons";
 import { buildEditorUrl } from "../../utils/url";
 import type { PendingOp } from "../../utils/tree";
 
+const fileIcon = html`<svg class="sidebar-icon sidebar-icon-file" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/></svg>`;
+const folderIcon = html`<svg class="sidebar-icon sidebar-icon-folder" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>`;
+
 export interface PageNode {
   weight?: number;
 }
@@ -183,7 +186,7 @@ export function mountSidebar(
               actions.onNavigate(pagePath);
             }}
           >
-            ${label}${pendingLabelSuffix(name, prefix)}
+            ${fileIcon}${label}${pendingLabelSuffix(name, prefix)}
           </a>
           <button
             class="nav-more"
@@ -215,7 +218,7 @@ export function mountSidebar(
           }
         }}
       >
-        <span class="nav-section-title depth-${depth}">${label}</span>
+        <span class="nav-section-title depth-${depth}">${folderIcon}${label}</span>
         <div class="nav-section-children" style="--line-color: ${lineColor}">
           ${children}
         </div>
