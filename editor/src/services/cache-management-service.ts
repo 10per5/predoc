@@ -51,12 +51,22 @@ export class CacheManagementService {
   // ── Pending Operations ──
 
   queueCreate(path: string, content: string): void {
-    this.pendingOps.push({ type: "create", path, content });
+    const delIdx = this.pendingOps.findIndex(o => o.type === "delete" && o.path === path);
+    if (delIdx !== -1) {
+      this.pendingOps.splice(delIdx, 1);
+    } else {
+      this.pendingOps.push({ type: "create", path, content });
+    }
     this.persistPendingOps()
   }
 
   queueDelete(path: string): void {
-    this.pendingOps.push({ type: "delete", path });
+    const createIdx = this.pendingOps.findIndex(o => o.type === "create" && o.path === path);
+    if (createIdx !== -1) {
+      this.pendingOps.splice(createIdx, 1);
+    } else {
+      this.pendingOps.push({ type: "delete", path });
+    }
     this.persistPendingOps()
   }
 
