@@ -155,7 +155,7 @@ jobs:
         id: version
         run: |
           msg="${{ github.event.head_commit.message }}"
-          ver=$(echo "$msg" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+(p[0-9]+)?' | head -n 1 | tr -d '[:space:]')
+          ver=$(echo "$msg" | grep -oP 'v[0-9]+\.[0-9]+\.[0-9]+(?=p[0-9]+|$)' | head -n 1)
           if [ -z "$ver" ]; then
             ver="dev"
           fi
@@ -174,5 +174,4 @@ jobs:
         with:
           tag_name: ${{ steps.version.outputs.version }}
           name: ${{ steps.version.outputs.version }}
-          files: predoc-*.zip
-          generate_release_notes: true
+          files: predoc-*.tar.gz
