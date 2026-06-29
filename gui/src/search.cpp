@@ -1,5 +1,6 @@
 #include "search.h"
 #include "config.h"
+#include "json.h"
 #include <fstream>
 #include <sstream>
 #include <filesystem>
@@ -193,20 +194,7 @@ saucer::scheme::response handle_search(
     const config &cfg,
     std::string_view body)
 {
-    // Parse {"query":"..."}
-    std::string query;
-    auto qpos = body.find("\"query\"");
-    if (qpos != std::string::npos)
-    {
-        auto val_start = body.find('"', qpos + 7);
-        if (val_start != std::string::npos)
-        {
-            val_start++;
-            auto val_end = body.find('"', val_start);
-            if (val_end != std::string::npos)
-                query = body.substr(val_start, val_end - val_start);
-        }
-    }
+    auto query = json_string_value(std::string(body), "query");
 
     if (query.empty())
         return {.data = saucer::stash::from_str("{\"results\":[]}"),

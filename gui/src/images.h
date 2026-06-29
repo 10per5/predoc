@@ -2,10 +2,19 @@
 #include "config.h"
 #include <string>
 #include <map>
+#include <filesystem>
 #include <saucer/scheme.hpp>
 
 /// Decode percent-encoded URL component (e.g. %20 -> space).
 std::string url_decode(const std::string &s);
+
+/// Check that `target` resolves within `base` (path traversal guard).
+/// Sets `resolved` to the weakly-canonical target on success.
+/// Returns false if target escapes base or canonicalization fails.
+bool resolve_within(
+    const std::filesystem::path &target,
+    const std::filesystem::path &base,
+    std::filesystem::path &resolved);
 
 saucer::scheme::response handle_serve_image(
     const config &cfg,

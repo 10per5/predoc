@@ -52,7 +52,7 @@ static saucer::stash stash_from_file(const std::string &path)
     return saucer::stash::from_str(content);
 }
 
-static bool resolve_within(
+bool resolve_within(
     const fs::path &target,
     const fs::path &base,
     fs::path &resolved)
@@ -254,9 +254,10 @@ static std::string sanitize_image_name(const std::string &name)
     std::string clean;
     for (unsigned char c : base)
     {
-        if (std::isalnum(c)) clean += static_cast<char>(std::tolower(c));
-        else if (c == '-' || c == '_') clean += c;
-        else if (!clean.empty() && clean.back() != '-') clean += '-';
+        if (std::isalnum(c))
+            clean += static_cast<char>(std::tolower(c));
+        else if (!clean.empty() && clean.back() != '-')
+            clean += '-';
     }
     // Trim leading/trailing hyphens
     auto cs = clean.find_first_not_of('-');

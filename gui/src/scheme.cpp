@@ -3,6 +3,7 @@
 #include "gitignore.h"
 #include "search.h"
 #include "images.h"
+#include "json.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -146,6 +147,9 @@ static void build_tree(const fs::path &dir, std::ostringstream &out,
         }
     }
 
+    std::sort(items.begin(), items.end(),
+              [](const item &a, const item &b) { return a.name < b.name; });
+
     bool first = true;
     for (auto &it : items)
     {
@@ -207,22 +211,8 @@ saucer::scheme::response handle_app_request(
     {
         std::string body(req.content().str());
 
-        auto find_val = [&](const std::string &key) -> std::string
-        {
-            auto pos = body.find("\"" + key + "\"");
-            if (pos == std::string::npos)
-                return "";
-            pos = body.find('"', pos + key.size() + 3);
-            if (pos == std::string::npos)
-                return "";
-            auto end = body.find('"', pos + 1);
-            if (end == std::string::npos)
-                return "";
-            return std::string(body.substr(pos + 1, end - pos - 1));
-        };
-
-        auto from = find_val("from");
-        auto to = find_val("to");
+        auto from = json_string_value(body, "from");
+        auto to = json_string_value(body, "to");
 
         if (from.empty() || to.empty())
             return {.data = saucer::stash::from_str("Missing from/to"),
@@ -237,13 +227,11 @@ saucer::scheme::response handle_app_request(
             return {.data = saucer::stash::from_str("Invalid path"),
                     .mime = "text/plain", .status = 400};
 
-        if (from.find("..") != std::string::npos ||
-            to.find("..") != std::string::npos)
+        fs::path src, dst;
+        if (!resolve_within(fs::path(cfg.content_root) / from, cfg.content_root, src) ||
+            !resolve_within(fs::path(cfg.content_root) / to, cfg.content_root, dst))
             return {.data = saucer::stash::from_str("Invalid path"),
-                    .mime = "text/plain", .status = 400};
-
-        auto src = fs::path(cfg.content_root) / from;
-        auto dst = fs::path(cfg.content_root) / to;
+                    .mime = "text/plain", .status = 403};
 
         if (!fs::exists(src))
             return {.data = saucer::stash::from_str("Source not found"),
@@ -315,19 +303,25 @@ saucer::scheme::response handle_app_request(
             return {.data = saucer::stash::from_str("Not Found"),
                     .mime = "text/plain", .status = 404};
 
+        // Path traversal guard
+        fs::path resolved;
+        if (!resolve_within(fpath, cfg.content_root, resolved))
+            return {.data = saucer::stash::from_str("Forbidden"),
+                    .mime = "text/plain", .status = 403};
+
         if (method == "GET")
         {
-            if (!fs::exists(fpath) || fs::is_directory(fpath))
+            if (!fs::exists(resolved) || fs::is_directory(resolved))
                 return {.data = saucer::stash::from_str(""),
                         .mime = "text/markdown", .status = 404};
 
-            return {.data = stash_from_file(fpath.string()),
+            return {.data = stash_from_file(resolved.string()),
                     .mime = "text/markdown; charset=utf-8", .status = 200};
         }
 
         if (method == "HEAD")
         {
-            if (!fs::exists(fpath) || !fs::is_regular_file(fpath))
+            if (!fs::exists(resolved) || !fs::is_regular_file(resolved))
                 return {.data = saucer::stash::from_str(""),
                         .mime = "text/markdown", .status = 404};
 
@@ -338,12 +332,9 @@ saucer::scheme::response handle_app_request(
         if (method == "PUT")
         {
             std::string body(req.content().str());
-            if (fpath.string().find("..") != std::string::npos)
-                return {.data = saucer::stash::from_str("Invalid path"),
-                        .mime = "text/plain", .status = 400};
 
-            fs::create_directories(fpath.parent_path());
-            std::ofstream f(fpath, std::ios::binary);
+            fs::create_directories(resolved.parent_path());
+            std::ofstream f(resolved, std::ios::binary);
             if (!f)
                 return {.data = saucer::stash::from_str("Write failed"),
                         .mime = "text/plain", .status = 500};
@@ -360,17 +351,17 @@ saucer::scheme::response handle_app_request(
 
         if (method == "DELETE")
         {
-            if (!fs::exists(fpath))
+            if (!fs::exists(resolved))
                 return {.data = saucer::stash::from_str("Not found"),
                         .mime = "text/plain", .status = 404};
 
-            fs::remove(fpath);
+            fs::remove(resolved);
 
             // Remove orphaned images after document delete
             auto doc_dir = fs::path(spath).parent_path().string();
             remove_orphaned_images(cfg, doc_dir);
 
-            auto parent = fpath.parent_path();
+            auto parent = resolved.parent_path();
             while (parent != fs::path(cfg.content_root) && fs::is_empty(parent))
             {
                 fs::remove(parent);
@@ -431,20 +422,21 @@ saucer::scheme::response handle_app_request(
 
     // -- Static files --
 
-    std::string file_path;
+    fs::path file_target;
     if (path.empty() || path == "index.html")
-        file_path = cfg.editor_root + "/index.html";
+        file_target = fs::path(cfg.editor_root) / "index.html";
     else
-        file_path = cfg.editor_root + "/" + path;
+        file_target = fs::path(cfg.editor_root) / path;
 
-    if (file_path.find("..") != std::string::npos)
+    fs::path file_resolved;
+    if (!resolve_within(file_target, cfg.editor_root, file_resolved))
         return {.data = saucer::stash::from_str("Forbidden"),
                 .mime = "text/plain", .status = 403};
 
-    if (!fs::exists(file_path) || !fs::is_regular_file(file_path))
+    if (!fs::exists(file_resolved) || !fs::is_regular_file(file_resolved))
         return {.data = saucer::stash::from_str("Not Found"),
                 .mime = "text/plain", .status = 404};
 
-    return {.data = stash_from_file(file_path),
-            .mime = guess_mime(file_path), .status = 200};
+    return {.data = stash_from_file(file_resolved.string()),
+            .mime = guess_mime(file_resolved.string()), .status = 200};
 }
