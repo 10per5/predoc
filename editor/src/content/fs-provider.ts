@@ -1,5 +1,6 @@
-import type { ContentProvider, TreeNode, ImageEntry } from "./provider"
+import type { ContentProvider, TreeNode, ImageEntry, SearchResult } from "./provider"
 import { stripFrontmatter } from "../utils/frontmatter"
+import { extractSnippets, contentMatches } from "../utils/content-search"
 import { sanitizeImageName } from "../utils/sanitize"
 
 export class FileSystemProvider implements ContentProvider {
@@ -125,6 +126,42 @@ export class FileSystemProvider implements ContentProvider {
     if (content === null) throw new Error("Source not found")
     await this.writeFile(to, content)
     await this.deleteFile(from)
+  }
+
+  async search(query: string): Promise<SearchResult[]> {
+    if (!this.dirHandle) await this.init()
+    return this.searchInDir(this.dirHandle!, "", query)
+  }
+
+  private async searchInDir(
+    dir: FileSystemDirectoryHandle,
+    prefix: string,
+    query: string,
+  ): Promise<SearchResult[]> {
+    const results: SearchResult[] = []
+    for await (const entry of dir.values()) {
+      if (entry.name.startsWith(".")) continue
+      if (entry.kind === "directory") {
+        if (entry.name === "image") continue
+        const sub = await this.searchInDir(
+          entry as FileSystemDirectoryHandle,
+          prefix ? `${prefix}/${entry.name}` : entry.name,
+          query,
+        )
+        results.push(...sub)
+      } else if (entry.name.endsWith(".md")) {
+        const file = await (entry as FileSystemFileHandle).getFile()
+        const body = await file.text()
+        if (contentMatches(body, query)) {
+          const full = prefix ? `${prefix}/${entry.name}` : entry.name
+          results.push({
+            path: full.replace(/\.md$/, ""),
+            snippets: extractSnippets(body, query),
+          })
+        }
+      }
+    }
+    return results
   }
 
   async getServerTime(path: string): Promise<number | null> {

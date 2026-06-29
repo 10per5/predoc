@@ -169,6 +169,18 @@ function removeOrphanedImages(docRelPath: string, ctx: ServerContext): void {
   }
   if (readdirSync(imageDir).length === 0) {
     rmSync(imageDir, { force: true });
+    // Clean up empty parent directories up to content root
+    let dir = dirname(imageDir);
+    while (dir.startsWith(ctx.contentDir)) {
+      try {
+        const entries = readdirSync(dir);
+        if (entries.length > 0) break;
+        rmdirSync(dir);
+      } catch {
+        break;
+      }
+      dir = dirname(dir);
+    }
   }
 }
 
@@ -207,9 +219,13 @@ async function handleContent(req: Request, relPath: string, ctx: ServerContext):
     rmSync(target, { force: true });
     let dir = dirname(target);
     while (dir.startsWith(ctx.contentDir)) {
-      const entries = readdirSync(dir);
-      if (entries.length > 0) break;
-      rmSync(dir, { force: true });
+      try {
+        const entries = readdirSync(dir);
+        if (entries.length > 0) break;
+        rmdirSync(dir);
+      } catch {
+        break;
+      }
       dir = dirname(dir);
     }
     // Remove orphaned images
@@ -267,6 +283,88 @@ function handleUploads(relPath: string, ctx: ServerContext): Response | null {
 }
 
 const IMAGE_EXTS = new Set([".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".bmp", ".ico"]);
+
+// ── Search API ────────────────────────────────────────────────────────────
+
+function extractTableCells(table: string, query: string): string[] {
+  const q = query.toLowerCase();
+  const rows = table.split("\n").filter(r => r.trim().startsWith("|") && !r.includes("---"));
+  const results: string[] = [];
+  for (let ri = 0; ri < rows.length; ri++) {
+    const cells = rows[ri].split("|").slice(1, -1).map(c => c.trim());
+    for (let ci = 0; ci < cells.length; ci++) {
+      if (cells[ci].toLowerCase().includes(q)) {
+        const col = String.fromCharCode(65 + ci);
+        results.push(`${col}${ri + 1}: ${cells[ci]}`);
+      }
+    }
+  }
+  return results;
+}
+
+function extractSnippets(content: string, query: string, maxSnippets = 3): string[] {
+  const q = query.toLowerCase().trim();
+  if (!q) return [];
+  const paragraphs = content.split(/\n\s*\n/);
+  const snippets: string[] = [];
+  for (const para of paragraphs) {
+    if (para.toLowerCase().includes(q)) {
+      if (para.trim().startsWith("|")) {
+        const cells = extractTableCells(para, q);
+        snippets.push(...cells);
+      } else {
+        snippets.push(para.trim());
+      }
+      if (snippets.length >= maxSnippets) break;
+    }
+  }
+  return snippets;
+}
+
+async function handleSearch(req: Request, ctx: ServerContext): Promise<Response | null> {
+  const { query } = await req.json();
+  if (!query || typeof query !== "string") {
+    return new Response(JSON.stringify({ results: [] }), {
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const q = query.toLowerCase().trim();
+  if (!q) {
+    return new Response(JSON.stringify({ results: [] }), {
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const results: { path: string; snippets: string[] }[] = [];
+
+  function walk(dir: string, prefix: string) {
+    if (!existsSync(dir)) return;
+    for (const name of readdirSync(dir).sort()) {
+      if (name.startsWith(".")) continue;
+      const full = join(dir, name);
+      const stat = statSync(full);
+      if (stat.isDirectory()) {
+        if (name === "image") continue;
+        walk(full, prefix ? `${prefix}/${name}` : name);
+      } else if (name.endsWith(".md")) {
+        const content = readFileSync(full, "utf-8");
+        if (content.toLowerCase().includes(q)) {
+          const path = prefix ? `${prefix}/${name}` : name;
+          results.push({
+            path: path.replace(/\.md$/, ""),
+            snippets: extractSnippets(content, q),
+          });
+        }
+      }
+    }
+  }
+
+  walk(ctx.contentDir, "");
+  return new Response(JSON.stringify({ results }), {
+    headers: { "Content-Type": "application/json" },
+  });
+}
 
 function handleListImages(req: Request, ctx: ServerContext): Response | null {
   const url = new URL(req.url);
@@ -367,9 +465,13 @@ async function handleMove(req: Request, ctx: ServerContext): Promise<Response | 
 
   let dir = dirname(src);
   while (dir.startsWith(ctx.contentDir)) {
-    const entries = readdirSync(dir);
-    if (entries.length > 0) break;
-    rmSync(dir, { force: true });
+    try {
+      const entries = readdirSync(dir);
+      if (entries.length > 0) break;
+      rmdirSync(dir);
+    } catch {
+      break;
+    }
     dir = dirname(dir);
   }
 
@@ -413,6 +515,10 @@ export async function handleApiRoutes(
 
   if (path.startsWith("/api/images/") && req.method === "DELETE") {
     return handleDeleteImage(req, path, ctx);
+  }
+
+  if (path === "/api/search" && req.method === "POST") {
+    return handleSearch(req, ctx);
   }
 
   return null;

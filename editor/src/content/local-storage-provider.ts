@@ -1,4 +1,5 @@
-import type { ContentProvider, TreeNode, ImageEntry } from "./provider"
+import type { ContentProvider, TreeNode, ImageEntry, SearchResult } from "./provider"
+import { extractSnippets, contentMatches } from "../utils/content-search"
 
 const STORAGE_PREFIX = "predoc:"
 const IMAGE_PREFIX = "predoc:image:"
@@ -72,6 +73,22 @@ export class LocalStorageProvider implements ContentProvider {
 
   async getServerTime(_path: string): Promise<number | null> {
     return null
+  }
+
+  async search(query: string): Promise<SearchResult[]> {
+    const results: SearchResult[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (!key || !key.startsWith(STORAGE_PREFIX) || !key.endsWith(".md")) continue
+      const body = localStorage.getItem(key)
+      if (body && contentMatches(body, query)) {
+        results.push({
+          path: key.slice(STORAGE_PREFIX.length).replace(/\.md$/, ""),
+          snippets: extractSnippets(body, query),
+        })
+      }
+    }
+    return results
   }
 
   private async fileToBase64(file: File): Promise<string> {

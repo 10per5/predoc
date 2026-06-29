@@ -3,6 +3,7 @@ import { editorSelfBase, liveUrlBase, isDev } from "../../config";
 import { liveIcon } from "../icons";
 import { buildEditorUrl } from "../../utils/url";
 import type { PendingOp } from "../../utils/tree";
+import { collectPagePaths, searchContent, type SearchMatch } from "../../services/sidebar-search";
 
 const fileIcon = html`<svg class="sidebar-icon sidebar-icon-file" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/></svg>`;
 const folderIcon = html`<svg class="sidebar-icon sidebar-icon-folder" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>`;
@@ -227,6 +228,76 @@ export function mountSidebar(
   }
 
   const treeEmpty = Object.keys(tree).length === 0;
+  const allPaths = treeEmpty ? [] : collectPagePaths(tree);
+
+  let searchTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function applyResults(q: string, filenameMatches: Set<string>, contentMatches: Map<string, string[]>): void {
+    const items = container.querySelectorAll<HTMLElement>(".nav-item");
+    const pathToItem = new Map<string, HTMLElement>();
+    for (const item of items) {
+      const path = item.getAttribute("data-nav-path") || "";
+      pathToItem.set(path, item);
+    }
+
+    for (const [path, item] of pathToItem) {
+      const matched = !q || filenameMatches.has(path) || contentMatches.has(path);
+      item.style.display = matched ? "" : "none";
+
+      const snippetEl = item.querySelector(".search-snippet") as HTMLElement;
+      const ctx = contentMatches.get(path);
+      if (q && ctx && ctx.length > 0) {
+        if (!snippetEl) {
+          const div = document.createElement("div");
+          div.className = "search-snippet";
+          for (let i = 0; i < ctx.length; i++) {
+            if (i > 0) div.appendChild(document.createElement("hr"));
+            div.appendChild(document.createTextNode(ctx[i]));
+          }
+          item.appendChild(div);
+        }
+      } else if (snippetEl) {
+        snippetEl.remove();
+      }
+    }
+
+    const sections = container.querySelectorAll<HTMLElement>(".nav-section");
+    for (const section of sections) {
+      const children = section.querySelectorAll<HTMLElement>(".nav-item");
+      const hasVisible = Array.from(children).some(c => c.style.display !== "none");
+      section.style.display = hasVisible || !q ? "" : "none";
+    }
+  }
+
+  function updateSearchResults(query: string): void {
+    if (searchTimer) clearTimeout(searchTimer);
+
+    const q = query.toLowerCase().trim();
+    if (!q) {
+      applyResults("", new Set(), new Map());
+      return;
+    }
+
+    // Step 1: filename match (instant, sync)
+    const items = container.querySelectorAll<HTMLElement>(".nav-item");
+    const filenameMatches = new Set<string>();
+    for (const item of items) {
+      const path = item.getAttribute("data-nav-path") || "";
+      const label = item.querySelector(".nav-link")?.textContent?.toLowerCase() || "";
+      if (label.includes(q)) filenameMatches.add(path);
+    }
+    applyResults(q, filenameMatches, new Map());
+
+    // Step 2: content search (debounced, async — includes cache + provider)
+    searchTimer = setTimeout(async () => {
+      const matches = await searchContent(allPaths, q);
+      const contentMatches = new Map<string, string[]>();
+      for (const m of matches) {
+        contentMatches.set(m.path, m.snippets);
+      }
+      applyResults(q, filenameMatches, contentMatches);
+    }, 200);
+  }
 
   render(
     html`
@@ -246,6 +317,41 @@ export function mountSidebar(
               </div>
             `
           : html``}
+        ${treeEmpty
+          ? html``
+          : html`
+              <div class="sidebar-search-wrapper">
+                <input
+                  class="sidebar-search"
+                  type="text"
+                  placeholder="Find file…"
+                  @input=${(e: InputEvent) => {
+                    const q = (e.target as HTMLInputElement).value;
+                    updateSearchResults(q);
+                    (e.target as HTMLElement).parentElement!.classList.toggle("has-value", !!q);
+                  }}
+                  @keydown=${(e: KeyboardEvent) => {
+                    if (e.key === "Escape") {
+                      const input = e.target as HTMLInputElement;
+                      input.value = "";
+                      updateSearchResults("");
+                      input.parentElement!.classList.remove("has-value");
+                      input.blur();
+                    }
+                  }}
+                />
+                <button
+                  class="search-clear"
+                  @click=${(e: Event) => {
+                    const input = (e.target as HTMLElement).parentElement!.querySelector<HTMLInputElement>(".sidebar-search")!;
+                    input.value = "";
+                    updateSearchResults("");
+                    input.parentElement!.classList.remove("has-value");
+                    input.focus();
+                  }}
+                ></button>
+              </div>
+            `}
         <div class="sidebar-inner">
           ${treeEmpty ? html`<div class="sidebar-empty">No files</div>` : renderItems(tree, "", 0, rawTree)}
           <button
@@ -273,6 +379,7 @@ export function mountSidebar(
     `,
     container,
   );
+
 }
 
 function showMenu(

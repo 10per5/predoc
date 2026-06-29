@@ -1,4 +1,4 @@
-import type { ContentProvider, TreeNode, ImageEntry } from "./provider"
+import type { ContentProvider, TreeNode, ImageEntry, SearchResult } from "./provider"
 
 export class RemoteProvider implements ContentProvider {
   readonly name = "remote"
@@ -34,6 +34,17 @@ export class RemoteProvider implements ContentProvider {
       body: JSON.stringify({ from: `${from}.md`, to: `${to}.md` }),
     })
     if (!res.ok) throw new Error(`Move failed: ${res.status}`)
+  }
+
+  async search(query: string): Promise<SearchResult[]> {
+    const res = await fetch("/api/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+    })
+    if (!res.ok) return []
+    const data = await res.json()
+    return data.results ?? []
   }
 
   async getServerTime(path: string): Promise<number | null> {

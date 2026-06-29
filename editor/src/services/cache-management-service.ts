@@ -16,6 +16,12 @@ import { imageRegistry } from "./image-registry";
 import { applyPendingOps, type PendingOp } from "../utils/tree";
 import type { TreeNode } from "../components/panels/sidebar";
 import { savePendingOps, loadPendingOps, clearPendingOpsStorage } from "../storage";
+import { extractSnippets } from "../utils/content-search";
+
+export interface SearchMatch {
+  path: string;
+  snippets: string[];
+}
 
 export interface CacheCallbacks {
   getCurrentContent?: () => string;
@@ -365,4 +371,18 @@ export class CacheManagementService {
       () => {}
     );
   }
+}
+
+export function searchCache(allPaths: string[], query: string): SearchMatch[] {
+  const q = query.toLowerCase().trim();
+  if (!q) return [];
+
+  const results: SearchMatch[] = [];
+  for (const path of allPaths) {
+    const body = cache.getBody(path) ?? cache.getBaseline(path);
+    if (body && body.toLowerCase().includes(q)) {
+      results.push({ path, snippets: extractSnippets(body, q) });
+    }
+  }
+  return results;
 }
