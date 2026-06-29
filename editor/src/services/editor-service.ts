@@ -658,6 +658,14 @@ export class EditorService {
       }
       if (!rect) return;
 
+      const viewportHeight = window.innerHeight;
+      const scrollEl = document.querySelector('.book-layout');
+      const idealTop = Math.max(0, (viewportHeight - rect.height) / 2);
+      if (Math.abs(rect.top - idealTop) > 2 && scrollEl) {
+        scrollEl.scrollTop += rect.top - idealTop;
+        rect = range.getBoundingClientRect();
+      }
+
       const flash = document.createElement("div");
       flash.style.cssText = `
         position: fixed;
