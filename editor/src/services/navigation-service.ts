@@ -40,7 +40,7 @@ export interface NavigationCallbacks {
   onPageRenamed?: () => void;
   onPageMoved?: () => void;
   onUpdateUI?: () => void;
-  onSearchNavigate?: (query: string, matchIndex?: number) => void;
+  onSearchNavigate?: (query: string, matchIndex?: number, snippetText?: string) => void;
 }
 
 export class NavigationService {
@@ -79,7 +79,7 @@ export class NavigationService {
   /**
    * Navigate to a page
    */
-  async navigate(path: string, pushHistory = true, searchQuery?: string, matchIndex?: number): Promise<void> {
+  async navigate(path: string, pushHistory = true, searchQuery?: string, matchIndex?: number, snippetText?: string): Promise<void> {
     if (this.loading) return;
     this.loading = true;
 
@@ -106,7 +106,7 @@ export class NavigationService {
         this.callbacks.onNavigate?.(path);
         if (searchQuery) {
           requestAnimationFrame(() => {
-            this.callbacks.onSearchNavigate?.(searchQuery, matchIndex);
+            this.callbacks.onSearchNavigate?.(searchQuery, matchIndex, snippetText);
           });
         }
       }
@@ -123,7 +123,7 @@ export class NavigationService {
    * Load and render sidebar
    */
   async loadSidebar(
-    onNavigate: (path: string, searchQuery?: string, matchIndex?: number) => void,
+    onNavigate: (path: string, searchQuery?: string, matchIndex?: number, snippetText?: string) => void,
     onUpdateMention?: (pages: string[], meta: any) => void
   ): Promise<void> {
     const sidebarEl = document.getElementById("sidebar-nav");
@@ -150,7 +150,7 @@ export class NavigationService {
       const dirtyPaths = cache.getDirtyPaths();
 
       const actions: SidebarActions = {
-        onNavigate: (path, searchQuery, matchIndex) => onNavigate(path, searchQuery, matchIndex),
+        onNavigate: (path, searchQuery, matchIndex, snippetText) => onNavigate(path, searchQuery, matchIndex, snippetText),
         onNewItem: (parentPath) =>
           createNewItem(this.cacheService, parentPath, (p) => onNavigate(p), () => this.loadSidebar(onNavigate, onUpdateMention)),
         onDelete: (path) => this.deletePage(path, onNavigate),

@@ -17,7 +17,7 @@ export interface TreeNode {
 }
 
 export interface SidebarActions {
-  onNavigate: (path: string, searchQuery?: string, matchIndex?: number) => void;
+  onNavigate: (path: string, searchQuery?: string, matchIndex?: number, snippetText?: string) => void;
   onNewItem: (parentPath: string) => void;
   onDelete: (path: string) => void;
   onRename: (path: string) => void;
@@ -299,7 +299,7 @@ export function mountSidebar(
             entry.addEventListener("click", (e) => {
               e.stopPropagation();
               e.preventDefault();
-              actions.onNavigate(path, currentQuery, matchSkips[i]);
+              actions.onNavigate(path, currentQuery, matchSkips[i], ctx[i]);
             });
             div.appendChild(entry);
           }

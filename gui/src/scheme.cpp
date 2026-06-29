@@ -2,6 +2,7 @@
 #include "config.h"
 #include "gitignore.h"
 #include "search.h"
+#include "images.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -53,6 +54,12 @@ static std::string guess_mime(const std::string &path)
         return "image/svg+xml";
     if (ext == ".ico")
         return "image/x-icon";
+    if (ext == ".gif")
+        return "image/gif";
+    if (ext == ".webp")
+        return "image/webp";
+    if (ext == ".bmp")
+        return "image/bmp";
     if (ext == ".woff2")
         return "font/woff2";
     if (ext == ".woff")
@@ -247,7 +254,27 @@ saucer::scheme::response handle_app_request(
                     .mime = "text/plain", .status = 409};
 
         fs::create_directories(dst.parent_path());
-        fs::rename(src, dst);
+
+        std::error_code rename_ec;
+        fs::rename(src, dst, rename_ec);
+        if (rename_ec)
+        {
+            // Cross-device fallback: copy + delete (handles EXDEV)
+            std::ifstream src_f(src, std::ios::binary);
+            if (!src_f)
+                return {.data = saucer::stash::from_str("Read failed"),
+                        .mime = "text/plain", .status = 500};
+            std::string content((std::istreambuf_iterator<char>(src_f)),
+                                std::istreambuf_iterator<char>());
+            src_f.close();
+            std::ofstream dst_f(dst, std::ios::binary);
+            if (!dst_f)
+                return {.data = saucer::stash::from_str("Write failed"),
+                        .mime = "text/plain", .status = 500};
+            dst_f << content;
+            dst_f.close();
+            fs::remove(src);
+        }
 
         auto parent = src.parent_path();
         while (parent != fs::path(cfg.content_root) && fs::is_empty(parent))
@@ -279,6 +306,10 @@ saucer::scheme::response handle_app_request(
             spath = spath.substr(0, qm);
 
         auto fpath = fs::path(cfg.content_root) / spath;
+
+        // Auto-append .md if the path has no extension (matching Node.js behavior)
+        if (fpath.extension().empty())
+            fpath += ".md";
 
         if (fpath.extension() != ".md")
             return {.data = saucer::stash::from_str("Not Found"),
@@ -319,6 +350,10 @@ saucer::scheme::response handle_app_request(
             f << body;
             f.close();
 
+            // Remove orphaned images after document save
+            auto doc_dir = fs::path(spath).parent_path().string();
+            remove_orphaned_images(cfg, doc_dir);
+
             return {.data = saucer::stash::from_str("ok"),
                     .mime = "text/plain", .status = 200};
         }
@@ -330,6 +365,10 @@ saucer::scheme::response handle_app_request(
                         .mime = "text/plain", .status = 404};
 
             fs::remove(fpath);
+
+            // Remove orphaned images after document delete
+            auto doc_dir = fs::path(spath).parent_path().string();
+            remove_orphaned_images(cfg, doc_dir);
 
             auto parent = fpath.parent_path();
             while (parent != fs::path(cfg.content_root) && fs::is_empty(parent))
@@ -344,6 +383,50 @@ saucer::scheme::response handle_app_request(
 
         return {.data = saucer::stash::from_str("Method not allowed"),
                 .mime = "text/plain", .status = 405};
+    }
+
+    // -- Image API: GET /uploads/{path} --
+
+    const std::string uploads_prefix = "uploads/";
+    if (path.size() > uploads_prefix.size() &&
+        path.substr(0, uploads_prefix.size()) == uploads_prefix &&
+        method == "GET")
+    {
+        auto rel_path = path.substr(uploads_prefix.size());
+        auto qm = rel_path.find('?');
+        if (qm != std::string::npos)
+            rel_path = rel_path.substr(0, qm);
+        return handle_serve_image(cfg, rel_path);
+    }
+
+    // -- Image API: POST /api/upload --
+
+    if (path == "api/upload" && method == "POST")
+    {
+        auto headers = req.headers();
+        std::string body(req.content().str());
+        return handle_upload_image(cfg, body, headers);
+    }
+
+    // -- Image API: GET /api/images --
+
+    if (path == "api/images" && method == "GET")
+    {
+        auto qs = req_url.query();
+        return handle_list_images(cfg, qs);
+    }
+
+    // -- Image API: DELETE /api/images/{name} --
+
+    const std::string images_api_prefix = "api/images/";
+    if (path.size() > images_api_prefix.size() &&
+        path.substr(0, images_api_prefix.size()) == images_api_prefix &&
+        method == "DELETE")
+    {
+        auto name = path.substr(images_api_prefix.size());
+        name = url_decode(name);
+        auto qs = req_url.query();
+        return handle_delete_image(cfg, name, qs);
     }
 
     // -- Static files --

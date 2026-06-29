@@ -16,7 +16,7 @@ import {
 import { commonmark } from "@milkdown/kit/preset/commonmark";
 import { gfm } from "@milkdown/kit/preset/gfm";
 import { nord } from "@milkdown/theme-nord";
-import { EditorState, TextSelection, Plugin, PluginKey } from "@milkdown/kit/prose/state";
+import { EditorState, Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { parserCtx, remarkStringifyOptionsCtx } from "@milkdown/core";
 import { clipboard } from "@milkdown/plugin-clipboard";
 import { history } from "@milkdown/kit/plugin/history";
@@ -58,6 +58,7 @@ import { getProvider } from "../content/provider-registry";
 import { stripFrontmatter } from "../utils/frontmatter";
 import { setCurrentDocDir, uploadImage } from "./image-config";
 import { imageRegistry } from "./image-registry";
+import { findTextInProseMirror } from "../utils/prosemirror-search";
 
 export interface EditorServiceConfig {
   onContentChange?: (content: string) => void;
@@ -591,69 +592,45 @@ export class EditorService {
   }
 
   /**
-   * Scroll to a match in the editor, skipping matchIndex occurrences of the query
+   * Scroll to a match in the editor by walking .ProseMirror text nodes
    */
-  scrollToText(query: string, matchIndex?: number): void {
-    if (!this.editor) return;
+  scrollToText(query: string, matchIndex?: number, snippetText?: string): void {
+    if (!this.editor) {
+      console.log("[scrollToText] no editor");
+      return;
+    }
     const q = query.toLowerCase().trim();
-    if (!q) return;
+    if (!q) {
+      console.log("[scrollToText] empty query");
+      return;
+    }
 
-    let pos = -1;
-    let v: any = null;
-    let skip = matchIndex ?? 0;
+    console.log("[scrollToText] inputs:", { query: JSON.stringify(q), matchIndex, snippetText: JSON.stringify(snippetText) });
 
-    this.editor.action((ctx) => {
-      const view = ctx.get(editorViewCtx);
-      const doc = view.state.doc;
+    const result = findTextInProseMirror(q, matchIndex, snippetText);
+    console.log("[scrollToText] findTextInProseMirror result:", result ? { nodeType: result.node.nodeType, nodeText: JSON.stringify((result.node.textContent || '').slice(0, 60)), offset: result.offset, parentTag: result.node.parentElement?.tagName } : null);
+    if (!result) {
+      console.log("[scrollToText] no result — bailing");
+      return;
+    }
 
-      doc.descendants((node, p) => {
-        if (pos >= 0) return false;
-        if (!node.isText) return true;
-
-        const text = node.text || '';
-        const lower = text.toLowerCase();
-        let idx = 0;
-        while (idx < lower.length) {
-          idx = lower.indexOf(q, idx);
-          if (idx < 0) break;
-          if (skip === 0) {
-            pos = p + idx;
-            return false;
-          }
-          skip--;
-          idx += q.length;
-        }
-        return true;
-      });
-
-      if (pos >= 0) {
-        const tr = view.state.tr
-          .setSelection(TextSelection.create(view.state.doc, pos))
-          .scrollIntoView();
-        view.dispatch(tr);
-        view.focus();
-        v = view;
-      }
-    });
-
-    if (pos < 0 || !v) return;
+    const proseMirror = document.querySelector('.ProseMirror');
+    if (!proseMirror) return;
+    (proseMirror as HTMLElement).focus();
 
     requestAnimationFrame(() => {
-      const dom = v!.domAtPos(pos);
-      if (!dom || dom.node.nodeType !== Node.TEXT_NODE) return;
-
       const range = document.createRange();
-      const endOff = Math.min(dom.offset + q.length, (dom.node.textContent || '').length);
+      const endOff = Math.min(result.offset + q.length, (result.node.textContent || '').length);
       let rect: DOMRect | null = null;
       try {
-        range.setStart(dom.node, dom.offset);
-        range.setEnd(dom.node, endOff);
+        range.setStart(result.node, result.offset);
+        range.setEnd(result.node, endOff);
         rect = range.getBoundingClientRect();
       } catch {
         rect = null;
       }
       if (!rect || rect.width === 0) {
-        const parent = dom.node.parentElement;
+        const parent = result.node.parentElement;
         if (parent) rect = parent.getBoundingClientRect();
       }
       if (!rect) return;
