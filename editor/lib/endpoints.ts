@@ -294,8 +294,7 @@ function extractTableCells(table: string, query: string): string[] {
     const cells = rows[ri].split("|").slice(1, -1).map(c => c.trim());
     for (let ci = 0; ci < cells.length; ci++) {
       if (cells[ci].toLowerCase().includes(q)) {
-        const col = String.fromCharCode(65 + ci);
-        results.push(`${col}${ri + 1}: ${cells[ci]}`);
+        results.push(cells[ci]);
       }
     }
   }

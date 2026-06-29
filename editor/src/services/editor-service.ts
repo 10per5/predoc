@@ -16,7 +16,7 @@ import {
 import { commonmark } from "@milkdown/kit/preset/commonmark";
 import { gfm } from "@milkdown/kit/preset/gfm";
 import { nord } from "@milkdown/theme-nord";
-import { EditorState, Plugin, PluginKey } from "@milkdown/kit/prose/state";
+import { EditorState, TextSelection, Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { parserCtx, remarkStringifyOptionsCtx } from "@milkdown/core";
 import { clipboard } from "@milkdown/plugin-clipboard";
 import { history } from "@milkdown/kit/plugin/history";
@@ -588,6 +588,94 @@ export class EditorService {
    */
   clearLastSetContent(path: string): void {
     this.lastSetContent.set(path, "");
+  }
+
+  /**
+   * Scroll to a match in the editor, skipping matchIndex occurrences of the query
+   */
+  scrollToText(query: string, matchIndex?: number): void {
+    if (!this.editor) return;
+    const q = query.toLowerCase().trim();
+    if (!q) return;
+
+    let pos = -1;
+    let v: any = null;
+    let skip = matchIndex ?? 0;
+
+    this.editor.action((ctx) => {
+      const view = ctx.get(editorViewCtx);
+      const doc = view.state.doc;
+
+      doc.descendants((node, p) => {
+        if (pos >= 0) return false;
+        if (!node.isText) return true;
+
+        const text = node.text || '';
+        const lower = text.toLowerCase();
+        let idx = 0;
+        while (idx < lower.length) {
+          idx = lower.indexOf(q, idx);
+          if (idx < 0) break;
+          if (skip === 0) {
+            pos = p + idx;
+            return false;
+          }
+          skip--;
+          idx += q.length;
+        }
+        return true;
+      });
+
+      if (pos >= 0) {
+        const tr = view.state.tr
+          .setSelection(TextSelection.create(view.state.doc, pos))
+          .scrollIntoView();
+        view.dispatch(tr);
+        view.focus();
+        v = view;
+      }
+    });
+
+    if (pos < 0 || !v) return;
+
+    requestAnimationFrame(() => {
+      const dom = v!.domAtPos(pos);
+      if (!dom || dom.node.nodeType !== Node.TEXT_NODE) return;
+
+      const range = document.createRange();
+      const endOff = Math.min(dom.offset + q.length, (dom.node.textContent || '').length);
+      let rect: DOMRect | null = null;
+      try {
+        range.setStart(dom.node, dom.offset);
+        range.setEnd(dom.node, endOff);
+        rect = range.getBoundingClientRect();
+      } catch {
+        rect = null;
+      }
+      if (!rect || rect.width === 0) {
+        const parent = dom.node.parentElement;
+        if (parent) rect = parent.getBoundingClientRect();
+      }
+      if (!rect) return;
+
+      const flash = document.createElement("div");
+      flash.style.cssText = `
+        position: fixed;
+        left: ${rect.left}px;
+        top: ${rect.top}px;
+        width: ${rect.width}px;
+        height: ${rect.height}px;
+        background: var(--color-warning);
+        opacity: 0.5;
+        border-radius: 3px;
+        pointer-events: none;
+        z-index: 9999;
+        transition: opacity 0.7s ease;
+      `;
+      document.body.appendChild(flash);
+      requestAnimationFrame(() => { flash.style.opacity = "0"; });
+      setTimeout(() => flash.remove(), 800);
+    });
   }
 
   /**

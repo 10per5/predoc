@@ -17,7 +17,7 @@ export interface TreeNode {
 }
 
 export interface SidebarActions {
-  onNavigate: (path: string) => void;
+  onNavigate: (path: string, searchQuery?: string, matchIndex?: number) => void;
   onNewItem: (parentPath: string) => void;
   onDelete: (path: string) => void;
   onRename: (path: string) => void;
@@ -231,6 +231,26 @@ export function mountSidebar(
   const allPaths = treeEmpty ? [] : collectPagePaths(tree);
 
   let searchTimer: ReturnType<typeof setTimeout> | null = null;
+  let currentQuery = "";
+
+  function highlightText(text: string, query: string): (string | { matched: string })[] {
+    const parts: (string | { matched: string })[] = [];
+    if (!query) {
+      parts.push(text);
+      return parts;
+    }
+    const lower = text.toLowerCase();
+    let last = 0;
+    let idx = lower.indexOf(query, last);
+    while (idx >= 0) {
+      if (idx > last) parts.push(text.slice(last, idx));
+      parts.push({ matched: text.slice(idx, idx + query.length) });
+      last = idx + query.length;
+      idx = lower.indexOf(query, last);
+    }
+    if (last < text.length) parts.push(text.slice(last));
+    return parts;
+  }
 
   function applyResults(q: string, filenameMatches: Set<string>, contentMatches: Map<string, string[]>): void {
     const items = container.querySelectorAll<HTMLElement>(".nav-item");
@@ -250,9 +270,38 @@ export function mountSidebar(
         if (!snippetEl) {
           const div = document.createElement("div");
           div.className = "search-snippet";
+          const matchSkips: number[] = [];
+          let cum = 0;
+          for (const snippet of ctx) {
+            matchSkips.push(cum);
+            const lower = snippet.toLowerCase();
+            let si = lower.indexOf(q);
+            while (si >= 0) {
+              cum++;
+              si = lower.indexOf(q, si + q.length);
+            }
+          }
           for (let i = 0; i < ctx.length; i++) {
             if (i > 0) div.appendChild(document.createElement("hr"));
-            div.appendChild(document.createTextNode(ctx[i]));
+            const entry = document.createElement("div");
+            entry.className = "snippet-entry";
+            const parts = highlightText(ctx[i], q);
+            for (const part of parts) {
+              if (typeof part === "string") {
+                entry.appendChild(document.createTextNode(part));
+              } else {
+                const span = document.createElement("span");
+                span.className = "snippet-hl";
+                span.textContent = part.matched;
+                entry.appendChild(span);
+              }
+            }
+            entry.addEventListener("click", (e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              actions.onNavigate(path, currentQuery, matchSkips[i]);
+            });
+            div.appendChild(entry);
           }
           item.appendChild(div);
         }
@@ -273,6 +322,7 @@ export function mountSidebar(
     if (searchTimer) clearTimeout(searchTimer);
 
     const q = query.toLowerCase().trim();
+    currentQuery = q;
     if (!q) {
       applyResults("", new Set(), new Map());
       return;

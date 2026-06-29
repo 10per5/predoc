@@ -111,6 +111,9 @@ export default class extends Controller {
       onContentNeeded: (path) => this.editorService.fetchContent(path, (data) => this.metaPanel?.update(data)),
       onContentReady: (path, content) => this.editorService.ensureEditor(content),
       onNavigate: () => {},
+      onSearchNavigate: (query, matchIndex) => {
+        this.editorService?.scrollToText(query, matchIndex);
+      },
       onSidebarReload: async () => {
         await this.loadSidebar();
       },
@@ -203,7 +206,7 @@ export default class extends Controller {
 
   private loadSidebar(): Promise<void> {
     return this.navService.loadSidebar(
-      (p) => this.navService.navigate(p),
+      (p, query, matchIndex) => this.navService.navigate(p, true, query, matchIndex),
       (pages, meta) => this.editorService.getMentionView()?.setPages(pages, meta),
     );
   }

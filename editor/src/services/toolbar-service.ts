@@ -77,7 +77,6 @@ export class ToolbarService {
    */
   private createScrollHandler(): () => void {
     return () => {
-      console.info(this.autoHidePref, this.toolbar);
       if (!this.autoHidePref || !this.toolbar) return;
 
       const layoutEl = document.querySelector(".book-layout");

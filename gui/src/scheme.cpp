@@ -1,4 +1,7 @@
 #include "scheme.h"
+#include "config.h"
+#include "gitignore.h"
+#include "search.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -8,147 +11,6 @@
 #include <algorithm>
 #include <string>
 namespace fs = std::filesystem;
-
-// ── gitignore pattern matching ──────────────────────────────────────────
-
-struct GitIgnorePattern
-{
-    std::string pattern; ///< cleaned pattern (no leading !, no trailing /)
-    bool negate   = false;
-    bool dir_only = false;
-    bool anchored = false; ///< has / in pattern (match relative path, not basename)
-};
-
-static std::vector<GitIgnorePattern> load_gitignore(const fs::path &dir)
-{
-    std::vector<GitIgnorePattern> out;
-    auto gi_path = dir / ".gitignore";
-    std::ifstream f(gi_path);
-    if (!f)
-        return out;
-
-    std::string line;
-    while (std::getline(f, line))
-    {
-        // strip trailing whitespace
-        while (!line.empty() && (line.back() == ' ' || line.back() == '\t'))
-            line.pop_back();
-        if (line.empty() || line[0] == '#')
-            continue;
-
-        GitIgnorePattern p;
-
-        if (line[0] == '!')
-        {
-            p.negate = true;
-            line = line.substr(1);
-        }
-
-        if (!line.empty() && line.back() == '/')
-        {
-            p.dir_only = true;
-            line.pop_back();
-        }
-
-        if (line.empty())
-            continue;
-
-        p.pattern = line;
-        p.anchored = line.find('/') != std::string::npos;
-        out.push_back(p);
-    }
-    return out;
-}
-
-static bool glob_match(const std::string &pat, std::size_t pi,
-                       const std::string &str, std::size_t si)
-{
-    // consume rest of pattern?
-    for (;;)
-    {
-        if (pi == pat.size() && si == str.size())
-            return true;
-
-        // ** matches everything
-        if (pi + 1 < pat.size() && pat[pi] == '*' && pat[pi + 1] == '*')
-        {
-            // skip second *
-            pi += 2;
-            // ** at end matches any trailing chars
-            if (pi == pat.size())
-                return true;
-            // try matching remaining pattern at every position
-            for (auto i = si; i <= str.size(); ++i)
-                if (glob_match(pat, pi, str, i))
-                    return true;
-            return false;
-        }
-
-        // * matches any chars except /
-        if (pi < pat.size() && pat[pi] == '*')
-        {
-            ++pi;
-            for (auto i = si; i <= str.size(); ++i)
-            {
-                if (i > si && str[i - 1] == '/')
-                    break;
-                if (glob_match(pat, pi, str, i))
-                    return true;
-            }
-            return false;
-        }
-
-        // ? matches any single char except /
-        if (pi < pat.size() && pat[pi] == '?')
-        {
-            if (si >= str.size() || str[si] == '/')
-                return false;
-            ++pi;
-            ++si;
-            continue;
-        }
-
-        // literal
-        if (pi < pat.size() && si < str.size() && pat[pi] == str[si])
-        {
-            ++pi;
-            ++si;
-            continue;
-        }
-
-        return false;
-    }
-}
-
-static bool is_ignored(const std::string &name, bool is_dir,
-                       const std::vector<GitIgnorePattern> &patterns)
-{
-    bool ignored = false;
-    for (const auto &p : patterns)
-    {
-        if (p.dir_only && !is_dir)
-            continue;
-
-        bool matched = false;
-
-        if (p.anchored)
-        {
-            // match against full relative path
-            matched = glob_match(p.pattern, 0, name, 0);
-        }
-        else
-        {
-            // match against basename
-            auto slash = name.rfind('/');
-            auto base  = (slash == std::string::npos) ? name : name.substr(slash + 1);
-            matched = glob_match(p.pattern, 0, base, 0);
-        }
-
-        if (matched)
-            ignored = !p.negate;
-    }
-    return ignored;
-}
 
 // ── ─────────────────────────────────────────────────────────────────────
 
@@ -201,6 +63,8 @@ static std::string guess_mime(const std::string &path)
         return "application/json";
     return "application/octet-stream";
 }
+
+// ── ─────────────────────────────────────────────────────────────────────
 
 static int extract_weight(const fs::path &file)
 {
@@ -284,6 +148,8 @@ static void build_tree(const fs::path &dir, std::ostringstream &out,
         out << prefix << "  \"" << it.name << "\": " << it.json;
     }
 }
+
+// ── ─────────────────────────────────────────────────────────────────────
 
 saucer::scheme::response handle_app_request(
     const config &cfg,
@@ -392,6 +258,13 @@ saucer::scheme::response handle_app_request(
 
         return {.data = saucer::stash::from_str("ok"),
                 .mime = "text/plain", .status = 200};
+    }
+
+    // -- API: search --
+
+    if (path == "api/search" && method == "POST")
+    {
+        return handle_search(cfg, req.content().str());
     }
 
     // -- Content API: /content/{path} --

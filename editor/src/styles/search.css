@@ -71,17 +71,32 @@
   flex: 0 0 100%;
   font-size: 0.72rem;
   color: var(--color-text-primary);
-  padding: 0.3rem 0.6rem;
   line-height: 1.45;
-  white-space: pre-wrap;
   background: linear-gradient(135deg, rgba(230,195,0,0.07) 0%, rgba(230,195,0,0.03) 100%);
   border-left: 3px solid var(--color-warning);
   margin: 0.2rem 0.5rem 0.3rem 0.35rem;
   border-radius: 0 4px 4px 0;
 }
 
+.snippet-entry {
+  padding: 0.3rem 0.6rem;
+  white-space: pre-wrap;
+  cursor: pointer;
+}
+
+.snippet-entry:hover {
+  background: rgba(230,195,0,0.08);
+}
+
 .search-snippet hr {
   border: none;
   border-top: 1px solid var(--color-border);
   margin: 0.3rem 0;
+}
+
+.snippet-hl {
+  background: var(--color-warning);
+  color: var(--color-bg-primary);
+  border-radius: 2px;
+  padding: 0 1px;
 }

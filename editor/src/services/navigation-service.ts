@@ -40,6 +40,7 @@ export interface NavigationCallbacks {
   onPageRenamed?: () => void;
   onPageMoved?: () => void;
   onUpdateUI?: () => void;
+  onSearchNavigate?: (query: string, matchIndex?: number) => void;
 }
 
 export class NavigationService {
@@ -78,7 +79,7 @@ export class NavigationService {
   /**
    * Navigate to a page
    */
-  async navigate(path: string, pushHistory = true): Promise<void> {
+  async navigate(path: string, pushHistory = true, searchQuery?: string, matchIndex?: number): Promise<void> {
     if (this.loading) return;
     this.loading = true;
 
@@ -103,6 +104,11 @@ export class NavigationService {
       if (content) {
         await this.callbacks.onContentReady?.(path, content);
         this.callbacks.onNavigate?.(path);
+        if (searchQuery) {
+          requestAnimationFrame(() => {
+            this.callbacks.onSearchNavigate?.(searchQuery, matchIndex);
+          });
+        }
       }
 
       // Reload sidebar
@@ -117,7 +123,7 @@ export class NavigationService {
    * Load and render sidebar
    */
   async loadSidebar(
-    onNavigate: (path: string) => void,
+    onNavigate: (path: string, searchQuery?: string, matchIndex?: number) => void,
     onUpdateMention?: (pages: string[], meta: any) => void
   ): Promise<void> {
     const sidebarEl = document.getElementById("sidebar-nav");
@@ -144,7 +150,7 @@ export class NavigationService {
       const dirtyPaths = cache.getDirtyPaths();
 
       const actions: SidebarActions = {
-        onNavigate: (path) => onNavigate(path),
+        onNavigate: (path, searchQuery, matchIndex) => onNavigate(path, searchQuery, matchIndex),
         onNewItem: (parentPath) =>
           createNewItem(this.cacheService, parentPath, (p) => onNavigate(p), () => this.loadSidebar(onNavigate, onUpdateMention)),
         onDelete: (path) => this.deletePage(path, onNavigate),
