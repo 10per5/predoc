@@ -333,6 +333,10 @@ saucer::scheme::response handle_app_request(
         {
             std::string body(req.content().str());
 
+            if (body.size() > cfg.max_content_size)
+                return {.data = saucer::stash::from_str("Content too large"),
+                        .mime = "text/plain", .status = 413};
+
             fs::create_directories(resolved.parent_path());
             std::ofstream f(resolved, std::ios::binary);
             if (!f)

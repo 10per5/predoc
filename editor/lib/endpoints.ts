@@ -7,6 +7,7 @@ export interface ServerContext {
   disableApi: boolean;
   noIgnore: boolean;
   treeDepth: number;
+  maxContentSize?: number; // bytes, default 10MB
 }
 
 const MIME: Record<string, string> = {
@@ -207,6 +208,9 @@ async function handleContent(req: Request, relPath: string, ctx: ServerContext):
 
   if (req.method === "PUT") {
     const text = await req.text();
+    const limit = ctx.maxContentSize ?? 10 * 1024 * 1024;
+    if (text.length > limit)
+      return new Response("Content too large", { status: 413 });
     mkdirSync(dirname(target), { recursive: true });
     writeFileSync(target, text, "utf-8");
     // Remove orphaned images after content update
@@ -249,6 +253,9 @@ async function handleUpload(req: Request, ctx: ServerContext): Promise<Response 
   const docDir = form.get("dir") as string | null;
 
   if (!file) return new Response("No file", { status: 400 });
+  const limit = ctx.maxContentSize ?? 10 * 1024 * 1024;
+  if (file.size > limit)
+    return new Response("File too large", { status: 413 });
 
   const rawTargetDir = docDir ? join(ctx.contentDir, docDir, "image") : join(ctx.contentDir, "image");
   const targetDir = resolveWithin(rawTargetDir, ctx.contentDir);

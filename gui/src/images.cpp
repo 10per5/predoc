@@ -384,6 +384,10 @@ saucer::scheme::response handle_upload_image(
         return {.data = saucer::stash::from_str("No file"),
                 .mime = "text/plain", .status = 400};
 
+    if (file_content.size() > cfg.max_content_size)
+        return {.data = saucer::stash::from_str("File too large"),
+                .mime = "text/plain", .status = 413};
+
     auto safe_name = sanitize_image_name(filename.empty() ? "image.png" : filename);
 
     // Build target directory

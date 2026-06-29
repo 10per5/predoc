@@ -29,6 +29,12 @@ Saucer supports Qt WebEngine (Linux), WebKitGTK (Linux), WKWebView (macOS), and 
 
 Detect mounted content volumes at startup. A future File System Access API (FSAA) fallback would let the browser read/write local files in environments without a GUI binary.
 
+## Diff-Based Content Updates
+
+The current PUT endpoint sends the entire markdown body on every save. For large documents this is wasteful. A future improvement would use operational transforms (OT) or JSON patches so only the changed portion is transmitted, reducing bandwidth and enabling conflict resolution across clients.
+
+A `maxContentSize` config flag (default ~10 MB) currently rejects oversized PUT bodies at the server — but the real fix is to never send them in the first place.
+
 ## Decoupled Server
 
 The server is currently a single-file Bun route handler. Future path toward a deployable, scalable server:
