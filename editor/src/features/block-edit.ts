@@ -1,6 +1,6 @@
 import type { Ctx } from "@milkdown/kit/ctx";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import type { EditorState } from "@milkdown/kit/prose/state";
+import { TextSelection, type EditorState } from "@milkdown/kit/prose/state";
 import { editorViewCtx, commandsCtx } from "@milkdown/kit/core";
 import { block, BlockProvider, blockConfig } from "@milkdown/kit/plugin/block";
 import { slashFactory, SlashProvider } from "@milkdown/kit/plugin/slash";
@@ -13,7 +13,6 @@ import {
   insertHrCommand,
 } from "@milkdown/kit/preset/commonmark";
 import { createTable } from "@milkdown/kit/preset/gfm";
-import { TextSelection } from "@milkdown/kit/prose/state";
 import type { Node } from "@milkdown/kit/prose/model";
 import { menuAPI, type MenuAPI } from "./menu-api";
 import {
@@ -27,6 +26,7 @@ import {
   quoteIcon,
   dividerIcon,
   codeBlockIcon,
+  mathIcon,
   tableIcon,
   todoListIcon,
   imageIcon,
@@ -46,6 +46,7 @@ const SLASH_ITEMS: SlashItem[] = [
   { cmd: "blockquote", label: "Blockquote", icon: quoteIcon },
   { cmd: "thematic_break", label: "Divider", icon: dividerIcon },
   { cmd: "code_block", label: "Code Block", icon: codeBlockIcon },
+  { cmd: "math_block", label: "Math Block (LaTeX)", icon: mathIcon },
   { cmd: "table", label: "Table", icon: tableIcon },
   { cmd: "image", label: "Image", icon: imageIcon },
 ];
@@ -389,6 +390,7 @@ class SlashView {
     else if (cmd === "blockquote") commands.call(wrapInBlockquoteCommand.key);
     else if (cmd === "todo_list") this.convertToTodoList(view);
     else if (cmd === "code_block") this.convertToCodeBlock(view);
+    else if (cmd === "math_block") this.convertToMathBlock(view);
     else if (cmd === "table") this.insertTable(view);
     view.focus();
   }
@@ -693,9 +695,25 @@ class SlashView {
     const { $from } = state.selection;
     const codeBlock = state.schema.nodes.code_block.create({ language: "" });
     const pos = $from.before($from.depth);
+    const tr = state.tr
+      .replaceWith(pos, pos + $from.node($from.depth).nodeSize, codeBlock);
     dispatch(
-      state.tr
-        .replaceWith(pos, pos + $from.node($from.depth).nodeSize, codeBlock)
+      tr
+        .setSelection(TextSelection.near(tr.doc.resolve(pos + 1)))
+        .scrollIntoView(),
+    );
+  }
+
+  private convertToMathBlock(view: EditorView) {
+    const { state, dispatch } = view;
+    const { $from } = state.selection;
+    const codeBlock = state.schema.nodes.code_block.create({ language: "LaTeX" });
+    const pos = $from.before($from.depth);
+    const tr = state.tr
+      .replaceWith(pos, pos + $from.node($from.depth).nodeSize, codeBlock);
+    dispatch(
+      tr
+        .setSelection(TextSelection.near(tr.doc.resolve(pos + 1)))
         .scrollIntoView(),
     );
   }

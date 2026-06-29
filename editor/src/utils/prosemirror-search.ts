@@ -119,7 +119,7 @@ export function findTextInProseMirror(query: string, matchIndex?: number, snippe
       _debug("findTextInProseMirror: findTextInElement failed, trying pre ancestor");
       const pre = el instanceof HTMLPreElement
         ? el
-        : el.closest('pre[data-language]');
+        : el.closest('pre[data-language]') as HTMLElement | null;
       _debug("findTextInProseMirror: pre ancestor:", pre ? pre.tagName.toLowerCase() + "[lang=" + (pre.dataset.language || '') + "]" : null);
       if (pre) {
         const inAttr = findQueryInAttributes(pre, q);

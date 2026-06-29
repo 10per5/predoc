@@ -52,6 +52,16 @@ import {
   slash,
   menuAPI,
 } from "../features/block-edit";
+import {
+  remarkMathPlugin,
+  remarkMathBlockPlugin,
+  mathInlineSchema,
+  mathInlineInputRule,
+  mathBlockInputRule,
+  blockLatexSchema,
+  toggleLatexCommand,
+} from "../plugins/math";
+import { codeBlockUI } from "../plugins/code-block-ui";
 import { cache } from "../cache";
 import { toggleSourceMode, applySourceContent } from "../editor-source";
 import { getProvider } from "../content/provider-registry";
@@ -456,7 +466,15 @@ export class EditorService {
       .use(linkTooltipPlugin)
       .use(tableBlock)
       .use(imageBlockComponent)
+      .use(codeBlockUI)
       .use(cursor)
+      .use(remarkMathPlugin)
+      .use(remarkMathBlockPlugin)
+      .use(mathInlineSchema)
+      .use(mathInlineInputRule)
+      .use(mathBlockInputRule)
+      .use(blockLatexSchema)
+      .use(toggleLatexCommand)
       .use(
         $prose(() => {
           const dragDropPlugin = new Plugin({
