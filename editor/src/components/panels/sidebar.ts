@@ -246,6 +246,7 @@ export function mountSidebar(
           const from = e.dataTransfer?.getData("text/plain");
           if (from) {
             const to = path + "/" + from.split("/").pop();
+            if (from === to || to.startsWith(from + "/")) return;
             const parts = to.split("/");
             let node: unknown = tree;
             let exists = true;

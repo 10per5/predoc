@@ -63,6 +63,7 @@ export function mountFileMenu(
       { type: "separator" },
       {
         type: "item",
+        id: "menu-img-" + Math.random().toString(36).slice(2),
         icon: "🖼",
         label: "Image Manager",
         onClick: () => { callbacks.onImageManager?.(); close() },
@@ -70,12 +71,14 @@ export function mountFileMenu(
       { type: "separator" },
       {
         type: "item",
+        id: "menu-save-" + Math.random().toString(36).slice(2),
         icon: "💾",
         label: "Save as Zip",
         onClick: () => { callbacks.onSave?.(); close() },
       },
       {
         type: "item",
+        id: "menu-load-" + Math.random().toString(36).slice(2),
         icon: "📂",
         label: "Load from Zip",
         onClick: () => { callbacks.onLoad?.(); close() },
