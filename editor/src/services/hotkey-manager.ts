@@ -1,8 +1,8 @@
 type HotkeyHandler = () => void;
 
-const SHIFT = 1
-const CTRL = 2
-const META = 4
+const SHIFT = 1;
+const CTRL = 2;
+const META = 4;
 
 interface Binding {
   mods: number;
@@ -10,11 +10,14 @@ interface Binding {
   handler: HotkeyHandler;
 }
 
+/**
+ * Alternatively, consider https://wangchujiang.com/hotkeys-js/
+ */
 export class HotkeyManager {
   private bindings: Binding[] = [];
 
   register(key: string, handler: HotkeyHandler): void {
-    const parts = key.split("+").map(s => s.trim().toLowerCase());
+    const parts = key.split("+").map((s) => s.trim().toLowerCase());
     let mods = 0;
     let targetKey = "";
     for (const p of parts) {
@@ -51,3 +54,4 @@ export class HotkeyManager {
 
 export const hotkeys = new HotkeyManager();
 hotkeys.attach();
+
