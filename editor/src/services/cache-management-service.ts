@@ -97,7 +97,8 @@ export class CacheManagementService {
   }
 
   queueRename(from: string, to: string): void {
-    this.pendingOps.push({ type: "rename", from, to });
+    const content = cache.reconstructContent(from) ?? undefined;
+    this.pendingOps.push({ type: "rename", from, to, ...(content ? { content } : {}) });
     this.persistPendingOps();
     const fromDir = from.includes("/") ? from.substring(0, from.lastIndexOf("/")) : "";
     const toDir = to.includes("/") ? to.substring(0, to.lastIndexOf("/")) : "";
@@ -107,7 +108,18 @@ export class CacheManagementService {
   }
 
   queueMove(from: string, to: string): void {
-    this.pendingOps.push({ type: "move", from, to });
+    const content = cache.reconstructContent(from) ?? undefined;
+    this.pendingOps.push({ type: "move", from, to, ...(content ? { content } : {}) });
+
+    const fromBody = cache.getBody(from);
+    const fromBaseline = cache.getBaseline(from);
+    const fromFm = cache.getFrontmatter(from);
+    cache.clearPath(to);
+    if (fromBody !== undefined) cache.cacheBody(to, fromBody);
+    if (fromBaseline !== undefined) cache.setBaseline(to, fromBaseline);
+    if (fromFm !== undefined) cache.setFrontmatter(to, fromFm);
+    cache.sync();
+
     this.persistPendingOps();
     const fromDir = from.includes("/") ? from.substring(0, from.lastIndexOf("/")) : "";
     const toDir = to.includes("/") ? to.substring(0, to.lastIndexOf("/")) : "";
@@ -155,6 +167,48 @@ export class CacheManagementService {
         cache.sync()
       }
     }
+  }
+
+  private existsInTree(tree: TreeNode, path: string): boolean {
+    const parts = path.split("/");
+    let node: TreeNode | null | undefined = tree;
+    for (let i = 0; i < parts.length; i++) {
+      if (!node || typeof node !== "object") return false;
+      const part = parts[i];
+      node = (node[part] ?? node[part + ".md"]) as TreeNode | null | undefined;
+    }
+    return node !== undefined;
+  }
+
+  async pathExists(path: string): Promise<boolean> {
+    const hasPendingDelete = this.pendingOps.some(
+      (o) => o.type === "delete" && o.path === path,
+    );
+    const hasPendingCreate = this.pendingOps.some(
+      (o) => o.type === "create" && o.path === path,
+    );
+    const hasPendingMoveTo = this.pendingOps.some(
+      (o) => (o.type === "move" || o.type === "rename") && o.to === path,
+    );
+    if (hasPendingDelete) return false;
+    if (hasPendingCreate || hasPendingMoveTo) return true;
+
+    if (
+      cache.getBody(path) !== undefined ||
+      cache.getFrontmatter(path) !== undefined
+    ) {
+      return true;
+    }
+
+    try {
+      const provider = getProvider();
+      const tree = await provider?.getTree();
+      if (tree) {
+        return this.existsInTree(tree, path);
+      }
+    } catch {}
+
+    return false;
   }
 
   clearPendingOps(): void {
@@ -219,10 +273,20 @@ export class CacheManagementService {
             await provider?.deleteFile?.(op.path);
             break;
           case "rename":
-            await provider?.moveFile?.(op.from, op.to);
+            if (op.content) {
+              await provider?.writeFile?.(op.to, op.content);
+              await provider?.deleteFile?.(op.from);
+            } else {
+              await provider?.moveFile?.(op.from, op.to);
+            }
             break;
           case "move":
-            await provider?.moveFile?.(op.from, op.to);
+            if (op.content) {
+              await provider?.writeFile?.(op.to, op.content);
+              await provider?.deleteFile?.(op.from);
+            } else {
+              await provider?.moveFile?.(op.from, op.to);
+            }
             break;
         }
       } catch (error) {

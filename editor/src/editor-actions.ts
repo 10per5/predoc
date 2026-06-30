@@ -3,12 +3,14 @@ import { serializeFrontmatter } from "./utils/frontmatter"
 import type { MetaPanelData } from "./components/panels/meta-panel"
 import { cache } from "./cache"
 import type { CacheManagementService } from "./services/cache-management-service"
+import { showNotification } from "./components/notification/notification"
 
 export async function createNewItem(
   cacheService: CacheManagementService,
   pagePath: string,
   doNavigate: (path: string) => void,
-  loadSidebar: () => Promise<void>
+  loadSidebar: () => Promise<void>,
+  isFolder?: boolean,
 ): Promise<void> {
   const result = await promptCreateDialog("New")
   if (!result) return
@@ -24,14 +26,19 @@ export async function createNewItem(
     return
   }
 
-  // Create as sibling (same directory as the clicked item)
-  const parentDir = pagePath.includes("/")
-    ? pagePath.substring(0, pagePath.lastIndexOf("/"))
-    : ""
+  const parentDir = isFolder
+    ? pagePath
+    : pagePath.includes("/")
+      ? pagePath.substring(0, pagePath.lastIndexOf("/"))
+      : ""
 
   if (result.asDirectory) {
     const dirPath = parentDir ? `${parentDir}/${slug}` : slug
     const indexPath = `${dirPath}/_index`
+    if (await cacheService.pathExists(indexPath)) {
+      showNotification(`"${indexPath}" already exists.`, { title: "Duplicate", type: "warning" })
+      return
+    }
     const fmData: MetaPanelData = { title: result.name, weight: 100 }
     const fmStr = serializeFrontmatter(fmData)
     const body = `# ${result.name}\n\n`
@@ -46,6 +53,10 @@ export async function createNewItem(
     doNavigate(indexPath)
   } else {
     const fullPath = parentDir ? `${parentDir}/${slug}` : slug
+    if (await cacheService.pathExists(fullPath)) {
+      showNotification(`"${fullPath}" already exists.`, { title: "Duplicate", type: "warning" })
+      return
+    }
     const fmData: MetaPanelData = { title: result.name, weight: 100 }
     const fmStr = serializeFrontmatter(fmData)
     const body = `# ${result.name}\n\n`

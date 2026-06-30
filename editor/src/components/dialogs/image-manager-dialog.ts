@@ -1,6 +1,6 @@
 import { html, render } from "lit-html"
 import { listImages, deleteImage, getCurrentDocDir, getAllImages } from "../../services/image-config"
-import { showToast } from "../toast/toast"
+import { showNotification } from "../notification/notification"
 
 export async function mountImageManagerDialog(): Promise<void> {
   const dir = getCurrentDocDir()
@@ -135,12 +135,12 @@ export async function mountImageManagerDialog(): Promise<void> {
           row.remove()
           const remaining = overlay.querySelectorAll(".img-row").length
           if (remaining === 0) {
-            showToast("All images deleted")
+            showNotification("All images deleted", { type: "info" })
             close()
           }
-          showToast(`Deleted ${name}`)
+          showNotification(`Deleted ${name}`, { type: "info" })
         } catch (e: any) {
-          showToast(`Failed to delete: ${e.message}`)
+          showNotification(`Failed to delete: ${e.message}`, { type: "danger" })
         }
       })
     })
@@ -151,7 +151,7 @@ export async function mountImageManagerDialog(): Promise<void> {
         if (!storage) return
         const embed = `![](${storage})`
         navigator.clipboard.writeText(embed).then(() => {
-          showToast("Copied to clipboard")
+          showNotification("Copied to clipboard", { type: "info" })
         })
       })
     })

@@ -16,7 +16,7 @@ import { exportToZip, pickAndParseZip } from "../utils/zip";
 import type { ZipEntry, ZipFileEntry } from "../utils/zip";
 import { mountImportZipDialog } from "../components/dialogs/import-zip-dialog";
 import { mountImageManagerDialog } from "../components/dialogs/image-manager-dialog";
-import { showToast } from "../components/toast/toast";
+import { showNotification } from "../components/notification/notification";
 import { loadPrefs } from "../storage";
 import { applyThemeFromPrefs } from "../components/dialogs/prefs-dialog";
 import { PathService } from "../services/path-service";
@@ -118,7 +118,14 @@ export default class extends Controller {
         this.editorService.setCurrentPath(path);
         this.cacheService.setCurrentPath(path);
       },
-      onContentNeeded: (path) => this.editorService.fetchContent(path, (data) => this.metaPanel?.update(data)),
+      onContentNeeded: async (path) => {
+        const ops = this.cacheService.getPendingOps();
+        const moveOp = ops.find(o => o.type === "move" && o.to === path) as
+          | { type: "move"; from: string; to: string }
+          | undefined;
+        const effectivePath = moveOp ? moveOp.from : path;
+        return this.editorService.fetchContent(effectivePath, (data) => this.metaPanel?.update(data));
+      },
       onContentReady: (path, content) => this.editorService.ensureEditor(content),
       onNavigate: () => {},
       onSearchNavigate: (query, matchIndex, snippetText) => {
@@ -180,7 +187,7 @@ export default class extends Controller {
               cache.sync();
               await this.loadSidebar();
               await this.editorService.loadContent(initialPath, (data) => this.metaPanel?.update(data));
-              showToast(`Imported ${result.selected.length} file${result.selected.length > 1 ? "s" : ""}`);
+              showNotification(`Imported ${result.selected.length} file${result.selected.length > 1 ? "s" : ""}`, { type: "info" });
             },
             () => {},
           );

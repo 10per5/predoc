@@ -245,10 +245,6 @@ saucer::scheme::response handle_app_request(
             return {.data = saucer::stash::from_str("Source not found"),
                     .mime = "text/plain", .status = 404};
 
-        if (fs::exists(dst))
-            return {.data = saucer::stash::from_str("Destination exists"),
-                    .mime = "text/plain", .status = 409};
-
         fs::create_directories(dst.parent_path());
 
         std::error_code rename_ec;

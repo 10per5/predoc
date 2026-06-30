@@ -16,8 +16,8 @@ export function collectLeaves(tree: TreeNode, prefix = ""): string[] {
 export type PendingOp =
   | { type: "create"; path: string; content: string }
   | { type: "delete"; path: string }
-  | { type: "rename"; from: string; to: string }
-  | { type: "move"; from: string; to: string }
+  | { type: "rename"; from: string; to: string; content?: string }
+  | { type: "move"; from: string; to: string; content?: string }
 
 export function setPath(tree: TreeNode, path: string): void {
   const parts = path.split("/")

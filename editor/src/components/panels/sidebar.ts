@@ -2,12 +2,35 @@ import { html, render } from "lit-html";
 import { editorSelfBase, liveUrlBase, isDev } from "../../config";
 import { liveIcon } from "../icons";
 import { confirmDialog } from "../dialogs/dialog";
+import { showNotification } from "../notification/notification";
 import { buildEditorUrl } from "../../utils/url";
 import type { PendingOp } from "../../utils/tree";
-import { collectPagePaths, searchContent, type SearchMatch } from "../../services/sidebar-search";
+import {
+  collectPagePaths,
+  searchContent,
+  type SearchMatch,
+} from "../../services/sidebar-search";
 
-const fileIcon = html`<svg class="sidebar-icon sidebar-icon-file" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/></svg>`;
-const folderIcon = html`<svg class="sidebar-icon sidebar-icon-folder" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>`;
+const fileIcon = html`<svg
+  class="sidebar-icon sidebar-icon-file"
+  viewBox="0 0 24 24"
+  aria-hidden="true"
+>
+  <path
+    fill="currentColor"
+    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"
+  />
+</svg>`;
+const folderIcon = html`<svg
+  class="sidebar-icon sidebar-icon-folder"
+  viewBox="0 0 24 24"
+  aria-hidden="true"
+>
+  <path
+    fill="currentColor"
+    d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"
+  />
+</svg>`;
 
 export interface PageNode {
   weight?: number;
@@ -18,8 +41,13 @@ export interface TreeNode {
 }
 
 export interface SidebarActions {
-  onNavigate: (path: string, searchQuery?: string, matchIndex?: number, snippetText?: string) => void;
-  onNewItem: (parentPath: string) => void;
+  onNavigate: (
+    path: string,
+    searchQuery?: string,
+    matchIndex?: number,
+    snippetText?: string,
+  ) => void;
+  onNewItem: (parentPath: string, isFolder?: boolean) => void;
   onDelete: (path: string) => void;
   onRename: (path: string) => void;
   onMove: (from: string, to: string) => void;
@@ -59,23 +87,28 @@ export function mountSidebar(
 ) {
   const basePath = editorSelfBase;
   const page = current === "_index" ? "" : `/${current}`;
-  const baseUrl = liveUrlBase || (isDev ? 'http://localhost:5000' : '');
-  const liveUrl = baseUrl ? `${baseUrl}${providerType === "localStorage" ? "" : page}` : "";
+  const baseUrl = liveUrlBase || (isDev ? "http://localhost:5000" : "");
+  const liveUrl = baseUrl
+    ? `${baseUrl}${providerType === "localStorage" ? "" : page}`
+    : "";
 
   const pendingDeleteSet = new Set(
-    pendingOps?.filter(o => o.type === "delete").map(o => o.path) ?? []
+    pendingOps?.filter((o) => o.type === "delete").map((o) => o.path) ?? [],
   );
   const pendingRenameFromSet = new Set(
-    pendingOps?.filter(o => o.type === "rename").map(o => o.from) ?? []
+    pendingOps?.filter((o) => o.type === "rename").map((o) => o.from) ?? [],
   );
   const pendingRenameToMap = new Map(
-    pendingOps?.filter(o => o.type === "rename").map(o => [o.from, o.to]) ?? []
+    pendingOps?.filter((o) => o.type === "rename").map((o) => [o.from, o.to]) ??
+      [],
   );
   const pendingCreateSet = new Set(
-    pendingOps?.filter(o => o.type === "create").map(o => o.path) ?? []
+    pendingOps?.filter((o) => o.type === "create").map((o) => o.path) ?? [],
   );
   const pendingMoveToSet = new Set(
-    pendingOps?.filter(o => o.type === "move" || o.type === "rename").map(o => o.to) ?? []
+    pendingOps
+      ?.filter((o) => o.type === "move" || o.type === "rename")
+      .map((o) => o.to) ?? [],
   );
   const dirtySet = new Set(dirtyPaths ?? []);
 
@@ -96,30 +129,51 @@ export function mountSidebar(
     const pagePath = parts.replace(/\.md$/, "");
     const result: unknown[] = [];
     if (pendingDeleteSet.has(pagePath)) {
-      result.push(html`<span class="pending-badge pending-badge-delete">delete</span>`);
+      result.push(
+        html`<span class="pending-badge pending-badge-delete">delete</span>`,
+      );
     }
     if (pendingRenameFromSet.has(pagePath)) {
       const to = pendingRenameToMap.get(pagePath);
       if (to) {
-        result.push(html`<span class="pending-badge pending-badge-rename">→ ${to.split("/").pop()}</span>`);
+        result.push(
+          html`<span class="pending-badge pending-badge-rename"
+            >→ ${to.split("/").pop()}</span
+          >`,
+        );
       }
     }
     if (pendingCreateSet.has(pagePath)) {
-      result.push(html`<span class="pending-badge pending-badge-create">new</span>`);
+      result.push(
+        html`<span class="pending-badge pending-badge-create">new</span>`,
+      );
     }
     if (pendingMoveToSet.has(pagePath)) {
-      const from = pendingOps?.find(o => (o.type === "move" || o.type === "rename") && o.to === pagePath);
+      const from = pendingOps?.find(
+        (o) => (o.type === "move" || o.type === "rename") && o.to === pagePath,
+      );
       if (from && "from" in from) {
-        result.push(html`<span class="pending-badge pending-badge-move">from ${from.from.split("/").pop()}</span>`);
+        result.push(
+          html`<span class="pending-badge pending-badge-move"
+            >from ${from.from.split("/").pop()}</span
+          >`,
+        );
       }
     }
     if (dirtySet.has(pagePath)) {
-      result.push(html`<span class="pending-badge pending-badge-unsaved">unsaved</span>`);
+      result.push(
+        html`<span class="pending-badge pending-badge-unsaved">unsaved</span>`,
+      );
     }
     return result;
   }
 
-  function renderItems(items: TreeNode, prefix = "", depth = 0, rawSubtree?: TreeNode): unknown {
+  function renderItems(
+    items: TreeNode,
+    prefix = "",
+    depth = 0,
+    rawSubtree?: TreeNode,
+  ): unknown {
     // Merge raw tree items back in so pending deletes remain visible
     const display: TreeNode = { ...items };
     if (rawSubtree) {
@@ -164,16 +218,14 @@ export function mountSidebar(
         const active = pagePath === current;
         let label: string;
         if (name === "_index.md") {
-          label = !prefix
-            ? "Home"
-            : "Index";
+          label = !prefix ? "Home" : "Index";
         } else {
           label = name
             .replace(/\.md$/, "")
             .replace(/-/g, " ")
             .replace(/^\w/, (c) => c.toUpperCase());
         }
-          return html` <div
+        return html` <div
           class="nav-item${pendingClass(name, prefix)}"
           draggable="true"
           data-nav-path="${pagePath}"
@@ -198,7 +250,7 @@ export function mountSidebar(
             class="nav-more"
             @click=${(e: Event) => {
               e.stopPropagation();
-              showMenu(e.target as HTMLElement, pagePath, actions);
+              showMenu(e.target as HTMLElement, pagePath, actions, false);
             }}
           >
             ⋮
@@ -207,8 +259,16 @@ export function mountSidebar(
       }
       const childrenDepth = depth + 1;
       const rawEntry = rawSubtree?.[name];
-      const rawChild = rawEntry && typeof rawEntry === "object" && !("weight" in rawEntry) ? rawEntry as TreeNode : undefined;
-      const children = renderItems(val as TreeNode, path, childrenDepth, rawChild);
+      const rawChild =
+        rawEntry && typeof rawEntry === "object" && !("weight" in rawEntry)
+          ? (rawEntry as TreeNode)
+          : undefined;
+      const children = renderItems(
+        val as TreeNode,
+        path,
+        childrenDepth,
+        rawChild,
+      );
       const label = name
         .replace(/-/g, " ")
         .replace(/^\w/, (c) => c.toUpperCase());
@@ -246,15 +306,29 @@ export function mountSidebar(
           const from = e.dataTransfer?.getData("text/plain");
           if (from) {
             const to = path + "/" + from.split("/").pop();
-            if (from === to || to.startsWith(from + "/")) return;
+            if (from === to || to.startsWith(from + "/")) {
+              if (to.startsWith(from + "/")) {
+                showNotification(
+                  "Cannot move a folder into itself or its own child.",
+                  { title: "Sorry, not possible", type: "warning" },
+                );
+              }
+              return;
+            }
             const parts = to.split("/");
             let node: unknown = tree;
             let exists = true;
             for (let i = 0; i < parts.length; i++) {
-              if (!node || typeof node !== "object") { exists = false; break; }
+              if (!node || typeof node !== "object") {
+                exists = false;
+                break;
+              }
               const key = i === parts.length - 1 ? parts[i] + ".md" : parts[i];
               node = (node as Record<string, unknown>)[key];
-              if (node === undefined) { exists = false; break; }
+              if (node === undefined) {
+                exists = false;
+                break;
+              }
             }
             if (exists) {
               const confirmed = await confirmDialog({
@@ -268,12 +342,14 @@ export function mountSidebar(
           }
         }}
       >
-        <span class="nav-section-title depth-${depth}">${folderIcon}${label}</span>
+        <span class="nav-section-title depth-${depth}"
+          >${folderIcon}${label}</span
+        >
         <button
           class="nav-more"
           @click=${(e: Event) => {
             e.stopPropagation();
-            showMenu(e.target as HTMLElement, path, actions);
+            showMenu(e.target as HTMLElement, path, actions, true);
           }}
         >
           ⋮
@@ -291,7 +367,10 @@ export function mountSidebar(
   let searchTimer: ReturnType<typeof setTimeout> | null = null;
   let currentQuery = "";
 
-  function highlightText(text: string, query: string): (string | { matched: string })[] {
+  function highlightText(
+    text: string,
+    query: string,
+  ): (string | { matched: string })[] {
     const parts: (string | { matched: string })[] = [];
     if (!query) {
       parts.push(text);
@@ -310,7 +389,11 @@ export function mountSidebar(
     return parts;
   }
 
-  function applyResults(q: string, filenameMatches: Set<string>, contentMatches: Map<string, string[]>): void {
+  function applyResults(
+    q: string,
+    filenameMatches: Set<string>,
+    contentMatches: Map<string, string[]>,
+  ): void {
     const items = container.querySelectorAll<HTMLElement>(".nav-item");
     const pathToItem = new Map<string, HTMLElement>();
     for (const item of items) {
@@ -319,7 +402,8 @@ export function mountSidebar(
     }
 
     for (const [path, item] of pathToItem) {
-      const matched = !q || filenameMatches.has(path) || contentMatches.has(path);
+      const matched =
+        !q || filenameMatches.has(path) || contentMatches.has(path);
       item.style.display = matched ? "" : "none";
 
       const snippetEl = item.querySelector(".search-snippet") as HTMLElement;
@@ -371,7 +455,9 @@ export function mountSidebar(
     const sections = container.querySelectorAll<HTMLElement>(".nav-section");
     for (const section of sections) {
       const children = section.querySelectorAll<HTMLElement>(".nav-item");
-      const hasVisible = Array.from(children).some(c => c.style.display !== "none");
+      const hasVisible = Array.from(children).some(
+        (c) => c.style.display !== "none",
+      );
       section.style.display = hasVisible || !q ? "" : "none";
     }
   }
@@ -391,7 +477,8 @@ export function mountSidebar(
     const filenameMatches = new Set<string>();
     for (const item of items) {
       const path = item.getAttribute("data-nav-path") || "";
-      const label = item.querySelector(".nav-link")?.textContent?.toLowerCase() || "";
+      const label =
+        item.querySelector(".nav-link")?.textContent?.toLowerCase() || "";
       if (label.includes(q)) filenameMatches.add(path);
     }
     applyResults(q, filenameMatches, new Map());
@@ -409,9 +496,12 @@ export function mountSidebar(
 
   render(
     html`
-      <div class="sidebar-wrapper"
+      <div
+        class="sidebar-wrapper"
         @dragend=${() => {
-          container.querySelectorAll(".drag-over").forEach(el => el.classList.remove("drag-over"));
+          container
+            .querySelectorAll(".drag-over")
+            .forEach((el) => el.classList.remove("drag-over"));
         }}
       >
         ${treeEmpty
@@ -440,7 +530,10 @@ export function mountSidebar(
                   @input=${(e: InputEvent) => {
                     const q = (e.target as HTMLInputElement).value;
                     updateSearchResults(q);
-                    (e.target as HTMLElement).parentElement!.classList.toggle("has-value", !!q);
+                    (e.target as HTMLElement).parentElement!.classList.toggle(
+                      "has-value",
+                      !!q,
+                    );
                   }}
                   @keydown=${(e: KeyboardEvent) => {
                     if (e.key === "Escape") {
@@ -455,7 +548,11 @@ export function mountSidebar(
                 <button
                   class="search-clear"
                   @click=${(e: Event) => {
-                    const input = (e.target as HTMLElement).parentElement!.querySelector<HTMLInputElement>(".sidebar-search")!;
+                    const input = (
+                      e.target as HTMLElement
+                    ).parentElement!.querySelector<HTMLInputElement>(
+                      ".sidebar-search",
+                    )!;
                     input.value = "";
                     updateSearchResults("");
                     input.parentElement!.classList.remove("has-value");
@@ -465,7 +562,9 @@ export function mountSidebar(
               </div>
             `}
         <div class="sidebar-inner">
-          ${treeEmpty ? html`<div class="sidebar-empty">No files</div>` : renderItems(tree, "", 0, rawTree)}
+          ${treeEmpty
+            ? html`<div class="sidebar-empty">No files</div>`
+            : renderItems(tree, "", 0, rawTree)}
           <button
             class="nav-new-page"
             @click=${() => actions.onNewItem("docs")}
@@ -491,13 +590,13 @@ export function mountSidebar(
     `,
     container,
   );
-
 }
 
 function showMenu(
   anchor: HTMLElement,
   pagePath: string,
   actions: SidebarActions,
+  isFolder?: boolean,
 ) {
   closeMenu();
 
@@ -524,7 +623,7 @@ function showMenu(
     closeMenu();
     switch (item.dataset.action) {
       case "new":
-        actions.onNewItem(pagePath);
+        actions.onNewItem(pagePath, isFolder);
         break;
       case "rename":
         actions.onRename(pagePath);
