@@ -30,15 +30,8 @@ The [Hugo Book theme](https://themes.gohugo.io/themes/hugo-book/) (~4k stars, MI
 | --------------------------------------- | ------------------------ | -------------------------------- |
 | CommonMark                              | ✅                       | ✅                               |
 | GFM (tables, strikethrough, task lists) | ✅                       | ✅                               |
-| Markdown alerts (`> [!NOTE]`)           | ✅ styled callout        | ✅ via `book-hint` CSS           |
-| Hugo shortcodes (`{{</* … */>}}`)       | 🔶 highlighted as badges | ✅ full rendering                |
-| `{{</* details */>}}`                   | 🔶 highlighted as badges | ✅ collapsible                   |
-| `{{</* param */>}}`                     | 🔶 highlighted as badges | ✅ inline                        |
-| `{{</* hint */>}}`                      | 🔶 highlighted as badges | ✅ (deprecated, use `> [!NOTE]`) |
-| `{{</* tabs */>}}`                      | 🔶 highlighted as badges | ✅ tabbed content                |
-| `{{</* mermaid */>}}`                   | 🔶 highlighted as badges | ✅ diagram rendering             |
-| `{{</* katex */>}}`                     | 🔶 highlighted as badges | ✅ math rendering                |
-| `{{</* figure */>}}`                    | 🔶 highlighted as badges | ✅ image with caption            |
+| [Markdown alerts](/docs/style/markdown-alerts) (`> [!NOTE]`) | ✅ styled callout        | ✅ via `book-hint` CSS           |
+| [Hugo shortcodes](/docs/style/shortcodes) (`{{</* … */>}}`)   | 🔶 highlighted as badges | ✅ full rendering                |
 
 For unimplemented shortcodes, the raw `{{</* … */>}}` syntax is preserved in the markdown source and highlighted as a badge in the editor. The Hugo build processes them correctly.
 
@@ -67,29 +60,3 @@ predoc package
 ```
 
 Output: `ssg/build/` — a portable static site compatible with GitHub Pages, Netlify, Surge, Vercel, or plain S3.
-
-## Formatting Reference
-
-### Markdown Alerts
-
-GitHub-style blockquote alerts render as colored callout blocks in both the editor and the Hugo site:
-
-```markdown
-> [!NOTE]
-> Useful information.
-
-> [!WARNING]
-> Proceed with caution.
-
-> [!DANGER]
-> This may cause issues.
-```
-
-Supported types: `note`, `tip`, `important`, `warning`, `caution`, `info`, `success`, `danger`.
-
-### Hugo Shortcodes
-
-For the full list of Hugo Book shortcodes, see:
-
-- <https://book.alxs.dev/docs/content/shortcodes/>
-- <https://gohugo.io/content-management/shortcodes/>

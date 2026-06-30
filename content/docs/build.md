@@ -27,36 +27,15 @@ predep package
 
 ## Build Steps
 
-All build recipes are declared in `predep.toml` at each subproject root:
+All build recipes are declared in `predep.toml` at each subproject root, the root [`predep.toml`](https://github.com/10per5/predoc/blob/main/predep.toml) ties them together via `[[include]]` directives and defines the top-level `build` and `build-docker` stage groups.
 
-| Step | Recipe File | Produces |
-|---|---|---|
-| GUI | [`gui/predep.toml`](https://github.com/10per5/predoc/tree/main/gui/predep.toml) | `gui/bin/predoc-gui` |
-| Editor JS | [`editor/predep.toml`](https://github.com/10per5/predoc/tree/main/editor/predep.toml) | `editor/public/assets/app.js` |
-
-The root [`predep.toml`](https://github.com/10per5/predoc/blob/main/predep.toml) ties them together via `[[include]]` directives and defines the top-level `build` and `build-docker` stage groups.
-
-Each subproject recipe uses Docker by default and falls back to native tools when available.
-
-### GUI
-
-Uses `gui/Dockerfile` (debian:trixie-slim, Qt6 WebEngine, Saucer built from source):
-
-1. `docker build -t predoc-gui gui/`
-2. `docker cp <container>:/build/bin/predoc-gui gui/bin/`
-
-Falls back to native build if premake5 and saucer headers are found at `/usr/local/include/saucer/`.
-
-The Dockerfile is single-stage — the binary is extracted and runs on the host, dynamically linking the host's Qt6 at runtime.
-
-## Build Artifacts
+### Build Artifacts
 
 ```
 gui/bin/predoc-gui             # ~1.2MB — GUI binary (links Qt6 at runtime)
 editor/public/assets/app.js  # Editor frontend JS (minified)
 editor/public/assets/app.css # Editor frontend CSS (minified)
 editor/public/index.html     # Static HTML shell
-
 ssg/
   hugo.toml                  # Hugo configuration
   themes/book/               # Hugo Book theme (downloaded on fetch-deps)

@@ -7,27 +7,7 @@ weight: 45
 
 ## Git Integration
 
-Auto-commit and push before each flush. Snapshot copies before writes would provide undo history beyond the in-memory buffer.
-
-## Single Binary
-
-Embed editor assets and Hugo into the CLI binary for a truly portable single-file executable.
-
-## SSG Pipeline Enhancements
-
-* Flush pending edits from browser buffer to disk before build
-
-* Auto-generate or update `hugo.toml`
-
-* Watch mode: rebuild on content changes
-
-## Platform Support
-
-Saucer supports Qt WebEngine (Linux), WebKitGTK (Linux), WKWebView (macOS), and WebView2 (Windows). The `app://` scheme handler works on all backends — adding macOS/Windows GUI builds is a Dockerfile change.
-
-## Filesystem Mounting
-
-Detect mounted content volumes at startup. A future File System Access API (FSAA) fallback would let the browser read/write local files in environments without a GUI binary.
+Streamline a way to commit directly from editor or start a PR to a repository, using the editor contents.
 
 ## Diff-Based Content Updates
 
@@ -53,4 +33,13 @@ Replace direct `fs` calls with a `StorageBackend` interface (`read`, `write`, `d
 
 ### Phase 4: Standalone Server Module
 
-Extract the server into its own package (`server/package.json`) with its own `Dockerfile`. The editor becomes a pure SPA that talks to any server implementing the API contract — deployable to serverless platforms (Cloudflare Workers, Lambda\@Edge) or scaled independently.
+Extract the server into its own package (`server/package.json`) with its own `Dockerfile`. The editor becomes a pure SPA that talks to any server implementing the API contract — deployable to serverless platforms (Cloudflare Workers, Lambda@Edge) or scaled independently.
+
+## Touch Gestures (Mobile)
+
+| Gesture                   | Action                            |
+| ------------------------- | --------------------------------- |
+| Swipe from left edge      | Open sidebar                      |
+| Swipe from right edge     | Open meta-panel                   |
+| Long-press on block       | Select for drag                   |
+| Swipe left/right on block | Quick actions (delete, duplicate) |
