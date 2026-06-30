@@ -18,6 +18,7 @@ import { mountImportZipDialog } from "../components/dialogs/import-zip-dialog";
 import { mountImageManagerDialog } from "../components/dialogs/image-manager-dialog";
 import { showToast } from "../components/toast/toast";
 import { loadPrefs } from "../storage";
+import { applyThemeFromPrefs } from "../components/dialogs/prefs-dialog";
 import { PathService } from "../services/path-service";
 import { imageRegistry } from "../services/image-registry";
 
@@ -55,6 +56,7 @@ export default class extends Controller {
     const initialPath = this.data.get("path")
       || new PathService().getInitialPath();
 
+    applyThemeFromPrefs();
     this.uiService = UIService.getInstance();
     this.uiInitializer = new UIInitializerService();
 

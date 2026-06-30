@@ -323,19 +323,27 @@
   font-size: 0.85rem;
   font-weight: 500;
   border-radius: 6px;
-  background: #e7f3e8;
-  border: 1px solid #b8d9ba;
+  background: var(--color-nav-live-bg, #e7f3e8);
+  border: 1px solid var(--color-nav-live-border, #b8d9ba);
   transition: all 0.2s ease;
 }
 
 .nav-live-link:hover {
-  background: #d4e8d6;
-  border-color: #5eac66;
+  background: var(--color-nav-live-bg-hover, #d4e8d6);
+  border-color: var(--color-nav-live-border-hover, #5eac66);
   color: var(--color-text-primary);
 }
 
 .live-icon {
   width: 16px;
   height: 16px;
-  color: #5eac66;
+  color: var(--color-nav-live-icon, #5eac66);
+}
+
+:root[data-theme="dark"] {
+  --color-nav-live-bg: #3b4252;
+  --color-nav-live-border: #4c566a;
+  --color-nav-live-bg-hover: #434c5e;
+  --color-nav-live-border-hover: #81a1c1;
+  --color-nav-live-icon: #81a1c1;
 }

@@ -341,14 +341,14 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.milkdown-link-edit .link-edit .input-area {
-  outline: none;
-  background: transparent;
-  width: 200px;
-  font-size: 14px;
-  color: #3b4252;
-  border: none;
-}
+  .milkdown-link-edit .link-edit .input-area {
+    outline: none;
+    background: transparent;
+    width: 200px;
+    font-size: 14px;
+    color: var(--color-text-primary);
+    border: none;
+  }
 
 .milkdown-link-edit .link-edit .input-area:focus {
   border-color: var(--color-accent);

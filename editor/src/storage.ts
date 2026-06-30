@@ -15,16 +15,21 @@ export type ImageStorageMode = "file" | "base64"
 export interface WikiPrefs {
   stickyToolbar: boolean;
   imageStorageMode: ImageStorageMode;
+  darkMode: boolean;
 }
 
-const DEFAULTS: WikiPrefs = { stickyToolbar: true, imageStorageMode: "file" };
+const DEFAULTS: WikiPrefs = { stickyToolbar: true, imageStorageMode: "file", darkMode: false };
+
+function systemPrefersDark(): boolean {
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
 
 export function loadPrefs(): WikiPrefs {
   try {
     const raw = localStorage.getItem(PREFS_KEY);
     if (raw) return { ...DEFAULTS, ...JSON.parse(raw) };
   } catch {}
-  return { ...DEFAULTS };
+  return { ...DEFAULTS, darkMode: systemPrefersDark() };
 }
 
 export function savePrefs(prefs: WikiPrefs) {
