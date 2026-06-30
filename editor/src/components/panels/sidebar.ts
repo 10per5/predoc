@@ -409,7 +409,11 @@ export function mountSidebar(
 
   render(
     html`
-      <div class="sidebar-wrapper">
+      <div class="sidebar-wrapper"
+        @dragend=${() => {
+          container.querySelectorAll(".drag-over").forEach(el => el.classList.remove("drag-over"));
+        }}
+      >
         ${treeEmpty
           ? html`
               <div class="sidebar-provider-bar">
