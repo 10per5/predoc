@@ -230,7 +230,8 @@ export function mountSidebar(
           draggable="true"
           data-nav-path="${pagePath}"
           @dragstart=${(e: DragEvent) => {
-            e.dataTransfer?.setData("text/plain", pagePath);
+            e.stopPropagation();
+            e.dataTransfer?.setData("text/plain", "file:" + pagePath);
           }}
         >
           <a
@@ -277,7 +278,8 @@ export function mountSidebar(
         draggable="true"
         data-nav-path="${path}"
         @dragstart=${(e: DragEvent) => {
-          e.dataTransfer?.setData("text/plain", path);
+          e.stopPropagation();
+          e.dataTransfer?.setData("text/plain", "dir:" + path);
         }}
         @dragenter=${(e: DragEvent) => {
           e.stopPropagation();
@@ -305,9 +307,12 @@ export function mountSidebar(
           el.classList.remove("drag-over");
           const from = e.dataTransfer?.getData("text/plain");
           if (from) {
-            const to = path + "/" + from.split("/").pop();
-            if (from === to || to.startsWith(from + "/")) {
-              if (to.startsWith(from + "/")) {
+            const fromIsDir = from.startsWith("dir:");
+            const fromPath = from.replace(/^(?:dir|file):/, "");
+            const to = path + "/" + fromPath.split("/").pop();
+            if (fromPath === to) return;
+            if (fromIsDir && (path === fromPath || path.startsWith(fromPath + "/"))) {
+              if (path.startsWith(fromPath + "/")) {
                 showNotification(
                   "Cannot move a folder into itself or its own child.",
                   { title: "Sorry, not possible", type: "warning" },
@@ -338,7 +343,7 @@ export function mountSidebar(
               });
               if (!confirmed) return;
             }
-            actions.onMove(from, to);
+            actions.onMove(fromPath, to);
           }
         }}
       >
