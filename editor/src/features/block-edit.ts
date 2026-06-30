@@ -81,7 +81,8 @@ class BlockHandleView {
       content,
       getOffset: () => {
         const w = window.innerWidth;
-        const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+        const rem =
+          parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
         if (w >= 1350) return Math.round(0.5 * rem);
         if (w >= 700) return 16;
         return Math.round(0.25 * rem);
@@ -102,20 +103,26 @@ class BlockHandleView {
         const w = window.innerWidth;
         const domRect = active.el.getBoundingClientRect();
         const style = window.getComputedStyle(active.el);
-        const paddingTop = Number.parseInt(style.paddingTop, 10) || 10;
+        let paddingTop = Number.parseInt(style.paddingTop, 10) || 10;
         const paddingBottom = Number.parseInt(style.paddingBottom, 10) || 0;
-        const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+        const rem =
+          parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
         let left: number;
         if (w >= 1350) {
           const prose = document.querySelector("#editor-area .ProseMirror");
           const proseRect = prose?.getBoundingClientRect();
-          left = proseRect ? proseRect.left - Math.round(1 * rem) : domRect.left;
-        } else if (w >= 700) {
+          left = proseRect
+            ? proseRect.left + Math.round(2 * rem)
+            : domRect.left;
+        } else if (w >= 800) {
           const menuEl = document.querySelector(".book-menu");
           const menuRect = menuEl?.getBoundingClientRect();
-          left = menuRect ? menuRect.right + Math.round(4.25 * rem) : domRect.left;
+          left = menuRect
+            ? menuRect.right + Math.round(4.25 * rem)
+            : domRect.left;
         } else {
-          left = domRect.right + Math.round(0.25 * rem);
+          left = domRect.right + Math.round(1.25 * rem);
+          paddingTop -= 12.5;
         }
         return {
           x: left,

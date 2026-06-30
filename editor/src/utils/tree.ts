@@ -25,7 +25,8 @@ export function setPath(tree: TreeNode, path: string): void {
   for (let i = 0; i < parts.length; i++) {
     const part = parts[i]
     if (i === parts.length - 1) {
-      if (!(part in node)) {
+      // Keys may have .md extension while incoming paths do not
+      if (!(part in node) && !(`${part}.md` in node)) {
         node[part] = null
       }
     } else {
@@ -46,7 +47,12 @@ function removePath(tree: TreeNode, path: string): void {
     node = node[part] as TreeNode
   }
   const last = parts[parts.length - 1]
-  delete node[last]
+  // Keys may have .md extension while incoming paths do not
+  if (last in node) {
+    delete node[last]
+  } else if (`${last}.md` in node) {
+    delete node[`${last}.md`]
+  }
 }
 
 export function applyPendingOps(tree: TreeNode, ops: PendingOp[]): TreeNode {

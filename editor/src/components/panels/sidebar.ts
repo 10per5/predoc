@@ -73,6 +73,9 @@ export function mountSidebar(
   const pendingCreateSet = new Set(
     pendingOps?.filter(o => o.type === "create").map(o => o.path) ?? []
   );
+  const pendingMoveToSet = new Set(
+    pendingOps?.filter(o => o.type === "move" || o.type === "rename").map(o => o.to) ?? []
+  );
   const dirtySet = new Set(dirtyPaths ?? []);
 
   function pendingClass(name: string, prefix: string): string {
@@ -82,6 +85,7 @@ export function mountSidebar(
     if (pendingDeleteSet.has(pagePath)) classes.push("pending-delete");
     if (pendingRenameFromSet.has(pagePath)) classes.push("pending-rename");
     if (pendingCreateSet.has(pagePath)) classes.push("pending-create");
+    if (pendingMoveToSet.has(pagePath)) classes.push("pending-move");
     if (dirtySet.has(pagePath)) classes.push("pending-unsaved");
     return classes.length > 0 ? " " + classes.join(" ") : "";
   }
@@ -102,6 +106,12 @@ export function mountSidebar(
     if (pendingCreateSet.has(pagePath)) {
       result.push(html`<span class="pending-badge pending-badge-create">new</span>`);
     }
+    if (pendingMoveToSet.has(pagePath)) {
+      const from = pendingOps?.find(o => (o.type === "move" || o.type === "rename") && o.to === pagePath);
+      if (from && "from" in from) {
+        result.push(html`<span class="pending-badge pending-badge-move">from ${from.from.split("/").pop()}</span>`);
+      }
+    }
     if (dirtySet.has(pagePath)) {
       result.push(html`<span class="pending-badge pending-badge-unsaved">unsaved</span>`);
     }
@@ -109,13 +119,13 @@ export function mountSidebar(
   }
 
   function renderItems(items: TreeNode, prefix = "", depth = 0, rawSubtree?: TreeNode): unknown {
-    // Merge raw tree items back in so pending deletes / renames remain visible
+    // Merge raw tree items back in so pending deletes remain visible
     const display: TreeNode = { ...items };
     if (rawSubtree) {
       for (const [name, val] of Object.entries(rawSubtree)) {
         const full = prefix ? `${prefix}/${name}` : name;
         const pagePath = full.replace(/\.md$/, "");
-        if (pendingDeleteSet.has(pagePath) || pendingRenameFromSet.has(pagePath)) {
+        if (pendingDeleteSet.has(pagePath)) {
           if (!(name in display)) {
             display[name] = val;
           }
@@ -169,12 +179,6 @@ export function mountSidebar(
           @dragstart=${(e: DragEvent) => {
             e.dataTransfer?.setData("text/plain", pagePath);
           }}
-          @dragover=${(e: DragEvent) => e.preventDefault()}
-          @drop=${(e: DragEvent) => {
-            e.preventDefault();
-            const from = e.dataTransfer?.getData("text/plain");
-            if (from) actions.onMove(from, pagePath);
-          }}
         >
           <a
             href="${buildEditorUrl(basePath, pagePath)}"
@@ -209,9 +213,23 @@ export function mountSidebar(
         .replace(/^\w/, (c) => c.toUpperCase());
       return html` <div
         class="nav-section"
+        @dragenter=${(e: DragEvent) => {
+          e.preventDefault();
+          const el = e.currentTarget as HTMLElement;
+          if (!el.contains(e.relatedTarget as Node)) {
+            el.classList.add("drag-over");
+          }
+        }}
+        @dragleave=${(e: DragEvent) => {
+          const el = e.currentTarget as HTMLElement;
+          if (!el.contains(e.relatedTarget as Node)) {
+            el.classList.remove("drag-over");
+          }
+        }}
         @dragover=${(e: DragEvent) => e.preventDefault()}
         @drop=${(e: DragEvent) => {
           e.preventDefault();
+          (e.currentTarget as HTMLElement).classList.remove("drag-over");
           const from = e.dataTransfer?.getData("text/plain");
           if (from) {
             const to = path + "/" + from.split("/").pop();
