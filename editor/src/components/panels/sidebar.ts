@@ -1,6 +1,7 @@
 import { html, render } from "lit-html";
 import { editorSelfBase, liveUrlBase, isDev } from "../../config";
 import { liveIcon } from "../icons";
+import { confirmDialog } from "../dialogs/dialog";
 import { buildEditorUrl } from "../../utils/url";
 import type { PendingOp } from "../../utils/tree";
 import { collectPagePaths, searchContent, type SearchMatch } from "../../services/sidebar-search";
@@ -213,7 +214,13 @@ export function mountSidebar(
         .replace(/^\w/, (c) => c.toUpperCase());
       return html` <div
         class="nav-section"
+        draggable="true"
+        data-nav-path="${path}"
+        @dragstart=${(e: DragEvent) => {
+          e.dataTransfer?.setData("text/plain", path);
+        }}
         @dragenter=${(e: DragEvent) => {
+          e.stopPropagation();
           e.preventDefault();
           const el = e.currentTarget as HTMLElement;
           if (!el.contains(e.relatedTarget as Node)) {
@@ -221,23 +228,55 @@ export function mountSidebar(
           }
         }}
         @dragleave=${(e: DragEvent) => {
+          e.stopPropagation();
           const el = e.currentTarget as HTMLElement;
           if (!el.contains(e.relatedTarget as Node)) {
             el.classList.remove("drag-over");
           }
         }}
-        @dragover=${(e: DragEvent) => e.preventDefault()}
-        @drop=${(e: DragEvent) => {
+        @dragover=${(e: DragEvent) => {
+          e.stopPropagation();
           e.preventDefault();
-          (e.currentTarget as HTMLElement).classList.remove("drag-over");
+        }}
+        @drop=${async (e: DragEvent) => {
+          e.stopPropagation();
+          e.preventDefault();
+          const el = e.currentTarget as HTMLElement;
+          el.classList.remove("drag-over");
           const from = e.dataTransfer?.getData("text/plain");
           if (from) {
             const to = path + "/" + from.split("/").pop();
+            const parts = to.split("/");
+            let node: unknown = tree;
+            let exists = true;
+            for (let i = 0; i < parts.length; i++) {
+              if (!node || typeof node !== "object") { exists = false; break; }
+              const key = i === parts.length - 1 ? parts[i] + ".md" : parts[i];
+              node = (node as Record<string, unknown>)[key];
+              if (node === undefined) { exists = false; break; }
+            }
+            if (exists) {
+              const confirmed = await confirmDialog({
+                title: "Replace file?",
+                message: `"${to}" already exists. Do you want to replace it?`,
+                confirmLabel: "Replace",
+              });
+              if (!confirmed) return;
+            }
             actions.onMove(from, to);
           }
         }}
       >
         <span class="nav-section-title depth-${depth}">${folderIcon}${label}</span>
+        <button
+          class="nav-more"
+          @click=${(e: Event) => {
+            e.stopPropagation();
+            showMenu(e.target as HTMLElement, path, actions);
+          }}
+        >
+          ⋮
+        </button>
         <div class="nav-section-children" style="--line-color: ${lineColor}">
           ${children}
         </div>

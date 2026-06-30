@@ -66,6 +66,10 @@
   opacity: 0.5;
 }
 
+.sidebar-inner .nav-section[draggable="true"] {
+  cursor: grab;
+}
+
 /* ── Navigation Links ──────────────────────────────────────────────── */
 
 .sidebar-inner .nav-link {
@@ -244,13 +248,21 @@
   line-height: 1;
 }
 
-.nav-item:hover .nav-more {
+.nav-item:hover .nav-more,
+.nav-section:hover > .nav-more {
   opacity: 1;
 }
 
 .nav-more:hover {
   background: var(--color-border);
   color: var(--color-text-primary);
+}
+
+.nav-section > .nav-more {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.5rem;
+  z-index: 1;
 }
 
 /* ── Empty Sidebar ────────────────────────────────────────────────── */
