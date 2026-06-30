@@ -13,7 +13,7 @@ import {
   serializerCtx,
   prosePluginsCtx,
 } from "@milkdown/kit/core";
-import { commonmark } from "@milkdown/kit/preset/commonmark";
+import { commonmark as _commonmark, wrapInHeadingInputRule } from "@milkdown/kit/preset/commonmark";
 import { gfm } from "@milkdown/kit/preset/gfm";
 import { nord } from "@milkdown/theme-nord";
 import { EditorState, Plugin, PluginKey } from "@milkdown/kit/prose/state";
@@ -27,6 +27,11 @@ import {
 } from "@milkdown/kit/component/link-tooltip";
 import { cursor, dropIndicatorConfig } from "@milkdown/kit/plugin/cursor";
 import { $prose } from "@milkdown/kit/utils";
+import { fixedHeadingInputRule } from "../plugins/heading-input-rule";
+
+const commonmark = _commonmark.filter(
+  (p) => p !== wrapInHeadingInputRule,
+);
 import {
   tableBlock,
   tableBlockConfig,
@@ -453,6 +458,7 @@ export class EditorService {
       })
       .use(nord as any)
       .use(commonmark)
+      .use(fixedHeadingInputRule)
       .use(gfm)
       .use(block)
       .use(slash)
