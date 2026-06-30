@@ -66,6 +66,7 @@ const LINE_COLORS = [
 
 let menuTarget = "";
 let menuTimer: ReturnType<typeof setTimeout> | null = null;
+const collapsedSections = new Map<string, boolean>();
 
 function closeMenu() {
   document.querySelectorAll(".ctx-menu").forEach((el) => el.remove());
@@ -195,11 +196,17 @@ export function mountSidebar(
         const weightA =
           valA != null && typeof valA === "object" && "weight" in valA
             ? ((valA as PageNode).weight ?? Infinity)
-            : Infinity;
+            : valA != null && typeof valA === "object" && "_index.md" in valA
+              ? ((valA as Record<string, unknown>)["_index.md"] as PageNode)
+                  ?.weight ?? Infinity
+              : Infinity;
         const weightB =
           valB != null && typeof valB === "object" && "weight" in valB
             ? ((valB as PageNode).weight ?? Infinity)
-            : Infinity;
+            : valB != null && typeof valB === "object" && "_index.md" in valB
+              ? ((valB as Record<string, unknown>)["_index.md"] as PageNode)
+                  ?.weight ?? Infinity
+              : Infinity;
 
         if (weightA !== weightB) return weightA - weightB;
         return nameA.localeCompare(nameB);
@@ -230,7 +237,6 @@ export function mountSidebar(
           draggable="true"
           data-nav-path="${pagePath}"
           @dragstart=${(e: DragEvent) => {
-            e.stopPropagation();
             e.dataTransfer?.setData("text/plain", "file:" + pagePath);
           }}
         >
@@ -273,26 +279,25 @@ export function mountSidebar(
       const label = name
         .replace(/-/g, " ")
         .replace(/^\w/, (c) => c.toUpperCase());
+      const collapsed = collapsedSections.get(path) ?? false;
       return html` <div
-        class="nav-section"
+        class="nav-section${collapsed ? " collapsed" : ""}"
         draggable="true"
         data-nav-path="${path}"
         @dragstart=${(e: DragEvent) => {
-          e.stopPropagation();
+          if (e.target !== e.currentTarget) return;
           e.dataTransfer?.setData("text/plain", "dir:" + path);
         }}
         @dragenter=${(e: DragEvent) => {
           e.stopPropagation();
           e.preventDefault();
-          const el = e.currentTarget as HTMLElement;
-          if (!el.contains(e.relatedTarget as Node)) {
-            el.classList.add("drag-over");
-          }
+          (e.currentTarget as HTMLElement).classList.add("drag-over");
         }}
         @dragleave=${(e: DragEvent) => {
           e.stopPropagation();
           const el = e.currentTarget as HTMLElement;
-          if (!el.contains(e.relatedTarget as Node)) {
+          const rt = e.relatedTarget;
+          if (rt !== null && !el.contains(rt as Node)) {
             el.classList.remove("drag-over");
           }
         }}
@@ -347,8 +352,43 @@ export function mountSidebar(
           }
         }}
       >
-        <span class="nav-section-title depth-${depth}"
-          >${folderIcon}${label}</span
+          <span
+            class="nav-section-title depth-${depth}"
+            @dblclick=${(e: Event) => {
+              const section = (e.currentTarget as HTMLElement).closest(
+                ".nav-section",
+              ) as HTMLElement;
+              if (section) {
+                const p = section.getAttribute("data-nav-path") || "";
+                const wasCollapsed = collapsedSections.get(p) ?? false;
+                collapsedSections.set(p, !wasCollapsed);
+                section.classList.toggle("collapsed");
+              }
+            }}
+          >
+          <span
+            class="nav-section-toggle"
+            @click=${(e: Event) => {
+              e.stopPropagation();
+              const section = (e.currentTarget as HTMLElement).closest(
+                ".nav-section",
+              ) as HTMLElement;
+              if (section) {
+                const path = section.getAttribute("data-nav-path") || "";
+                const wasCollapsed = collapsedSections.get(path) ?? false;
+                collapsedSections.set(path, !wasCollapsed);
+                section.classList.toggle("collapsed");
+              }
+            }}
+          >
+            <svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M7 10l5 5 5-5z"
+              />
+            </svg>
+          </span>
+          ${folderIcon}${label}</span
         >
         <button
           class="nav-more"
