@@ -94,6 +94,9 @@ export default class extends Controller {
     });
     this.cacheService.setCurrentPath(initialPath);
 
+    // Fix up any stale blob: URLs in cached content with pending-image:{id} references
+    await this.cacheService.afterRestore()
+
     // Sync to localStorage before page unload
     this.onBeforeUnload = () => { cache.sync() }
     window.addEventListener("beforeunload", this.onBeforeUnload)

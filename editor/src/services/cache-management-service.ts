@@ -19,7 +19,6 @@ import {
   replacePendingUrls,
   getCurrentDocDir,
 } from "./image-config";
-import { imageRegistry } from "./image-registry";
 import { applyPendingOps, type PendingOp } from "../utils/tree";
 import type { TreeNode } from "../components/panels/sidebar";
 import {
@@ -28,6 +27,7 @@ import {
   clearPendingOpsStorage,
 } from "../storage";
 import { extractSnippets } from "../utils/content-search";
+import { imageRegistry } from "./image-registry";
 
 export interface SearchMatch {
   path: string;
@@ -99,11 +99,21 @@ export class CacheManagementService {
   queueRename(from: string, to: string): void {
     this.pendingOps.push({ type: "rename", from, to });
     this.persistPendingOps();
+    const fromDir = from.includes("/") ? from.substring(0, from.lastIndexOf("/")) : "";
+    const toDir = to.includes("/") ? to.substring(0, to.lastIndexOf("/")) : "";
+    if (fromDir !== toDir) {
+      imageRegistry.remapDir(fromDir, toDir).catch(() => {});
+    }
   }
 
   queueMove(from: string, to: string): void {
     this.pendingOps.push({ type: "move", from, to });
     this.persistPendingOps();
+    const fromDir = from.includes("/") ? from.substring(0, from.lastIndexOf("/")) : "";
+    const toDir = to.includes("/") ? to.substring(0, to.lastIndexOf("/")) : "";
+    if (fromDir !== toDir) {
+      imageRegistry.remapDir(fromDir, toDir).catch(() => {});
+    }
   }
 
   getPendingOps(): PendingOp[] {
@@ -112,6 +122,39 @@ export class CacheManagementService {
 
   getPendingOpsCount(): number {
     return this.pendingOps.length;
+  }
+
+  /**
+   * Called after imageRegistry.restoreFromStorage() to ensure cached content
+   * has consistent image references. Replaces any stale blob: URLs in dirty
+   * cached content with stable pending-image:{id} references, matching against
+   * the registry's current blob URLs.
+   */
+  async afterRestore(): Promise<void> {
+    const blobToRef = new Map<string, string>()
+    for (const dir of imageRegistry.getAllPendingDirs()) {
+      for (const p of imageRegistry.getPending(dir)) {
+        blobToRef.set(p.blobUrl, `pending-image:${p.id}`)
+      }
+    }
+    if (blobToRef.size === 0) return
+
+    for (const path of cache.getDirtyPaths()) {
+      const body = cache.getBody(path)
+      if (!body) continue
+      let modified = false
+      let newBody = body
+      for (const [blobUrl, ref] of blobToRef) {
+        if (newBody.includes(blobUrl)) {
+          newBody = newBody.split(blobUrl).join(ref)
+          modified = true
+        }
+      }
+      if (modified) {
+        cache.setBody(path, newBody)
+        cache.sync()
+      }
+    }
   }
 
   clearPendingOps(): void {
@@ -206,10 +249,8 @@ export class CacheManagementService {
     // 1. Commit all pending images first
     const imageUrlMap = await commitAllPendingImages();
 
-    // 2. Execute pending ops (create/delete/rename/move)
-    await this.executePendingOps();
-
-    // 3. Write dirty files
+    // 2. Write dirty files (before executing pending ops so content lands
+    //    at the correct paths — move/rename ops will relocate them)
     for (const path of dirtyPaths) {
       let body: string;
 
@@ -260,6 +301,11 @@ export class CacheManagementService {
 
     cache.sync();
     this.updateDirtyCounter();
+
+    // 3. Execute pending ops (create/delete/rename/move) after writing dirty files,
+    //    so that content moves/renames correctly instead of creating a new file at the old path
+    await this.executePendingOps();
+
     this.callbacks.onFlushComplete?.();
 
     // 4. Clean up orphaned images — images that no longer appear in any document
