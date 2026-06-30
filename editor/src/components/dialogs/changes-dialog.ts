@@ -3,6 +3,7 @@ import { diffLines } from "diff"
 import { miniWindow } from "../ui"
 import { pressTwiceButton } from "./press-twice-button"
 import { colors } from "../../theme"
+import { formatBytes } from "../../utils/format"
 import type { MetaPanelData } from "../panels/meta-panel"
 
 function createOverlay(): HTMLDivElement {
@@ -112,9 +113,7 @@ export function mountChangesDialog(
 
     const bgColor = data.currentPath ? "#eef4f9" : ""
     const size = data.changeSize ?? 0
-    const sign = size >= 0 ? "+" : "-"
-    const abs = Math.abs(size)
-    const sizeStr = abs < 1024 ? `${sign}${abs} B` : `${sign}${(abs / 1024).toFixed(1)} KB`
+    const sizeStr = formatBytes(size)
     const sizeColor = size > 0 ? colors.green : size < 0 ? colors.danger : colors.teal
 
     return html`

@@ -17,9 +17,13 @@ import {
   boldIcon, italicIcon, strikethroughIcon, codeIcon, linkIcon, dividerIcon,
 } from "../icons"
 import { mountFileMenu } from "./file-menu"
+import { pressTwiceButton } from "../dialogs/press-twice-button"
+import { formatBytes } from "../../utils/format"
 
 export interface TopbarAPI {
   updateCounter(count: number, totalBytes: number, pendingCount?: number): void
+  showSingleDiscard(path: string, bytes: number): void
+  hideSingleDiscard(): void
   setDirtyState(hasDirty: boolean): void
   setProviderBadge(icon: string, label: string): void
   setProviderType(type: string): void
@@ -32,6 +36,7 @@ export function mountTopbar(
   callbacks: {
     onPrefs: () => void
     onDirtyClick?: () => void
+    onSingleDiscard?: (path: string) => void
     onChangeProvider: () => void
     onViewChange: (view: ViewType) => void
     onSave?: () => void
@@ -145,6 +150,7 @@ export function mountTopbar(
     updateCounter(count: number, totalBytes: number, pendingCount: number = 0) {
       const el = document.getElementById(counterId)
       if (!el) return
+      el.style.display = ""
       if (count === 0 && pendingCount === 0) {
         el.textContent = ""
         el.classList.toggle("clickable", false)
@@ -152,19 +158,36 @@ export function mountTopbar(
       }
       const parts: string[] = []
       if (count > 0) {
-        const sign = totalBytes >= 0 ? "+" : "-"
-        const abs = Math.abs(totalBytes)
-        const size = abs < 1024
-          ? `${sign}${abs} B`
-          : `${sign}${(abs / 1024).toFixed(1)} KB`
         const color = totalBytes > 0 ? colors.green : totalBytes < 0 ? colors.danger : 'inherit'
-        parts.push(`<span>${count} unsaved</span><span style="color:${color};font-size:0.7rem;margin-left:4px">${size}</span>`)
+        parts.push(`<span>${count} unsaved</span><span style="color:${color};font-size:0.7rem;margin-left:4px">${formatBytes(totalBytes)}</span>`)
       }
       if (pendingCount > 0) {
         parts.push(`<span style="color:#856404;font-size:0.7rem">${pendingCount} pending</span>`)
       }
       el.innerHTML = `<div style="display:flex;gap:6px;align-items:center">${parts.join('<span style="color:#ccc">|</span>')}</div>`
       el.classList.toggle("clickable", true)
+    },
+    showSingleDiscard(path: string, bytes: number) {
+      const el = document.getElementById(counterId)
+      if (!el) return
+      el.style.display = ""
+      el.innerHTML = ""
+      el.classList.toggle("clickable", false)
+      const btn = pressTwiceButton({
+        idleText: "Discard",
+        pendingText: "Press again",
+        variant: "danger",
+        small: true,
+        idleBadge: `(${formatBytes(bytes)})`,
+        onConfirm: () => callbacks.onSingleDiscard?.(path),
+      })
+      el.appendChild(btn)
+    },
+    hideSingleDiscard() {
+      const el = document.getElementById(counterId)
+      if (!el) return
+      el.textContent = ""
+      el.classList.toggle("clickable", false)
     },
     setDirtyState(hasDirty: boolean) {
       const flush = document.getElementById(flushId) as HTMLButtonElement

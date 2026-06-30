@@ -17,6 +17,7 @@ import type { ViewManager } from "../components/views/view";
 export interface UIInitializeOptions {
   onPrefs?: () => void;
   onDirtyClick?: () => void;
+  onSingleDiscard?: (path: string) => void;
   onChangeProvider?: () => void;
   onViewChange?: (view: ViewType) => void;
   onSave?: () => void;
@@ -51,6 +52,7 @@ export class UIInitializerService {
         });
       },
       onDirtyClick: options.onDirtyClick ?? undefined,
+      onSingleDiscard: options.onSingleDiscard ?? undefined,
       onChangeProvider: options.onChangeProvider ?? (() => {}),
       onViewChange: options.onViewChange ?? (() => {}),
       onSave: options.onSave,

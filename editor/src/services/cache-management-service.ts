@@ -1,21 +1,32 @@
 /**
  * CacheManagementService
- * 
+ *
  * Manages file caching, dirty tracking, and file synchronization
  * Handles flushing changes and discarding edits
  * Owns pending sidebar operations (create/delete/rename/move)
  */
 
 import { stripFrontmatter, serializeFrontmatter } from "../utils/frontmatter";
-import { mountChangesDialog, type ChangesDialogData } from "../components/dialogs/changes-dialog";
+import {
+  mountChangesDialog,
+  type ChangesDialogData,
+} from "../components/dialogs/changes-dialog";
 import { confirmDialog } from "../components/dialogs/dialog";
 import { cache } from "../cache";
 import { getProvider } from "../content/provider-registry";
-import { commitAllPendingImages, replacePendingUrls, getCurrentDocDir } from "./image-config";
+import {
+  commitAllPendingImages,
+  replacePendingUrls,
+  getCurrentDocDir,
+} from "./image-config";
 import { imageRegistry } from "./image-registry";
 import { applyPendingOps, type PendingOp } from "../utils/tree";
 import type { TreeNode } from "../components/panels/sidebar";
-import { savePendingOps, loadPendingOps, clearPendingOpsStorage } from "../storage";
+import {
+  savePendingOps,
+  loadPendingOps,
+  clearPendingOpsStorage,
+} from "../storage";
 import { extractSnippets } from "../utils/content-search";
 
 export interface SearchMatch {
@@ -27,7 +38,12 @@ export interface CacheCallbacks {
   getCurrentContent?: () => string;
   onFlushComplete?: () => void;
   onDiscardComplete?: () => void;
-  onDirtyCountChanged?: (count: number, bytes: number, pendingCount: number) => void;
+  onDirtyCountChanged?: (
+    count: number,
+    bytes: number,
+    pendingCount: number,
+  ) => void;
+  onSingleCurrentDirty?: (path: string, bytes: number) => void;
   onSidebarReload?: () => void;
   onNavigate?: (path: string) => void;
   onContentReload?: (path: string, content: string) => Promise<void>;
@@ -40,9 +56,9 @@ export class CacheManagementService {
 
   constructor(callbacks: CacheCallbacks = {}) {
     this.callbacks = callbacks;
-    const saved = loadPendingOps<PendingOp[]>()
+    const saved = loadPendingOps<PendingOp[]>();
     if (Array.isArray(saved) && saved.length > 0) {
-      this.pendingOps = saved
+      this.pendingOps = saved;
     }
   }
 
@@ -51,39 +67,43 @@ export class CacheManagementService {
   }
 
   private persistPendingOps(): void {
-    savePendingOps(this.pendingOps)
+    savePendingOps(this.pendingOps);
   }
 
   // ── Pending Operations ──
 
   queueCreate(path: string, content: string): void {
-    const delIdx = this.pendingOps.findIndex(o => o.type === "delete" && o.path === path);
+    const delIdx = this.pendingOps.findIndex(
+      (o) => o.type === "delete" && o.path === path,
+    );
     if (delIdx !== -1) {
       this.pendingOps.splice(delIdx, 1);
     } else {
       this.pendingOps.push({ type: "create", path, content });
     }
-    this.persistPendingOps()
+    this.persistPendingOps();
   }
 
   queueDelete(path: string): void {
-    const createIdx = this.pendingOps.findIndex(o => o.type === "create" && o.path === path);
+    const createIdx = this.pendingOps.findIndex(
+      (o) => o.type === "create" && o.path === path,
+    );
     if (createIdx !== -1) {
       this.pendingOps.splice(createIdx, 1);
     } else {
       this.pendingOps.push({ type: "delete", path });
     }
-    this.persistPendingOps()
+    this.persistPendingOps();
   }
 
   queueRename(from: string, to: string): void {
     this.pendingOps.push({ type: "rename", from, to });
-    this.persistPendingOps()
+    this.persistPendingOps();
   }
 
   queueMove(from: string, to: string): void {
     this.pendingOps.push({ type: "move", from, to });
-    this.persistPendingOps()
+    this.persistPendingOps();
   }
 
   getPendingOps(): PendingOp[] {
@@ -96,7 +116,7 @@ export class CacheManagementService {
 
   clearPendingOps(): void {
     this.pendingOps = [];
-    clearPendingOpsStorage()
+    clearPendingOpsStorage();
   }
 
   applyPendingOpsToTree(tree: TreeNode): TreeNode {
@@ -107,11 +127,25 @@ export class CacheManagementService {
 
   updateDirtyCounter(): void {
     let totalBytes = 0;
-    for (const path of cache.getDirtyPaths()) {
+    const dirtyPaths = cache.getDirtyPaths();
+    for (const path of dirtyPaths) {
       totalBytes += cache.getBodyDelta(path);
     }
-    const count = cache.getDirtyCount();
-    this.callbacks.onDirtyCountChanged?.(count, totalBytes, this.pendingOps.length);
+    const count = dirtyPaths.length;
+    this.callbacks.onSidebarReload?.();
+    if (
+      count === 1 &&
+      dirtyPaths[0] === this.currentPath &&
+      this.pendingOps.length === 0
+    ) {
+      this.callbacks.onSingleCurrentDirty?.(dirtyPaths[0], totalBytes);
+    } else {
+      this.callbacks.onDirtyCountChanged?.(
+        count,
+        totalBytes,
+        this.pendingOps.length,
+      );
+    }
   }
 
   getDirtyState(): { count: number; bytes: number; pendingCount: number } {
@@ -149,12 +183,15 @@ export class CacheManagementService {
             break;
         }
       } catch (error) {
-        console.error(`Failed to execute pending op ${op.type} ${"path" in op ? op.path : op.from}:`, error);
+        console.error(
+          `Failed to execute pending op ${op.type} ${"path" in op ? op.path : op.from}:`,
+          error,
+        );
       }
     }
 
     this.pendingOps = [];
-    clearPendingOpsStorage()
+    clearPendingOpsStorage();
   }
 
   // ── Flush ──
@@ -203,7 +240,8 @@ export class CacheManagementService {
         if (serverTime) {
           const fileTime = await provider?.getServerTime(path);
           if (fileTime && fileTime > serverTime) {
-            if (!confirm(`"${path}" was modified on disk. Overwrite?`)) continue;
+            if (!confirm(`"${path}" was modified on disk. Overwrite?`))
+              continue;
           }
         }
       }
@@ -228,8 +266,15 @@ export class CacheManagementService {
     this.cleanupOrphanedImages(dirtyPaths, provider).catch(() => {});
   }
 
-  private async cleanupOrphanedImages(dirtyPaths: string[], provider: any): Promise<void> {
-    const dirs = new Set(dirtyPaths.map(p => p.includes("/") ? p.substring(0, p.lastIndexOf("/")) : ""));
+  private async cleanupOrphanedImages(
+    dirtyPaths: string[],
+    provider: any,
+  ): Promise<void> {
+    const dirs = new Set(
+      dirtyPaths.map((p) =>
+        p.includes("/") ? p.substring(0, p.lastIndexOf("/")) : "",
+      ),
+    );
     for (const dir of dirs) {
       if (!provider.listImages || !provider.deleteImage) continue;
       try {
@@ -246,15 +291,6 @@ export class CacheManagementService {
   // ── Discard ──
 
   async discardFileChanges(pagePath: string): Promise<void> {
-    const confirmed = await confirmDialog({
-      title: "Discard changes",
-      message: `Discard unsaved changes to "${pagePath}"? This cannot be undone.`,
-      confirmLabel: "Discard",
-      confirmClass: "predoc-dialog-confirm",
-    });
-
-    if (!confirmed) return;
-
     cache.clearPath(pagePath);
     cache.sync();
     this.updateDirtyCounter();
@@ -362,13 +398,14 @@ export class CacheManagementService {
           if (paths.includes(this.currentPath)) {
             const raw = (await provider?.readFile(this.currentPath)) || "";
             const { frontmatter, body } = stripFrontmatter(raw);
-            if (frontmatter) cache.setFrontmatter(this.currentPath, frontmatter);
+            if (frontmatter)
+              cache.setFrontmatter(this.currentPath, frontmatter);
             cache.setBaseline(this.currentPath, body);
             await this.callbacks.onContentReload?.(this.currentPath, body);
           }
         },
       },
-      () => {}
+      () => {},
     );
   }
 }

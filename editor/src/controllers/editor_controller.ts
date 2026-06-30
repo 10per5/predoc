@@ -77,8 +77,13 @@ export default class extends Controller {
     this.cacheService = new CacheManagementService({
       getCurrentContent: () => this.editorService.getCurrentContent(),
       onDirtyCountChanged: (count, bytes, pendingCount) => {
+        this.topbar?.hideSingleDiscard();
         this.topbar?.updateCounter(count, bytes, pendingCount);
         this.topbar?.setDirtyState(count > 0 || (pendingCount ?? 0) > 0);
+      },
+      onSingleCurrentDirty: (path, bytes) => {
+        this.topbar?.showSingleDiscard(path, bytes);
+        this.topbar?.setDirtyState(true);
       },
       onFlushComplete: () => this.loadSidebar(),
       onSidebarReload: () => this.loadSidebar(),
@@ -140,6 +145,7 @@ export default class extends Controller {
           });
         },
         onDirtyClick: () => this.cacheService.handleDirtyClick(),
+        onSingleDiscard: (path) => this.cacheService.discardFileChanges(path),
         onChangeProvider: () => this.navService.changeProvider(),
         onViewChange: (view) => this.viewService.getViewManager().switchTo(view),
         onSave: () => exportToZip().then(() => this.loadSidebar()),
