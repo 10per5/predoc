@@ -26,7 +26,7 @@ for (const name of readdirSync(staticDir)) {
   }
 }
 
-const args = ["build", "src/app.ts", "--outdir", "public/assets", "--minify"];
+const args = ["build", "src/app.ts", "--outdir", "public/assets", "--minify", "--splitting"];
 if (watch) args.push("--watch");
 
 const result = Bun.spawnSync(["bun", ...args], {

@@ -14,18 +14,124 @@ import {
   type ViewUpdate,
   keymap,
   drawSelection,
+  lineNumbers,
+  highlightActiveLineGutter,
+  highlightActiveLine,
+  highlightSpecialChars,
+  dropCursor,
 } from "@codemirror/view";
-import { basicSetup } from "codemirror";
 import { defaultKeymap, indentWithTab } from "@codemirror/commands";
+import {
+  bracketMatching,
+  indentOnInput,
+  syntaxHighlighting,
+  defaultHighlightStyle,
+  StreamLanguage,
+  LanguageSupport,
+} from "@codemirror/language";
 import { oneDark } from "@codemirror/theme-one-dark";
-import type { LanguageDescription, LanguageSupport } from "@codemirror/language";
-import { languages } from "@codemirror/language-data";
 import { renderLatex } from "./math";
 
-interface LangInfo {
+const PAIRS: Record<string, string> = { "(": ")", "[": "]", "{": "}" };
+
+function autoClosePair(view: CodeMirrorView, open: string): boolean {
+  const close = PAIRS[open];
+  if (!close) return false;
+  const { selection, doc } = view.state;
+  const { from, to, empty } = selection.main;
+  if (empty) {
+    view.dispatch({
+      changes: { from, insert: open + close },
+      selection: { anchor: from + 1, head: from + 1 },
+    });
+  } else {
+    view.dispatch({
+      changes: { from, to, insert: open + doc.sliceString(from, to) + close },
+      selection: { anchor: from + 1, head: to + 1 },
+    });
+  }
+  return true;
+}
+
+function skipClose(view: CodeMirrorView, close: string): boolean {
+  const { selection, doc } = view.state;
+  const { head } = selection.main;
+  if (head < doc.length && doc.sliceString(head, head + 1) === close) {
+    view.dispatch({ selection: { anchor: head + 1, head: head + 1 } });
+    return true;
+  }
+  return false;
+}
+
+const closeBracketKeymap = [
+  { key: "(", run: (view: CodeMirrorView) => autoClosePair(view, "(") },
+  { key: "[", run: (view: CodeMirrorView) => autoClosePair(view, "[") },
+  { key: "{", run: (view: CodeMirrorView) => autoClosePair(view, "{") },
+  { key: ")", run: (view: CodeMirrorView) => skipClose(view, ")") },
+  { key: "]", run: (view: CodeMirrorView) => skipClose(view, "]") },
+  { key: "}", run: (view: CodeMirrorView) => skipClose(view, "}") },
+];
+
+interface CuratedLang {
   name: string;
   alias: readonly string[];
+  load: () => Promise<LanguageSupport>;
 }
+
+const CORE_LANGS: CuratedLang[] = [
+  {
+    name: "JavaScript",
+    alias: ["js", "jsx", "mjs", "cjs", "ts", "tsx", "typescript"],
+    load: () => import("@codemirror/lang-javascript").then(m => m.javascript()),
+  },
+  {
+    name: "Python",
+    alias: ["py", "python3"],
+    load: () => import("@codemirror/lang-python").then(m => m.python()),
+  },
+  {
+    name: "Go",
+    alias: ["golang"],
+    load: () => import("@codemirror/lang-go").then(m => m.go()),
+  },
+  {
+    name: "HTML",
+    alias: ["htm", "xhtml"],
+    load: () => import("@codemirror/lang-html").then(m => m.html()),
+  },
+  {
+    name: "CSS",
+    alias: ["scss", "less"],
+    load: () => import("@codemirror/lang-css").then(m => m.css()),
+  },
+  {
+    name: "Shell",
+    alias: ["bash", "sh", "zsh"],
+    load: () => import("@codemirror/legacy-modes/mode/shell").then(m =>
+      new LanguageSupport(StreamLanguage.define(m.shell)),
+    ),
+  },
+  {
+    name: "JSON",
+    alias: [],
+    load: () => import("@codemirror/lang-json").then(m => m.json()),
+  },
+  {
+    name: "YAML",
+    alias: ["yml"],
+    load: () => import("@codemirror/lang-yaml").then(m => m.yaml()),
+  },
+  {
+    name: "Rust",
+    alias: ["rs"],
+    load: () => import("@codemirror/lang-rust").then(m => m.rust()),
+  },
+  {
+    name: "C/C++",
+    alias: ["c", "cpp", "h", "hpp", "c++", "h++"],
+    load: () => import("@codemirror/lang-cpp").then(m => m.cpp()),
+  },
+];
 
 const DISPLAY_OVERRIDE: Record<string, string> = {
   Shell: "Bash",
@@ -37,14 +143,14 @@ interface DisplayLang {
   alias: readonly string[];
 }
 
-const allLangs: DisplayLang[] = languages.map((l) => ({
+const allLangs: DisplayLang[] = CORE_LANGS.map((l) => ({
   display: DISPLAY_OVERRIDE[l.name] ?? l.name,
   canonical: l.name,
   alias: l.alias,
 }));
 
 const aliasToName = new Map<string, string>();
-for (const lang of languages) {
+for (const lang of CORE_LANGS) {
   aliasToName.set(lang.name.toLowerCase(), lang.name);
   for (const a of lang.alias) {
     aliasToName.set(a.toLowerCase(), lang.name);
@@ -56,11 +162,13 @@ function resolveLang(value: string): string {
   return aliasToName.get(value.toLowerCase()) ?? value;
 }
 
+const loadedCache = new Map<string, LanguageSupport>();
+
 class LanguageLoader {
-  private map: Record<string, LanguageDescription> = {};
+  private map: Record<string, CuratedLang> = {};
 
   constructor() {
-    for (const lang of languages) {
+    for (const lang of CORE_LANGS) {
       for (const alias of lang.alias) {
         this.map[alias.toLowerCase()] = lang;
       }
@@ -68,12 +176,15 @@ class LanguageLoader {
     }
   }
 
-  load(languageName: string): Promise<LanguageSupport | undefined> {
+  async load(languageName: string): Promise<LanguageSupport | undefined> {
     const canonical = resolveLang(languageName);
     const lang = this.map[canonical.toLowerCase()];
-    if (!lang) return Promise.resolve(undefined);
-    if (lang.support) return Promise.resolve(lang.support);
-    return lang.load();
+    if (!lang) return undefined;
+    const cached = loadedCache.get(lang.name);
+    if (cached) return cached;
+    const support = await lang.load();
+    loadedCache.set(lang.name, support);
+    return support;
   }
 }
 
@@ -312,11 +423,22 @@ class CodeMirrorBlock {
       doc: this.node.textContent ?? "",
       root: (this.pmView as any).root as Document | ShadowRoot,
       extensions: [
-        basicSetup,
-        oneDark,
-        keymap.of(defaultKeymap.concat(indentWithTab)),
-        this.readOnlyConf.of(EditorState.readOnly.of(!this.pmView.editable)),
+        lineNumbers(),
+        highlightActiveLineGutter(),
+        highlightActiveLine(),
+        highlightSpecialChars(),
         drawSelection(),
+        dropCursor(),
+        indentOnInput(),
+        bracketMatching(),
+        syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+        oneDark,
+        keymap.of([
+          ...defaultKeymap,
+          indentWithTab,
+          ...closeBracketKeymap,
+        ]),
+        this.readOnlyConf.of(EditorState.readOnly.of(!this.pmView.editable)),
         this.languageConf.of([]),
         CodeMirrorView.updateListener.of((update) =>
           this.forwardUpdate(update),

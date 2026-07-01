@@ -106,6 +106,23 @@ When a floating element transitions from hidden to shown, it may briefly appear 
 1. Set CSS `left`/`top` BEFORE calling `provider.show()` using `view.coordsAtPos(pos)`
 2. Set `data-show="false"` on the element until coordinates are computed, then set to `"true"`
 
+## Bundle Analysis
+
+To analyze bundle size and find bloat:
+
+```bash
+bun build src/app.ts --outdir /tmp/analyze --minify --metafile-md=/tmp/analyze/report.md
+```
+
+This generates an LLM-friendly markdown report with largest modules, dependency chains, and optimization opportunities. Use `--splitting` to see lazy chunk breakdowns. The JSON version (`--metafile=meta.json`) works with tools like `esbuild-visualizer`.
+
+### Known size issues
+
+| Asset | Size | Cause |
+|-------|------|-------|
+| `app.js` | 1.3 MB initial | Milkdown + ProseMirror + CM core |
+| `app.css` | 1.5 MB | `katex/dist/katex.min.css` has `@font-face` blocks → Bun inlines all woff2/woff/ttf fonts as base64 data URIs (~60 font files, 1.2 MB) |
+
 ### Pending Image Lifecycle
 
 Pending images (unflushed) are tracked in `ImageRegistry` with `pendingByDir`. They appear in `getAllImages()` alongside known (committed) images. When discarded or deleted:
