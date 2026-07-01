@@ -7,7 +7,7 @@ weight: 20
 
 Other editors and platforms that overlap with predoc's space.
 
-Notable difference across all these: predoc ships as a single <2 MB binary (<1 MB on Linux) that needs only the system web engine (WebKit/WebView) at runtime. It doesn't require a server but supports 3 different file APIs (local storage, browser file API, remote server), with future cloud sync planned.
+Notable difference across all these: predoc ships as a single ~2 MB binary that needs only the system web engine (WebKit/WebView) at runtime. It doesn't require a server but supports 3 different file APIs (local storage, browser file API, remote server), with future cloud sync planned.
 
 ***
 
@@ -19,7 +19,7 @@ A full framework for editing documents, more like a workspace aggregator than an
 
 | Strength                                                                         | Weakness                                                                                         |
 | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Strong local-first, offline-capable architecture; encrypted P2P sync built in    | Heavy desktop app built on Electron — large bundle size vs predoc's <2 MB footprint              |
+| Strong local-first, offline-capable architecture; encrypted P2P sync built in    | Heavy desktop app built on Electron — large bundle size vs predoc's ~2 MB footprint              |
 | Highly extensible object model (types, relations, templates); native mobile apps | Not a lightweight editor; more of a personal knowledge base platform with a steep learning curve |
 
 **Why choose Anytype over predoc?** You want an all-in-one encrypted knowledge base with offline-first sync, native mobile apps, and a rich object model rather than a focused document editor.
