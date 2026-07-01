@@ -641,7 +641,7 @@ class PrismEditorBlock {
   }
 
   private copyCode() {
-    const text = this.node.textContent ?? "";
+    const text = this.editor?.value ?? this.node.textContent ?? "";
     navigator.clipboard.writeText(text).catch(() => {
       const ta = document.createElement("textarea");
       ta.value = text;
