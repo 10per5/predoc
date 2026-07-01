@@ -21,6 +21,7 @@ import { loadPrefs } from "../storage";
 import { applyThemeFromPrefs } from "../components/dialogs/prefs-dialog";
 import { PathService } from "../services/path-service";
 import { imageRegistry } from "../services/image-registry";
+import { hotkeys } from "../services/hotkey-manager";
 
 function flattenTree(node: TreeNode, prefix = ""): string[] {
   const paths: string[] = []
@@ -213,6 +214,8 @@ export default class extends Controller {
     await this.editorService.loadContent(initialPath, (data) => this.metaPanel?.update(data));
     await this.loadSidebar();
     this.cacheService.updateDirtyCounter();
+
+    hotkeys.register("ctrl+s", () => this.saveCurrentFile());
   }
 
   disconnect() {
@@ -232,4 +235,15 @@ export default class extends Controller {
   toggleSource = () => this.editorService.toggleSourceMode();
   applySource = () => this.editorService.applySourceContent();
   flush = () => this.cacheService.flushDirtyFiles();
+
+  private async saveCurrentFile(): Promise<void> {
+    const path = this.navService.getCurrentPath();
+    const dirtyPaths = cache.getDirtyPaths();
+    if (!dirtyPaths.includes(path)) {
+      showNotification("No changes to save", { type: "info" });
+      return;
+    }
+    const content = this.editorService.getCurrentContent();
+    await this.cacheService.flushCurrentFile(path, content);
+  }
 }

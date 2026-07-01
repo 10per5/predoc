@@ -19,6 +19,7 @@ import {
   replacePendingUrls,
   getCurrentDocDir,
 } from "./image-config";
+import { showNotification } from "../components/notification/notification";
 import { applyPendingOps, type PendingOp } from "../utils/tree";
 import type { TreeNode } from "../components/panels/sidebar";
 import {
@@ -303,6 +304,34 @@ export class CacheManagementService {
 
   // ── Flush ──
 
+  async flushCurrentFile(path: string, content: string): Promise<void> {
+    const provider = getProvider();
+    const imageUrlMap = await commitAllPendingImages();
+    let body = content;
+    if (imageUrlMap.size > 0) {
+      body = replacePendingUrls(body, imageUrlMap);
+    }
+    const fmData = cache.getFrontmatter(path);
+    const fullContent = fmData
+      ? `---\n${serializeFrontmatter(fmData)}\n---\n\n${body}`
+      : body;
+
+    try {
+      await provider?.writeFile(path, fullContent);
+      cache.deletePatch(path);
+      cache.setBaseline(path, body);
+      cache.cacheBody(path, body);
+      const fileTime = await provider?.getServerTime(path);
+      if (fileTime) cache.setServerTime(path, fileTime);
+      cache.sync();
+      this.updateDirtyCounter();
+      showNotification("File saved", { type: "success" });
+    } catch (error) {
+      console.error(`Failed to flush ${path}:`, error);
+      showNotification(`Failed to save: ${error}`, { type: "danger" });
+    }
+  }
+
   async flushDirtyFiles(): Promise<void> {
     const dirtyPaths = cache.getDirtyPaths();
     if (dirtyPaths.length === 0 && this.pendingOps.length === 0) return;
@@ -372,6 +401,8 @@ export class CacheManagementService {
 
     this.callbacks.onFlushComplete?.();
 
+    showNotification("All files saved", { type: "success" });
+
     // 4. Clean up orphaned images — images that no longer appear in any document
     this.cleanupOrphanedImages(dirtyPaths, provider).catch(() => {});
   }
@@ -416,6 +447,7 @@ export class CacheManagementService {
     }
 
     this.callbacks.onDiscardComplete?.();
+    showNotification("Changes discarded", { type: "info" });
   }
 
   // ── Changes dialog ──
@@ -504,6 +536,7 @@ export class CacheManagementService {
           cache.sync();
           this.updateDirtyCounter();
           this.callbacks.onSidebarReload?.();
+          showNotification("All changes discarded", { type: "warning" });
 
           if (paths.includes(this.currentPath)) {
             const raw = (await provider?.readFile(this.currentPath)) || "";

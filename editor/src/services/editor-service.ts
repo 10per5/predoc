@@ -16,7 +16,7 @@ import {
 import { commonmark as _commonmark, wrapInHeadingInputRule } from "@milkdown/kit/preset/commonmark";
 import { gfm } from "@milkdown/kit/preset/gfm";
 import { nord } from "@milkdown/theme-nord";
-import { EditorState, Plugin, PluginKey } from "@milkdown/kit/prose/state";
+import { EditorState, NodeSelection, Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { parserCtx, remarkStringifyOptionsCtx } from "@milkdown/core";
 import { clipboard } from "@milkdown/plugin-clipboard";
 import { history } from "@milkdown/kit/plugin/history";
@@ -488,21 +488,28 @@ export class EditorService {
             props: {
               handleDOMEvents: {
                 dragstart(view, event) {
-                  if (view.dragging?.move) {
-                    const { selection, doc } = view.state;
-                    const $from = doc.resolve(selection.from);
-                    const from = $from.before($from.depth);
-                    const to = from + $from.node($from.depth).nodeSize;
+                    if (view.dragging?.move) {
+                        const { selection, doc } = view.state;
+                        let from: number, to: number;
+                        if (selection instanceof NodeSelection) {
+                            from = selection.from;
+                            to = selection.to;
+                        } else {
+                            const $from = doc.resolve(selection.from);
+                            const depth = Math.max(1, $from.depth);
+                            from = $from.before(depth);
+                            to = from + $from.node(depth).nodeSize;
+                        }
 
-                    (view.dragging as any).node = {
-                      replace: (tr: any) => {
-                        const mappedFrom = tr.mapping.map(from);
-                        const mappedTo = tr.mapping.map(to);
-                        tr.delete(mappedFrom, mappedTo);
-                      },
-                    };
-                  }
-                  return false;
+                        (view.dragging as any).node = {
+                            replace: (tr: any) => {
+                                const mappedFrom = tr.mapping.map(from);
+                                const mappedTo = tr.mapping.map(to);
+                                tr.delete(mappedFrom, mappedTo);
+                            },
+                        };
+                    }
+                    return false;
                 },
               },
             },
