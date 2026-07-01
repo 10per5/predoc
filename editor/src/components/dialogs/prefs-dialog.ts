@@ -34,7 +34,7 @@ export function mountPrefsDialog(actions: PrefsDialogActions) {
       <h3>Preferences</h3>
       <label>
         <input type="checkbox" id="predoc-sticky-checkbox" ?checked=${prefs.stickyToolbar} />
-        Auto-hide toolbar on scroll
+        Pin toolbar to top
       </label>
       <label>
         <input type="checkbox" id="predoc-dark-checkbox" ?checked=${prefs.darkMode} />

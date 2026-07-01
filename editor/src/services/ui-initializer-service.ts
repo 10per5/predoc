@@ -10,7 +10,6 @@ import type { TopbarAPI } from "../components/toolbar/topbar";
 import type { MetaPanelAPI } from "../components/panels/meta-panel";
 import { mountTopbar } from "../components/toolbar/topbar";
 import { mountMetaPanel } from "../components/panels/meta-panel";
-import { mountPrefsDialog } from "../components/dialogs/prefs-dialog";
 import type { ViewType } from "../components/views/view";
 import type { ViewManager } from "../components/views/view";
 
@@ -45,11 +44,6 @@ export class UIInitializerService {
     this.topbar = mountTopbar(toolbarEl, getEditor, {
       onPrefs: () => {
         options.onPrefs?.();
-        mountPrefsDialog({
-          onStickyToolbarChange: (sticky) => {
-            // This will be handled by caller
-          },
-        });
       },
       onDirtyClick: options.onDirtyClick ?? undefined,
       onSingleDiscard: options.onSingleDiscard ?? undefined,

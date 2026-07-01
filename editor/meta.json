@@ -1,0 +1,2575 @@
+{
+  "inputs": {
+    "src/_size_test.ts": {
+      "bytes": 55,
+      "imports": [
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/language-data/dist/index.js",
+          "kind": "import-statement",
+          "original": "@codemirror/language-data"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/language-data/dist/index.js": {
+      "bytes": 32830,
+      "imports": [
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/language/dist/index.js",
+          "kind": "import-statement",
+          "original": "@codemirror/language"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/lang-sql/dist/index.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/lang-sql"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/lang-cpp/dist/index.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/lang-cpp"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/lang-cpp/dist/index.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/lang-cpp"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/lang-css/dist/index.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/lang-css"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/lang-go/dist/index.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/lang-go"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/lang-html/dist/index.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/lang-html"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/lang-java/dist/index.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/lang-java"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/lang-javascript/dist/index.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/lang-javascript"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/lang-jinja/dist/index.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/lang-jinja"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/lang-json/dist/index.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/lang-json"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/lang-javascript/dist/index.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/lang-javascript"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/lang-less/dist/index.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/lang-less"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/lang-liquid/dist/index.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/lang-liquid"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/lang-markdown/dist/index.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/lang-markdown"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/lang-php/dist/index.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/lang-php"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/lang-python/dist/index.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/lang-python"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/lang-rust/dist/index.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/lang-rust"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/lang-sass/dist/index.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/lang-sass"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/lang-sass/dist/index.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/lang-sass"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/lang-javascript/dist/index.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/lang-javascript"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/lang-javascript/dist/index.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/lang-javascript"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/lang-wast/dist/index.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/lang-wast"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/lang-xml/dist/index.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/lang-xml"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/lang-yaml/dist/index.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/lang-yaml"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/apl.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/apl"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/asciiarmor.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/asciiarmor"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/asn1.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/asn1"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/asterisk.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/asterisk"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/brainfuck.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/brainfuck"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/cobol.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/cobol"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/clike.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/clike"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/clojure.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/clojure"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/clojure.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/clojure"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/css.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/css"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/cmake.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/cmake"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/coffeescript.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/coffeescript"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/commonlisp.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/commonlisp"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/cypher.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/cypher"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/python.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/python"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/crystal.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/crystal"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/d.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/d"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/clike.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/clike"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/diff.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/diff"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/dockerfile.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/dockerfile"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/dtd.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/dtd"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/dylan.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/dylan"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/ebnf.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/ebnf"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/ecl.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/ecl"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/clojure.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/clojure"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/eiffel.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/eiffel"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/elm.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/elm"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/erlang.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/erlang"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/sql.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/sql"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/factor.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/factor"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/fcl.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/fcl"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/forth.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/forth"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/fortran.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/fortran"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/mllike.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/mllike"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/gas.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/gas"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/gherkin.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/gherkin"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/groovy.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/groovy"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/haskell.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/haskell"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/haxe.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/haxe"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/haxe.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/haxe"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/http.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/http"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/idl.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/idl"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/javascript.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/javascript"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/julia.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/julia"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/clike.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/clike"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/livescript.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/livescript"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/lua.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/lua"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/mirc.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/mirc"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/mathematica.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/mathematica"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/modelica.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/modelica"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/mumps.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/mumps"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/mbox.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/mbox"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/nginx.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/nginx"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/nsis.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/nsis"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/ntriples.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/ntriples"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/clike.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/clike"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/clike.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/clike"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/mllike.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/mllike"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/octave.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/octave"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/oz.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/oz"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/pascal.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/pascal"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/perl.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/perl"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/pig.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/pig"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/powershell.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/powershell"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/properties.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/properties"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/protobuf.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/protobuf"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/pug.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/pug"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/puppet.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/puppet"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/q.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/q"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/r.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/r"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/rpm.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/rpm"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/rpm.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/rpm"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/ruby.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/ruby"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/sas.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/sas"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/clike.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/clike"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/scheme.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/scheme"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/shell.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/shell"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/sieve.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/sieve"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/smalltalk.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/smalltalk"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/solr.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/solr"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/mllike.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/mllike"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/sparql.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/sparql"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/spreadsheet.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/spreadsheet"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/clike.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/clike"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/stylus.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/stylus"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/swift.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/swift"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/stex.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/stex"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/stex.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/stex"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/verilog.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/verilog"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/tcl.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/tcl"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/textile.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/textile"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/tiddlywiki.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/tiddlywiki"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/tiki.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/tiki"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/toml.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/toml"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/troff.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/troff"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/ttcn.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/ttcn"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/ttcn-cfg.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/ttcn-cfg"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/turtle.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/turtle"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/webidl.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/webidl"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/vb.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/vb"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/vbscript.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/vbscript"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/velocity.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/velocity"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/verilog.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/verilog"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/vhdl.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/vhdl"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/xquery.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/xquery"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/yacas.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/yacas"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/z80.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/z80"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/mscgen.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/mscgen"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/mscgen.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/mscgen"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/mscgen.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/legacy-modes/mode/mscgen"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/lang-vue/dist/index.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/lang-vue"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/lang-angular/dist/index.js",
+          "kind": "dynamic-import",
+          "original": "@codemirror/lang-angular"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/apl.js": {
+      "bytes": 3562,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/commonlisp.js": {
+      "bytes": 3870,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/swift.js": {
+      "bytes": 6544,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/lang-php/dist/index.js": {
+      "bytes": 2879,
+      "imports": [
+        {
+          "path": "/home/user/project/editor/node_modules/@lezer/php/dist/index.js",
+          "kind": "import-statement",
+          "original": "@lezer/php"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@lezer/common/dist/index.js",
+          "kind": "import-statement",
+          "original": "@lezer/common"
+        },
+        {
+          "path": "@codemirror/lang-html",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/language",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/lang-markdown/dist/index.js": {
+      "bytes": 21599,
+      "imports": [
+        {
+          "path": "@codemirror/state",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/view",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/language",
+          "kind": "import-statement"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/autocomplete/dist/index.js",
+          "kind": "import-statement",
+          "original": "@codemirror/autocomplete"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@lezer/markdown/dist/index.js",
+          "kind": "import-statement",
+          "original": "@lezer/markdown"
+        },
+        {
+          "path": "@codemirror/lang-html",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/common",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/d.js": {
+      "bytes": 6663,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/clike.js": {
+      "bytes": 38933,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/css.js": {
+      "bytes": 39155,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/lang-html/dist/index.js": {
+      "bytes": 25938,
+      "imports": [
+        {
+          "path": "/home/user/project/editor/node_modules/@lezer/html/dist/index.js",
+          "kind": "import-statement",
+          "original": "@lezer/html"
+        },
+        {
+          "path": "@codemirror/lang-css",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/lang-javascript",
+          "kind": "import-statement"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/view/dist/index.js",
+          "kind": "import-statement",
+          "original": "@codemirror/view"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/state/dist/index.js",
+          "kind": "import-statement",
+          "original": "@codemirror/state"
+        },
+        {
+          "path": "@codemirror/language",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/cobol.js": {
+      "bytes": 9257,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/diff.js": {
+      "bytes": 567,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/dockerfile.js": {
+      "bytes": 3831,
+      "imports": [
+        {
+          "path": "./simple-mode.js",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/factor.js": {
+      "bytes": 2643,
+      "imports": [
+        {
+          "path": "/home/user/project/editor/node_modules/@codemirror/legacy-modes/mode/simple-mode.js",
+          "kind": "import-statement",
+          "original": "./simple-mode.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/scheme.js": {
+      "bytes": 11630,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/lang-angular/dist/index.js": {
+      "bytes": 7916,
+      "imports": [
+        {
+          "path": "@codemirror/language",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/lang-html",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/lang-javascript",
+          "kind": "import-statement"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@lezer/highlight/dist/index.js",
+          "kind": "import-statement",
+          "original": "@lezer/highlight"
+        },
+        {
+          "path": "@lezer/common",
+          "kind": "import-statement"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/@lezer/lr/dist/index.js",
+          "kind": "import-statement",
+          "original": "@lezer/lr"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/lang-javascript/dist/index.js": {
+      "bytes": 20788,
+      "imports": [
+        {
+          "path": "/home/user/project/editor/node_modules/@lezer/javascript/dist/index.js",
+          "kind": "import-statement",
+          "original": "@lezer/javascript"
+        },
+        {
+          "path": "@codemirror/language",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/state",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/view",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/autocomplete",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/common",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/pascal.js": {
+      "bytes": 3587,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/sparql.js": {
+      "bytes": 6054,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/powershell.js": {
+      "bytes": 11686,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/asciiarmor.js": {
+      "bytes": 1512,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/sql.js": {
+      "bytes": 46743,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/asn1.js": {
+      "bytes": 7380,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/lang-sass/dist/index.js": {
+      "bytes": 1970,
+      "imports": [
+        {
+          "path": "/home/user/project/editor/node_modules/@lezer/sass/dist/index.js",
+          "kind": "import-statement",
+          "original": "@lezer/sass"
+        },
+        {
+          "path": "@codemirror/language",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/lang-css",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/solr.js": {
+      "bytes": 1798,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/q.js": {
+      "bytes": 5878,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/ntriples.js": {
+      "bytes": 4814,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/properties.js": {
+      "bytes": 1491,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/language/dist/index.js": {
+      "bytes": 102129,
+      "imports": [
+        {
+          "path": "@lezer/common",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/state",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/view",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/highlight",
+          "kind": "import-statement"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/style-mod/src/style-mod.js",
+          "kind": "import-statement",
+          "original": "style-mod"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/gherkin.js": {
+      "bytes": 12095,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/yacas.js": {
+      "bytes": 4486,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/lang-cpp/dist/index.js": {
+      "bytes": 1707,
+      "imports": [
+        {
+          "path": "/home/user/project/editor/node_modules/@lezer/cpp/dist/index.js",
+          "kind": "import-statement",
+          "original": "@lezer/cpp"
+        },
+        {
+          "path": "@codemirror/language",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/idl.js": {
+      "bytes": 13821,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/sas.js": {
+      "bytes": 13476,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/http.js": {
+      "bytes": 1771,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/gas.js": {
+      "bytes": 8845,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/mllike.js": {
+      "bytes": 8214,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/julia.js": {
+      "bytes": 10106,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/turtle.js": {
+      "bytes": 3984,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/cmake.js": {
+      "bytes": 1973,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/ecl.js": {
+      "bytes": 7815,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/octave.js": {
+      "bytes": 3811,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/xquery.js": {
+      "bytes": 14631,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/lang-vue/dist/index.js": {
+      "bytes": 4945,
+      "imports": [
+        {
+          "path": "@codemirror/language",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/lang-html",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/lang-javascript",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/highlight",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/common",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/lr",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/toml.js": {
+      "bytes": 2256,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/lang-rust/dist/index.js": {
+      "bytes": 1459,
+      "imports": [
+        {
+          "path": "/home/user/project/editor/node_modules/@lezer/rust/dist/index.js",
+          "kind": "import-statement",
+          "original": "@lezer/rust"
+        },
+        {
+          "path": "@codemirror/language",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/vbscript.js": {
+      "bytes": 12906,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/smalltalk.js": {
+      "bytes": 3860,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/velocity.js": {
+      "bytes": 5288,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/troff.js": {
+      "bytes": 1689,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/lang-java/dist/index.js": {
+      "bytes": 1883,
+      "imports": [
+        {
+          "path": "/home/user/project/editor/node_modules/@lezer/java/dist/index.js",
+          "kind": "import-statement",
+          "original": "@lezer/java"
+        },
+        {
+          "path": "@codemirror/language",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/lang-jinja/dist/index.js": {
+      "bytes": 28031,
+      "imports": [
+        {
+          "path": "@codemirror/language",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/lang-html",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/highlight",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/common",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/lr",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/state",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/view",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/lang-go/dist/index.js": {
+      "bytes": 8177,
+      "imports": [
+        {
+          "path": "/home/user/project/editor/node_modules/@lezer/go/dist/index.js",
+          "kind": "import-statement",
+          "original": "@lezer/go"
+        },
+        {
+          "path": "@codemirror/language",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/autocomplete",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/common",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/pig.js": {
+      "bytes": 4567,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/javascript.js": {
+      "bytes": 37297,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/r.js": {
+      "bytes": 5850,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/textile.js": {
+      "bytes": 12089,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/webidl.js": {
+      "bytes": 5181,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/livescript.js": {
+      "bytes": 6329,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/protobuf.js": {
+      "bytes": 1525,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/sieve.js": {
+      "bytes": 3463,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/cypher.js": {
+      "bytes": 5517,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/puppet.js": {
+      "bytes": 6708,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/ttcn.js": {
+      "bytes": 8627,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/coffeescript.js": {
+      "bytes": 8486,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/pug.js": {
+      "bytes": 12021,
+      "imports": [
+        {
+          "path": "./javascript.js",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/ttcn-cfg.js": {
+      "bytes": 7867,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/clojure.js": {
+      "bytes": 16078,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/lang-css/dist/index.js": {
+      "bytes": 15969,
+      "imports": [
+        {
+          "path": "/home/user/project/editor/node_modules/@lezer/css/dist/index.js",
+          "kind": "import-statement",
+          "original": "@lezer/css"
+        },
+        {
+          "path": "@codemirror/language",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/common",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/haskell.js": {
+      "bytes": 6946,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/tiddlywiki.js": {
+      "bytes": 6891,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/fcl.js": {
+      "bytes": 3762,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/elm.js": {
+      "bytes": 4321,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/dtd.js": {
+      "bytes": 3880,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/mbox.js": {
+      "bytes": 3070,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/lang-json/dist/index.js": {
+      "bytes": 1876,
+      "imports": [
+        {
+          "path": "/home/user/project/editor/node_modules/@lezer/json/dist/index.js",
+          "kind": "import-statement",
+          "original": "@lezer/json"
+        },
+        {
+          "path": "@codemirror/language",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/mathematica.js": {
+      "bytes": 4694,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/lang-python/dist/index.js": {
+      "bytes": 13319,
+      "imports": [
+        {
+          "path": "/home/user/project/editor/node_modules/@lezer/python/dist/index.js",
+          "kind": "import-statement",
+          "original": "@lezer/python"
+        },
+        {
+          "path": "@codemirror/language",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/common",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/autocomplete",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/lua.js": {
+      "bytes": 4906,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/groovy.js": {
+      "bytes": 7496,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/perl.js": {
+      "bytes": 28958,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/lang-xml/dist/index.js": {
+      "bytes": 13393,
+      "imports": [
+        {
+          "path": "/home/user/project/editor/node_modules/@lezer/xml/dist/index.js",
+          "kind": "import-statement",
+          "original": "@lezer/xml"
+        },
+        {
+          "path": "@codemirror/language",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/state",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/view",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/lang-less/dist/index.js": {
+      "bytes": 18801,
+      "imports": [
+        {
+          "path": "@codemirror/language",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/lang-css",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/lr",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/highlight",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/eiffel.js": {
+      "bytes": 2988,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/mumps.js": {
+      "bytes": 4324,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/stex.js": {
+      "bytes": 6798,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/lang-sql/dist/index.js": {
+      "bytes": 53368,
+      "imports": [
+        {
+          "path": "@codemirror/language",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/highlight",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/lr",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/autocomplete",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/mirc.js": {
+      "bytes": 9135,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/tiki.js": {
+      "bytes": 7540,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/oz.js": {
+      "bytes": 5796,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/ruby.js": {
+      "bytes": 9675,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/vhdl.js": {
+      "bytes": 5857,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/brainfuck.js": {
+      "bytes": 1382,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/modelica.js": {
+      "bytes": 4989,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/erlang.js": {
+      "bytes": 16689,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/fortran.js": {
+      "bytes": 7390,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/haxe.js": {
+      "bytes": 15833,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/verilog.js": {
+      "bytes": 21487,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/asterisk.js": {
+      "bytes": 6444,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/lang-liquid/dist/index.js": {
+      "bytes": 29112,
+      "imports": [
+        {
+          "path": "@codemirror/language",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/lang-html",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/highlight",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/common",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/lr",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/state",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/view",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/vb.js": {
+      "bytes": 7700,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/nsis.js": {
+      "bytes": 7535,
+      "imports": [
+        {
+          "path": "./simple-mode.js",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/crystal.js": {
+      "bytes": 10922,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/tcl.js": {
+      "bytes": 4198,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/dylan.js": {
+      "bytes": 9043,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/stylus.js": {
+      "bytes": 38730,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/python.js": {
+      "bytes": 13801,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/lang-yaml/dist/index.js": {
+      "bytes": 4259,
+      "imports": [
+        {
+          "path": "/home/user/project/editor/node_modules/@lezer/yaml/dist/index.js",
+          "kind": "import-statement",
+          "original": "@lezer/yaml"
+        },
+        {
+          "path": "@codemirror/language",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/common",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/highlight",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/lr",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/shell.js": {
+      "bytes": 4570,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/lang-wast/dist/index.js": {
+      "bytes": 3585,
+      "imports": [
+        {
+          "path": "@codemirror/language",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/highlight",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/lr",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/spreadsheet.js": {
+      "bytes": 2251,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/mscgen.js": {
+      "bytes": 5541,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/ebnf.js": {
+      "bytes": 4076,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/forth.js": {
+      "bytes": 4155,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/nginx.js": {
+      "bytes": 9342,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/z80.js": {
+      "bytes": 3039,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/rpm.js": {
+      "bytes": 2939,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@lezer/php/dist/index.js": {
+      "bytes": 100905,
+      "imports": [
+        {
+          "path": "@lezer/lr",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/highlight",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@lezer/common/dist/index.js": {
+      "bytes": 83319,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@lezer/lr/dist/index.js": {
+      "bytes": 71678,
+      "imports": [
+        {
+          "path": "@lezer/common",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@lezer/highlight/dist/index.js": {
+      "bytes": 29915,
+      "imports": [
+        {
+          "path": "@lezer/common",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@lezer/sass/dist/index.js": {
+      "bytes": 27509,
+      "imports": [
+        {
+          "path": "@lezer/lr",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/highlight",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/state/dist/index.js": {
+      "bytes": 145445,
+      "imports": [
+        {
+          "path": "/home/user/project/editor/node_modules/@marijn/find-cluster-break/src/index.js",
+          "kind": "import-statement",
+          "original": "@marijn/find-cluster-break"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/view/dist/index.js": {
+      "bytes": 489438,
+      "imports": [
+        {
+          "path": "@codemirror/state",
+          "kind": "import-statement"
+        },
+        {
+          "path": "style-mod",
+          "kind": "import-statement"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/w3c-keyname/index.js",
+          "kind": "import-statement",
+          "original": "w3c-keyname"
+        },
+        {
+          "path": "/home/user/project/editor/node_modules/crelt/index.js",
+          "kind": "import-statement",
+          "original": "crelt"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@lezer/html/dist/index.js": {
+      "bytes": 20875,
+      "imports": [
+        {
+          "path": "@lezer/lr",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/highlight",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/common",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/autocomplete/dist/index.js": {
+      "bytes": 90042,
+      "imports": [
+        {
+          "path": "@codemirror/state",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/view",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@codemirror/language",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@lezer/markdown/dist/index.js": {
+      "bytes": 86656,
+      "imports": [
+        {
+          "path": "@lezer/common",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/highlight",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@lezer/cpp/dist/index.js": {
+      "bytes": 105518,
+      "imports": [
+        {
+          "path": "@lezer/lr",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/highlight",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@codemirror/legacy-modes/mode/simple-mode.js": {
+      "bytes": 4347,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@lezer/javascript/dist/index.js": {
+      "bytes": 80756,
+      "imports": [
+        {
+          "path": "@lezer/lr",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/highlight",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@lezer/go/dist/index.js": {
+      "bytes": 28563,
+      "imports": [
+        {
+          "path": "@lezer/lr",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/highlight",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@lezer/java/dist/index.js": {
+      "bytes": 40573,
+      "imports": [
+        {
+          "path": "@lezer/lr",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/highlight",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@lezer/xml/dist/index.js": {
+      "bytes": 10695,
+      "imports": [
+        {
+          "path": "@lezer/lr",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/highlight",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@lezer/rust/dist/index.js": {
+      "bytes": 72319,
+      "imports": [
+        {
+          "path": "@lezer/lr",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/highlight",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@lezer/json/dist/index.js": {
+      "bytes": 1981,
+      "imports": [
+        {
+          "path": "@lezer/lr",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/highlight",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@lezer/yaml/dist/index.js": {
+      "bytes": 17503,
+      "imports": [
+        {
+          "path": "@lezer/lr",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/highlight",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@lezer/python/dist/index.js": {
+      "bytes": 43981,
+      "imports": [
+        {
+          "path": "@lezer/lr",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/highlight",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/@lezer/css/dist/index.js": {
+      "bytes": 19572,
+      "imports": [
+        {
+          "path": "@lezer/lr",
+          "kind": "import-statement"
+        },
+        {
+          "path": "@lezer/highlight",
+          "kind": "import-statement"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/style-mod/src/style-mod.js": {
+      "bytes": 6935,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/@marijn/find-cluster-break/src/index.js": {
+      "bytes": 4241,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/crelt/index.js": {
+      "bytes": 951,
+      "imports": [
+      ],
+      "format": "esm"
+    },
+    "node_modules/w3c-keyname/index.js": {
+      "bytes": 2630,
+      "imports": [
+      ],
+      "format": "esm"
+    }
+  },
+  "outputs": {
+    "./_size_test.js": {
+      "bytes": 2297993,
+      "inputs": {
+        "node_modules/@lezer/common/dist/index.js": {
+          "bytesInOutput": 55409
+        },
+        "node_modules/@marijn/find-cluster-break/src/index.js": {
+          "bytesInOutput": 3692
+        },
+        "node_modules/@codemirror/state/dist/index.js": {
+          "bytesInOutput": 89856
+        },
+        "node_modules/style-mod/src/style-mod.js": {
+          "bytesInOutput": 4036
+        },
+        "node_modules/w3c-keyname/index.js": {
+          "bytesInOutput": 2438
+        },
+        "node_modules/crelt/index.js": {
+          "bytesInOutput": 0
+        },
+        "node_modules/@codemirror/view/dist/index.js": {
+          "bytesInOutput": 281883
+        },
+        "node_modules/@lezer/highlight/dist/index.js": {
+          "bytesInOutput": 9687
+        },
+        "node_modules/@codemirror/language/dist/index.js": {
+          "bytesInOutput": 38306
+        },
+        "node_modules/@lezer/lr/dist/index.js": {
+          "bytesInOutput": 48669
+        },
+        "node_modules/@codemirror/autocomplete/dist/index.js": {
+          "bytesInOutput": 15345
+        },
+        "node_modules/@codemirror/lang-sql/dist/index.js": {
+          "bytesInOutput": 44115
+        },
+        "node_modules/@lezer/cpp/dist/index.js": {
+          "bytesInOutput": 105674
+        },
+        "node_modules/@codemirror/lang-cpp/dist/index.js": {
+          "bytesInOutput": 1452
+        },
+        "node_modules/@lezer/css/dist/index.js": {
+          "bytesInOutput": 19713
+        },
+        "node_modules/@codemirror/lang-css/dist/index.js": {
+          "bytesInOutput": 17678
+        },
+        "node_modules/@lezer/go/dist/index.js": {
+          "bytesInOutput": 28565
+        },
+        "node_modules/@codemirror/lang-go/dist/index.js": {
+          "bytesInOutput": 7307
+        },
+        "node_modules/@lezer/html/dist/index.js": {
+          "bytesInOutput": 20973
+        },
+        "node_modules/@lezer/javascript/dist/index.js": {
+          "bytesInOutput": 81099
+        },
+        "node_modules/@codemirror/lang-javascript/dist/index.js": {
+          "bytesInOutput": 17562
+        },
+        "node_modules/@codemirror/lang-html/dist/index.js": {
+          "bytesInOutput": 24877
+        },
+        "node_modules/@lezer/java/dist/index.js": {
+          "bytesInOutput": 40751
+        },
+        "node_modules/@codemirror/lang-java/dist/index.js": {
+          "bytesInOutput": 1592
+        },
+        "node_modules/@codemirror/lang-jinja/dist/index.js": {
+          "bytesInOutput": 26227
+        },
+        "node_modules/@lezer/json/dist/index.js": {
+          "bytesInOutput": 1949
+        },
+        "node_modules/@codemirror/lang-json/dist/index.js": {
+          "bytesInOutput": 1482
+        },
+        "node_modules/@codemirror/lang-less/dist/index.js": {
+          "bytesInOutput": 18495
+        },
+        "node_modules/@codemirror/lang-liquid/dist/index.js": {
+          "bytesInOutput": 27251
+        },
+        "node_modules/@lezer/markdown/dist/index.js": {
+          "bytesInOutput": 66497
+        },
+        "node_modules/@codemirror/lang-markdown/dist/index.js": {
+          "bytesInOutput": 17431
+        },
+        "node_modules/@lezer/php/dist/index.js": {
+          "bytesInOutput": 100957
+        },
+        "node_modules/@codemirror/lang-php/dist/index.js": {
+          "bytesInOutput": 2505
+        },
+        "node_modules/@lezer/python/dist/index.js": {
+          "bytesInOutput": 44399
+        },
+        "node_modules/@codemirror/lang-python/dist/index.js": {
+          "bytesInOutput": 12749
+        },
+        "node_modules/@lezer/rust/dist/index.js": {
+          "bytesInOutput": 72780
+        },
+        "node_modules/@codemirror/lang-rust/dist/index.js": {
+          "bytesInOutput": 1203
+        },
+        "node_modules/@lezer/sass/dist/index.js": {
+          "bytesInOutput": 28144
+        },
+        "node_modules/@codemirror/lang-sass/dist/index.js": {
+          "bytesInOutput": 1688
+        },
+        "node_modules/@codemirror/lang-wast/dist/index.js": {
+          "bytesInOutput": 3504
+        },
+        "node_modules/@lezer/xml/dist/index.js": {
+          "bytesInOutput": 10708
+        },
+        "node_modules/@codemirror/lang-xml/dist/index.js": {
+          "bytesInOutput": 12047
+        },
+        "node_modules/@lezer/yaml/dist/index.js": {
+          "bytesInOutput": 17185
+        },
+        "node_modules/@codemirror/lang-yaml/dist/index.js": {
+          "bytesInOutput": 3513
+        },
+        "node_modules/@codemirror/legacy-modes/mode/apl.js": {
+          "bytesInOutput": 3951
+        },
+        "node_modules/@codemirror/legacy-modes/mode/asciiarmor.js": {
+          "bytesInOutput": 1779
+        },
+        "node_modules/@codemirror/legacy-modes/mode/asn1.js": {
+          "bytesInOutput": 6988
+        },
+        "node_modules/@codemirror/legacy-modes/mode/asterisk.js": {
+          "bytesInOutput": 7396
+        },
+        "node_modules/@codemirror/legacy-modes/mode/brainfuck.js": {
+          "bytesInOutput": 1421
+        },
+        "node_modules/@codemirror/legacy-modes/mode/cobol.js": {
+          "bytesInOutput": 8951
+        },
+        "node_modules/@codemirror/legacy-modes/mode/clike.js": {
+          "bytesInOutput": 36828
+        },
+        "node_modules/@codemirror/legacy-modes/mode/clojure.js": {
+          "bytesInOutput": 16767
+        },
+        "node_modules/@codemirror/legacy-modes/mode/css.js": {
+          "bytesInOutput": 43927
+        },
+        "node_modules/@codemirror/legacy-modes/mode/cmake.js": {
+          "bytesInOutput": 1745
+        },
+        "node_modules/@codemirror/legacy-modes/mode/coffeescript.js": {
+          "bytesInOutput": 8372
+        },
+        "node_modules/@codemirror/legacy-modes/mode/commonlisp.js": {
+          "bytesInOutput": 4374
+        },
+        "node_modules/@codemirror/legacy-modes/mode/cypher.js": {
+          "bytesInOutput": 5829
+        },
+        "node_modules/@codemirror/legacy-modes/mode/python.js": {
+          "bytesInOutput": 13480
+        },
+        "node_modules/@codemirror/legacy-modes/mode/crystal.js": {
+          "bytesInOutput": 11123
+        },
+        "node_modules/@codemirror/legacy-modes/mode/d.js": {
+          "bytesInOutput": 7096
+        },
+        "node_modules/@codemirror/legacy-modes/mode/diff.js": {
+          "bytesInOutput": 707
+        },
+        "node_modules/@codemirror/legacy-modes/mode/simple-mode.js": {
+          "bytesInOutput": 4517
+        },
+        "node_modules/@codemirror/legacy-modes/mode/dockerfile.js": {
+          "bytesInOutput": 4035
+        },
+        "node_modules/@codemirror/legacy-modes/mode/dtd.js": {
+          "bytesInOutput": 4110
+        },
+        "node_modules/@codemirror/legacy-modes/mode/dylan.js": {
+          "bytesInOutput": 7695
+        },
+        "node_modules/@codemirror/legacy-modes/mode/ebnf.js": {
+          "bytesInOutput": 4387
+        },
+        "node_modules/@codemirror/legacy-modes/mode/ecl.js": {
+          "bytesInOutput": 8343
+        },
+        "node_modules/@codemirror/legacy-modes/mode/eiffel.js": {
+          "bytesInOutput": 3256
+        },
+        "node_modules/@codemirror/legacy-modes/mode/elm.js": {
+          "bytesInOutput": 4255
+        },
+        "node_modules/@codemirror/legacy-modes/mode/erlang.js": {
+          "bytesInOutput": 15988
+        },
+        "node_modules/@codemirror/legacy-modes/mode/sql.js": {
+          "bytesInOutput": 42286
+        },
+        "node_modules/@codemirror/legacy-modes/mode/factor.js": {
+          "bytesInOutput": 2237
+        },
+        "node_modules/@codemirror/legacy-modes/mode/fcl.js": {
+          "bytesInOutput": 4084
+        },
+        "node_modules/@codemirror/legacy-modes/mode/forth.js": {
+          "bytesInOutput": 4176
+        },
+        "node_modules/@codemirror/legacy-modes/mode/fortran.js": {
+          "bytesInOutput": 7691
+        },
+        "node_modules/@codemirror/legacy-modes/mode/mllike.js": {
+          "bytesInOutput": 8288
+        },
+        "node_modules/@codemirror/legacy-modes/mode/gas.js": {
+          "bytesInOutput": 7931
+        },
+        "node_modules/@codemirror/legacy-modes/mode/gherkin.js": {
+          "bytesInOutput": 12118
+        },
+        "node_modules/@codemirror/legacy-modes/mode/groovy.js": {
+          "bytesInOutput": 8027
+        },
+        "node_modules/@codemirror/legacy-modes/mode/haskell.js": {
+          "bytesInOutput": 6797
+        },
+        "node_modules/@codemirror/legacy-modes/mode/haxe.js": {
+          "bytesInOutput": 16454
+        },
+        "node_modules/@codemirror/legacy-modes/mode/http.js": {
+          "bytesInOutput": 1907
+        },
+        "node_modules/@codemirror/legacy-modes/mode/idl.js": {
+          "bytesInOutput": 17190
+        },
+        "node_modules/@codemirror/legacy-modes/mode/javascript.js": {
+          "bytesInOutput": 39139
+        },
+        "node_modules/@codemirror/legacy-modes/mode/julia.js": {
+          "bytesInOutput": 10274
+        },
+        "node_modules/@codemirror/legacy-modes/mode/livescript.js": {
+          "bytesInOutput": 7160
+        },
+        "node_modules/@codemirror/legacy-modes/mode/lua.js": {
+          "bytesInOutput": 5861
+        },
+        "node_modules/@codemirror/legacy-modes/mode/mirc.js": {
+          "bytesInOutput": 7799
+        },
+        "node_modules/@codemirror/legacy-modes/mode/mathematica.js": {
+          "bytesInOutput": 3650
+        },
+        "node_modules/@codemirror/legacy-modes/mode/modelica.js": {
+          "bytesInOutput": 5217
+        },
+        "node_modules/@codemirror/legacy-modes/mode/mumps.js": {
+          "bytesInOutput": 3618
+        },
+        "node_modules/@codemirror/legacy-modes/mode/mbox.js": {
+          "bytesInOutput": 3027
+        },
+        "node_modules/@codemirror/legacy-modes/mode/nginx.js": {
+          "bytesInOutput": 9582
+        },
+        "node_modules/@codemirror/legacy-modes/mode/nsis.js": {
+          "bytesInOutput": 7326
+        },
+        "node_modules/@codemirror/legacy-modes/mode/ntriples.js": {
+          "bytesInOutput": 5267
+        },
+        "node_modules/@codemirror/legacy-modes/mode/octave.js": {
+          "bytesInOutput": 4362
+        },
+        "node_modules/@codemirror/legacy-modes/mode/oz.js": {
+          "bytesInOutput": 5743
+        },
+        "node_modules/@codemirror/legacy-modes/mode/pascal.js": {
+          "bytesInOutput": 3792
+        },
+        "node_modules/@codemirror/legacy-modes/mode/perl.js": {
+          "bytesInOutput": 19831
+        },
+        "node_modules/@codemirror/legacy-modes/mode/pig.js": {
+          "bytesInOutput": 4221
+        },
+        "node_modules/@codemirror/legacy-modes/mode/powershell.js": {
+          "bytesInOutput": 12003
+        },
+        "node_modules/@codemirror/legacy-modes/mode/properties.js": {
+          "bytesInOutput": 1513
+        },
+        "node_modules/@codemirror/legacy-modes/mode/protobuf.js": {
+          "bytesInOutput": 1697
+        },
+        "node_modules/@codemirror/legacy-modes/mode/pug.js": {
+          "bytesInOutput": 11823
+        },
+        "node_modules/@codemirror/legacy-modes/mode/puppet.js": {
+          "bytesInOutput": 4329
+        },
+        "node_modules/@codemirror/legacy-modes/mode/q.js": {
+          "bytesInOutput": 6628
+        },
+        "node_modules/@codemirror/legacy-modes/mode/r.js": {
+          "bytesInOutput": 6190
+        },
+        "node_modules/@codemirror/legacy-modes/mode/rpm.js": {
+          "bytesInOutput": 3266
+        },
+        "node_modules/@codemirror/legacy-modes/mode/ruby.js": {
+          "bytesInOutput": 10160
+        },
+        "node_modules/@codemirror/legacy-modes/mode/sas.js": {
+          "bytesInOutput": 12378
+        },
+        "node_modules/@codemirror/legacy-modes/mode/scheme.js": {
+          "bytesInOutput": 11163
+        },
+        "node_modules/@codemirror/legacy-modes/mode/shell.js": {
+          "bytesInOutput": 5060
+        },
+        "node_modules/@codemirror/legacy-modes/mode/sieve.js": {
+          "bytesInOutput": 3304
+        },
+        "node_modules/@codemirror/legacy-modes/mode/smalltalk.js": {
+          "bytesInOutput": 3995
+        },
+        "node_modules/@codemirror/legacy-modes/mode/solr.js": {
+          "bytesInOutput": 2004
+        },
+        "node_modules/@codemirror/legacy-modes/mode/sparql.js": {
+          "bytesInOutput": 6570
+        },
+        "node_modules/@codemirror/legacy-modes/mode/spreadsheet.js": {
+          "bytesInOutput": 2546
+        },
+        "node_modules/@codemirror/legacy-modes/mode/stylus.js": {
+          "bytesInOutput": 39988
+        },
+        "node_modules/@codemirror/legacy-modes/mode/swift.js": {
+          "bytesInOutput": 7475
+        },
+        "node_modules/@codemirror/legacy-modes/mode/stex.js": {
+          "bytesInOutput": 6467
+        },
+        "node_modules/@codemirror/legacy-modes/mode/verilog.js": {
+          "bytesInOutput": 17245
+        },
+        "node_modules/@codemirror/legacy-modes/mode/tcl.js": {
+          "bytesInOutput": 4164
+        },
+        "node_modules/@codemirror/legacy-modes/mode/textile.js": {
+          "bytesInOutput": 12590
+        },
+        "node_modules/@codemirror/legacy-modes/mode/tiddlywiki.js": {
+          "bytesInOutput": 6089
+        },
+        "node_modules/@codemirror/legacy-modes/mode/tiki.js": {
+          "bytesInOutput": 7384
+        },
+        "node_modules/@codemirror/legacy-modes/mode/toml.js": {
+          "bytesInOutput": 2356
+        },
+        "node_modules/@codemirror/legacy-modes/mode/troff.js": {
+          "bytesInOutput": 1820
+        },
+        "node_modules/@codemirror/legacy-modes/mode/ttcn.js": {
+          "bytesInOutput": 8926
+        },
+        "node_modules/@codemirror/legacy-modes/mode/ttcn-cfg.js": {
+          "bytesInOutput": 6929
+        },
+        "node_modules/@codemirror/legacy-modes/mode/turtle.js": {
+          "bytesInOutput": 4375
+        },
+        "node_modules/@codemirror/legacy-modes/mode/webidl.js": {
+          "bytesInOutput": 4974
+        },
+        "node_modules/@codemirror/legacy-modes/mode/vb.js": {
+          "bytesInOutput": 7743
+        },
+        "node_modules/@codemirror/legacy-modes/mode/vbscript.js": {
+          "bytesInOutput": 11516
+        },
+        "node_modules/@codemirror/legacy-modes/mode/velocity.js": {
+          "bytesInOutput": 5069
+        },
+        "node_modules/@codemirror/legacy-modes/mode/vhdl.js": {
+          "bytesInOutput": 6315
+        },
+        "node_modules/@codemirror/legacy-modes/mode/xquery.js": {
+          "bytesInOutput": 13110
+        },
+        "node_modules/@codemirror/legacy-modes/mode/yacas.js": {
+          "bytesInOutput": 4156
+        },
+        "node_modules/@codemirror/legacy-modes/mode/z80.js": {
+          "bytesInOutput": 3151
+        },
+        "node_modules/@codemirror/legacy-modes/mode/mscgen.js": {
+          "bytesInOutput": 5440
+        },
+        "node_modules/@codemirror/lang-vue/dist/index.js": {
+          "bytesInOutput": 4753
+        },
+        "node_modules/@codemirror/lang-angular/dist/index.js": {
+          "bytesInOutput": 7441
+        },
+        "node_modules/@codemirror/language-data/dist/index.js": {
+          "bytesInOutput": 32011
+        },
+        "src/_size_test.ts": {
+          "bytesInOutput": 0
+        }
+      },
+      "imports": [
+      ],
+      "exports": [
+        "languages"
+      ],
+      "entryPoint": "src/_size_test.ts"
+    }
+  }
+}
