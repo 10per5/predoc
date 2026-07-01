@@ -35,33 +35,22 @@ When the editor loads at the root URL (`/`), it defaults to `content/_index.md` 
 
 The editor supports full **CommonMark** and **GitHub Flavored Markdown** (GFM), including tables, strikethrough, task lists, and auto-links.
 
-### Markdown Alerts
+## Command Menu (/)
 
-The editor supports GitHub-style markdown alerts (also known as admonitions):
+Triggered by typing `/` or via the **+** button in the toolbar.
 
-```markdown
-> [!NOTE]
-> Useful information that users should know.
+* Available on all viewports
 
-> [!TIP]
-> Helpful advice for doing things better.
+* Inserts blocks (headings, lists, code, images, etc.)
 
-> [!IMPORTANT]
-> Key information users need to know.
+* **Mobile**: menu adapts to screen width, larger touch targets, positioned to avoid keyboard overlap
 
-> [!WARNING]
-> Urgent info that needs immediate attention.
+## @ Mentions
 
-> [!CAUTION]
-> Advises about risks or negative outcomes.
-```
+Triggered by typing `@` in the editor.
 
-These render as colored callout blocks in the WYSIWYG editor matching the Hugo Book theme's `.book-hint` styling.
+* Available on all viewports
 
-### Hugo Shortcodes
+* Searches and links to other pages in the project
 
-Hugo/Book shortcodes (e.g., `{{</* hint info */>}}`, `{{</* details "Summary" */>}}`, `{{</* param "name" */>}}`) are preserved as-is in the markdown source and highlighted as styled badges in the WYSIWYG editor. For a full list of supported shortcodes, see the Hugo Book shortcode reference and Hugo shortcode documentation. Unimplemented shortcodes pass through the editor unchanged.
-
-## Backends
-
-The editor stores plain markdown files. The same files can be processed by supported backends to produce a static site. See the [Backends](/docs/backends) page for details on formatting compatibility per backend.
+* **Mobile**: menu height limited to avoid keyboard overlap

@@ -17,7 +17,7 @@
 }
 
 .milkdown-table-block table tr:not(:first-child) > * {
-  background: #fff !important;
+  background: var(--color-bg-primary) !important;
 }
 
 .milkdown-table-block th,

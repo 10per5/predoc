@@ -14,6 +14,14 @@
 #include <string>
 namespace fs = std::filesystem;
 
+static std::string extract_query(const std::string &url)
+{
+    auto qm = url.find('?');
+    if (qm == std::string::npos)
+        return {};
+    return url.substr(qm + 1);
+}
+
 // ── ─────────────────────────────────────────────────────────────────────
 
 static saucer::stash stash_from_file(const std::string &path)
@@ -237,10 +245,6 @@ saucer::scheme::response handle_app_request(
             return {.data = saucer::stash::from_str("Source not found"),
                     .mime = "text/plain", .status = 404};
 
-        if (fs::exists(dst))
-            return {.data = saucer::stash::from_str("Destination exists"),
-                    .mime = "text/plain", .status = 409};
-
         fs::create_directories(dst.parent_path());
 
         std::error_code rename_ec;
@@ -407,7 +411,7 @@ saucer::scheme::response handle_app_request(
 
     if (path == "api/images" && method == "GET")
     {
-        auto qs = req_url.query();
+        auto qs = extract_query(req_url.string());
         return handle_list_images(cfg, qs);
     }
 
@@ -420,7 +424,7 @@ saucer::scheme::response handle_app_request(
     {
         auto name = path.substr(images_api_prefix.size());
         name = url_decode(name);
-        auto qs = req_url.query();
+        auto qs = extract_query(req_url.string());
         return handle_delete_image(cfg, name, qs);
     }
 

@@ -463,7 +463,6 @@ async function handleMove(req: Request, ctx: ServerContext): Promise<Response | 
   if (!src.endsWith(".md") || !dst.endsWith(".md"))
     return new Response("Forbidden", { status: 403 });
   if (!existsSync(src)) return new Response("Source not found", { status: 404 });
-  if (existsSync(dst)) return new Response("Destination exists", { status: 409 });
 
   mkdirSync(dirname(dst), { recursive: true });
   const text = readFileSync(src, "utf-8");

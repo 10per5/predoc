@@ -31,7 +31,11 @@ import {
   todoListIcon,
   imageIcon,
 } from "../components/icons";
-import { getAllImages, uploadImage, listImages } from "../services/image-config";
+import {
+  getAllImages,
+  uploadImage,
+  listImages,
+} from "../services/image-config";
 
 const slash = slashFactory("predoc");
 
@@ -75,8 +79,16 @@ class BlockHandleView {
     this.#provider = new BlockProvider({
       ctx,
       content,
-      getOffset: () => 16,
+      getOffset: () => {
+        const w = window.innerWidth;
+        const rem =
+          parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+        if (w >= 1350) return Math.round(0.5 * rem);
+        if (w >= 700) return 16;
+        return Math.round(0.25 * rem);
+      },
       getPlacement: ({ active, blockDom }) => {
+        if (window.innerWidth < 700) return "right-start";
         const dom = active.el;
         const domRect = dom.getBoundingClientRect();
         const handleRect = blockDom.getBoundingClientRect();
@@ -87,21 +99,40 @@ class BlockHandleView {
         const handleHeight = handleRect.height;
         return handleHeight < height ? "left-start" : "left";
       },
-      getPosition: ({ active, editorDom }) => {
-        const editorRect = editorDom.getBoundingClientRect();
+      getPosition: ({ active }) => {
+        const w = window.innerWidth;
         const domRect = active.el.getBoundingClientRect();
         const style = window.getComputedStyle(active.el);
-        const paddingTop = Number.parseInt(style.paddingTop, 10) || 0;
+        let paddingTop = Number.parseInt(style.paddingTop, 10) || 10;
         const paddingBottom = Number.parseInt(style.paddingBottom, 10) || 0;
+        const rem =
+          parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+        let left: number;
+        if (w >= 1350) {
+          const prose = document.querySelector("#editor-area .ProseMirror");
+          const proseRect = prose?.getBoundingClientRect();
+          left = proseRect
+            ? proseRect.left + Math.round(2 * rem)
+            : domRect.left;
+        } else if (w >= 800) {
+          const menuEl = document.querySelector(".book-menu");
+          const menuRect = menuEl?.getBoundingClientRect();
+          left = menuRect
+            ? menuRect.right + Math.round(4.25 * rem)
+            : domRect.left;
+        } else {
+          left = domRect.right + Math.round(1.25 * rem);
+          paddingTop -= 12.5;
+        }
         return {
-          x: editorRect.x,
+          x: left,
           y: domRect.y + paddingTop,
           width: 0,
           height: domRect.height - paddingTop - paddingBottom,
           top: domRect.y + paddingTop,
-          left: editorRect.x + 32,
+          left,
           bottom: domRect.y + domRect.height - paddingBottom,
-          right: editorRect.x,
+          right: left,
         };
       },
     });
@@ -144,7 +175,10 @@ class SlashView {
   #programmaticPos: number | null = null;
   #programmaticActive = false;
   #imageSlashStart: number = -1;
-  #editState: { type: "create" } | { type: "edit"; pos: number; src: string } | null = null;
+  #editState:
+    | { type: "create" }
+    | { type: "edit"; pos: number; src: string }
+    | null = null;
   #imageMode = false;
 
   constructor(view: EditorView, ctx: Ctx) {
@@ -202,26 +236,26 @@ class SlashView {
       content: this.content,
       debounce: 20,
       shouldShow(view) {
-          if (typeof self.#programmaticPos === "number") {
-            const maxSize = view.state.doc.nodeSize - 2;
-            const validPos = Math.min(self.#programmaticPos, maxSize);
-            if (
-              view.state.doc.resolve(validPos).node() !==
-              view.state.doc.resolve(view.state.selection.from).node()
-            ) {
-              self.#programmaticPos = null;
-              self.#imageMode = false;
-              return false;
-            }
+        if (typeof self.#programmaticPos === "number") {
+          const maxSize = view.state.doc.nodeSize - 2;
+          const validPos = Math.min(self.#programmaticPos, maxSize);
+          if (
+            view.state.doc.resolve(validPos).node() !==
+            view.state.doc.resolve(view.state.selection.from).node()
+          ) {
             self.#programmaticPos = null;
-            if (self.#imageMode) {
-              self.#imageMode = false;
-              return true;
-            }
-            self.filterText = "";
-            self.renderItems();
+            self.#imageMode = false;
+            return false;
+          }
+          self.#programmaticPos = null;
+          if (self.#imageMode) {
+            self.#imageMode = false;
             return true;
           }
+          self.filterText = "";
+          self.renderItems();
+          return true;
+        }
         const text = (this as any).getContent(view, (node: any) =>
           ["paragraph", "heading"].includes(node.type.name),
         );
@@ -296,7 +330,9 @@ class SlashView {
       return;
     }
     if (cmd === "image-url-submit") {
-      const input = this.content.querySelector(".slash-url-input") as HTMLInputElement;
+      const input = this.content.querySelector(
+        ".slash-url-input",
+      ) as HTMLInputElement;
       const url = input?.value.trim() || "";
       if (url) this.confirmImageUrl(url);
       return;
@@ -330,7 +366,8 @@ class SlashView {
         $from.parentOffset,
       );
       const slashPos = textBefore.lastIndexOf("/");
-      this.#imageSlashStart = slashPos >= 0 ? $from.pos - ($from.parentOffset - slashPos) : -1;
+      this.#imageSlashStart =
+        slashPos >= 0 ? $from.pos - ($from.parentOffset - slashPos) : -1;
       this.#editState = { type: "create" };
       this.#programmaticActive = true;
       this.#programmaticPos = $from.pos;
@@ -496,7 +533,11 @@ class SlashView {
       return;
     }
     if (cmd === "image") {
-      const img = schema.nodes["image-block"]?.create({ src: "", caption: "", ratio: 1 });
+      const img = schema.nodes["image-block"]?.create({
+        src: "",
+        caption: "",
+        ratio: 1,
+      });
       const para = schema.nodes.paragraph.create();
       if (img) {
         const tr = state.tr.insert(afterPos, img).insert(afterPos + 2, para);
@@ -562,7 +603,7 @@ class SlashView {
           <input class="slash-url-input" type="text" placeholder="Paste image URL\u2026" value="${currentSrc}">
           <button class="slash-url-btn" data-cmd="image-url-submit">OK</button>
           <button class="slash-url-btn slash-cancel-btn" data-cmd="image-cancel">Cancel</button>
-          ${editState?.type === "edit" ? '<button class="slash-url-btn slash-remove-btn" data-cmd="image-remove">Remove</button>' : ''}
+          ${editState?.type === "edit" ? '<button class="slash-url-btn slash-remove-btn" data-cmd="image-remove">Remove</button>' : ""}
         </div>
         <div class="slash-upload-row">
           <label class="slash-upload-label">
@@ -575,9 +616,12 @@ class SlashView {
     this.content.innerHTML = html;
     this.#imageMode = true;
     const es = this.#editState;
-    const pos = es?.type === "edit"
-      ? es.pos
-      : (this.#imageSlashStart >= 0 ? this.#imageSlashStart : this.view.state.selection.from);
+    const pos =
+      es?.type === "edit"
+        ? es.pos
+        : this.#imageSlashStart >= 0
+          ? this.#imageSlashStart
+          : this.view.state.selection.from;
     this.#programmaticPos = pos;
     this.#programmaticActive = true;
 
@@ -588,7 +632,9 @@ class SlashView {
     }
     this.provider.show();
 
-    const uploadInput = this.content.querySelector(".slash-upload-input") as HTMLInputElement;
+    const uploadInput = this.content.querySelector(
+      ".slash-upload-input",
+    ) as HTMLInputElement;
     if (uploadInput) {
       uploadInput.addEventListener("change", () => {
         const file = uploadInput.files?.[0];
@@ -596,7 +642,9 @@ class SlashView {
       });
     }
 
-    const urlInput = this.content.querySelector(".slash-url-input") as HTMLInputElement;
+    const urlInput = this.content.querySelector(
+      ".slash-url-input",
+    ) as HTMLInputElement;
     if (urlInput) {
       urlInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
@@ -609,22 +657,30 @@ class SlashView {
       urlInput.select();
     }
 
-    listImages().catch(() => {}).then(() => {
-      this.renderImageSuggestions();
-    });
+    listImages()
+      .catch(() => {})
+      .then(() => {
+        this.renderImageSuggestions();
+      });
   }
 
   private renderImageSuggestions() {
     const el = this.content.querySelector("[data-area='suggestions']");
     if (!el) return;
     const allImages = getAllImages();
-    el.innerHTML = allImages.slice(0, 3).map(img => `
+    el.innerHTML =
+      allImages
+        .slice(0, 3)
+        .map(
+          (img) => `
       <div class="slash-image-item" data-cmd="image-select" data-url="${img.url}">
         <img src="${img.url}" />
         <span>${img.name}</span>
-        ${img.pending ? '<span class="slash-image-pending">(pending)</span>' : ''}
+        ${img.pending ? '<span class="slash-image-pending">(pending)</span>' : ""}
       </div>
-    `).join('') || '<div class="slash-image-empty">No images yet</div>';
+    `,
+        )
+        .join("") || '<div class="slash-image-empty">No images yet</div>';
   }
 
   private confirmImageUrl(url: string) {
@@ -635,7 +691,9 @@ class SlashView {
       const pos = this.#editState.pos;
       const node = state.doc.nodeAt(pos);
       if (node) {
-        dispatch(state.tr.setNodeMarkup(pos, null, { ...node.attrs, src: url }));
+        dispatch(
+          state.tr.setNodeMarkup(pos, null, { ...node.attrs, src: url }),
+        );
       }
       this.#editState = null;
       this.provider.hide();
@@ -643,7 +701,11 @@ class SlashView {
       return;
     }
 
-    const img = state.schema.nodes["image-block"]?.create({ src: url, caption: "", ratio: 1 });
+    const img = state.schema.nodes["image-block"]?.create({
+      src: url,
+      caption: "",
+      ratio: 1,
+    });
     const para = state.schema.nodes.paragraph.create();
     if (!img) return;
 
@@ -695,8 +757,11 @@ class SlashView {
     const { $from } = state.selection;
     const codeBlock = state.schema.nodes.code_block.create({ language: "" });
     const pos = $from.before($from.depth);
-    const tr = state.tr
-      .replaceWith(pos, pos + $from.node($from.depth).nodeSize, codeBlock);
+    const tr = state.tr.replaceWith(
+      pos,
+      pos + $from.node($from.depth).nodeSize,
+      codeBlock,
+    );
     dispatch(
       tr
         .setSelection(TextSelection.near(tr.doc.resolve(pos + 1)))
@@ -707,10 +772,15 @@ class SlashView {
   private convertToMathBlock(view: EditorView) {
     const { state, dispatch } = view;
     const { $from } = state.selection;
-    const codeBlock = state.schema.nodes.code_block.create({ language: "LaTeX" });
+    const codeBlock = state.schema.nodes.code_block.create({
+      language: "LaTeX",
+    });
     const pos = $from.before($from.depth);
-    const tr = state.tr
-      .replaceWith(pos, pos + $from.node($from.depth).nodeSize, codeBlock);
+    const tr = state.tr.replaceWith(
+      pos,
+      pos + $from.node($from.depth).nodeSize,
+      codeBlock,
+    );
     dispatch(
       tr
         .setSelection(TextSelection.near(tr.doc.resolve(pos + 1)))

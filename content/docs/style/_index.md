@@ -1,5 +1,5 @@
 ---
-title: "Style"
+title: Style
 weight: 20
 ---
 

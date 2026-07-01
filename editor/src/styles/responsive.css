@@ -88,20 +88,20 @@
     padding: 0 0.5rem;
   }
 
-  /* Toolbar on mobile */
+  /* Toolbar on mobile — single-row to avoid 73px height */
   .app-toolbar {
-    flex-wrap: wrap;
-    height: auto;
-    min-height: 36px;
-    padding: 0.5rem 1rem;
+    flex-wrap: nowrap;
+    height: 28px;
+    min-height: 28px;
+    padding: 0 0.5rem;
   }
 
   .toolbar-section {
-    margin-bottom: 0.25rem;
+    margin-bottom: 0;
   }
-  
+
   .toolbar-spacer {
-    flex-basis: 100%;
+    flex-basis: auto;
   }
 }
 

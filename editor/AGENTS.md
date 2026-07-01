@@ -1,5 +1,10 @@
 # Agent Notes — predoc editor
 
+## Rules
+
+- **Never modify `node_modules/`** — use custom Milkdown plugins or project source files instead.
+- **Never create postinstall/patch scripts** that modify node_modules at install time.
+
 ## Supported Formatting in WYSIWYG
 
 - **CommonMark** — via `@milkdown/kit/preset/commonmark`

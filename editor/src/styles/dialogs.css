@@ -1,6 +1,82 @@
 /* ── Dialog and Modal Components ────────────────────────────────────────
- * 
+ *
  * Styles for dialogs, toasts, and overlay components
  */
 
-/* (Dialog styles will be added as needed from existing code) */
+#predoc-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.predoc-prefs-box {
+  background: var(--color-bg-primary);
+  border-radius: 8px;
+  padding: 1.5rem;
+  min-width: 360px;
+  max-width: 480px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.predoc-prefs-box h3 {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  color: var(--color-text-primary);
+}
+
+.predoc-prefs-box label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  color: var(--color-text-primary);
+}
+
+.predoc-prefs-box .prefs-section {
+  margin: 0.75rem 0;
+}
+
+.predoc-prefs-box .prefs-section-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  color: var(--color-text-secondary);
+}
+
+.predoc-prefs-box .radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding-left: 0.5rem;
+}
+
+.predoc-prefs-box .radio-group label {
+  font-size: 0.85rem;
+  color: var(--color-text-primary);
+}
+
+.predoc-prefs-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.predoc-prefs-actions button {
+  padding: 0.4rem 1.2rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-bg-primary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
+}
+
+.predoc-prefs-actions button:hover {
+  background: var(--color-bg-tertiary);
+}

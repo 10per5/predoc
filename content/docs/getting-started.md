@@ -7,8 +7,9 @@ weight: 1
 
 ## Prerequisites
 
-- [Docker](https://docs.docker.com/engine/install/) — primary build method
-- Or [premake5](https://premake.github.io/download) + C++23 compiler + Qt6 + Saucer for native builds
+* [Docker](https://docs.docker.com/engine/install/) — primary build method
+
+* Or [premake5](https://premake.github.io/download) + C++23 compiler + Qt6 + Saucer for native builds
 
 Hugo and the Book theme are downloaded automatically by `predoc fetch-deps`.
 
@@ -24,23 +25,23 @@ predep build
 predep build-docker
 
 # Launch the editor
-cli/bin/predoc
-
-# With debug logging
-cli/bin/predoc --debug
+predoc $PATH_TO_CONTENT
 ```
 
-## Commands
+## Build Steps
 
-| Command                  | Description                                       |
-| ------------------------ | ------------------------------------------------- |
-| `predoc` (no subcommand) | Launch the native GUI window with the editor      |
-| `predoc --debug`         | Same, with verbose debug output                   |
-| `predoc fetch-deps`      | Download Hugo binary + Book theme to cache        |
-| `predoc package`         | Build editor assets + GUI binary, assemble output |
+All build recipes are declared in `predep.toml` at each subproject root, the root [`predep.toml`](https://github.com/10per5/predoc/blob/main/predep.toml) ties them together via `[[include]]` directives and defines the top-level `build` and `build-docker` stage groups.
 
-## Content
+### Build Artifacts
 
-predoc reads and writes markdown from the `content/` directory. The directory tree is the page hierarchy — `content/docs/foo.md` appears as `/docs/foo` in the editor.
+```
+gui/bin/predoc-gui             # ~1.2MB — GUI binary (links Qt6 at runtime)
+editor/public/assets/app.js  # Editor frontend JS (minified)
+editor/public/assets/app.css # Editor frontend CSS (minified)
+editor/public/index.html     # Static HTML shell
+ssg/
+  hugo.toml                  # Hugo configuration
+  themes/book/               # Hugo Book theme (downloaded on fetch-deps)
+```
 
-The home page is `content/_index.md`. When the editor loads with no specific path, it defaults to `_index` and displays it as "Home" in the sidebar.
+These are the only files needed at runtime. Source files (`gui/src/`, `editor/src/`) and dev dependencies are not needed on the target machine.

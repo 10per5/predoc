@@ -40,7 +40,7 @@ class ImageRegistry {
     list.push({ id, file, blobUrl, dir })
     this.pendingByDir.set(dir, list)
     try { await savePendingImage({ id, dir, file }) } catch {}
-    return blobUrl
+    return `pending-image:${id}`
   }
 
   getPending(dir: string): PendingImage[] {
@@ -68,7 +68,7 @@ class ImageRegistry {
     const urlMap = new Map<string, string>()
     for (const p of list) {
       const url = await upload(p.file, dir)
-      urlMap.set(p.blobUrl, url)
+      urlMap.set(`pending-image:${p.id}`, url)
       URL.revokeObjectURL(p.blobUrl)
       try { await removePendingImageById(p.id) } catch {}
     }
@@ -99,6 +99,20 @@ class ImageRegistry {
       }
       this.pendingByDir.delete(dir)
     }
+  }
+
+  async remapDir(oldDir: string, newDir: string): Promise<void> {
+    const list = this.pendingByDir.get(oldDir)
+    if (!list || list.length === 0) return
+    for (const p of list) {
+      p.dir = newDir
+      try {
+        await removePendingImageById(p.id)
+        await savePendingImage({ id: p.id, dir: newDir, file: p.file })
+      } catch {}
+    }
+    this.pendingByDir.set(newDir, list)
+    this.pendingByDir.delete(oldDir)
   }
 
   setKnown(dir: string, entries: KnownImage[]): void {

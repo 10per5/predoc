@@ -80,12 +80,22 @@ export function mountDropdownMenu(opts: DropdownMenuOptions): { updateItem: (id:
     }
   })
 
+  function findItem(items: MenuItem[], id: string): MenuItem | undefined {
+    for (const item of items) {
+      if (item.id === id) return item
+      if (item.items) {
+        const found = findItem(item.items, id)
+        if (found) return found
+      }
+    }
+    return undefined
+  }
+
   menu?.addEventListener("click", (e) => {
     const itemEl = (e.target as HTMLElement).closest("[data-action='menu-item']") as HTMLElement | null
     if (!itemEl) return
-    const idx = items.findIndex((it) => it.id === itemEl.id)
-    if (idx === -1) return
-    const item = items[idx]
+    const item = findItem(items, itemEl.id)
+    if (!item) return
     item.onClick?.()
     opts.onItemClick?.(item)
     menu.classList.remove("open")

@@ -2,12 +2,22 @@ import { colors } from "../../theme.js";
 
 const DEFAULT_DURATION = 4000;
 
+export type ToastType = "danger" | "warning" | "info";
+
 export interface ToastOptions {
   duration?: number;
+  type?: ToastType;
 }
+
+const TOAST_BG: Record<ToastType, string> = {
+  danger: "#e03e3e",
+  warning: "#d08731",
+  info: "#388bf2",
+};
 
 export function showToast(msg: string, opts?: ToastOptions) {
   const duration = opts?.duration ?? DEFAULT_DURATION;
+  const type = opts?.type ?? "danger";
 
   // Remove existing toast if present
   const old = document.getElementById("prdc-toast");
@@ -16,6 +26,7 @@ export function showToast(msg: string, opts?: ToastOptions) {
   const toast = document.createElement("div");
   toast.id = "prdc-toast";
   toast.textContent = msg;
+  toast.style.background = TOAST_BG[type];
   document.body.appendChild(toast);
 
   if (duration > 0) {

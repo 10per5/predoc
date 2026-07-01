@@ -12,7 +12,7 @@ import { getProvider, setProvider, cacheKeyForProvider, getProviderDisplayInfo }
 import { createProviderByType } from "../content";
 import { mountSidebar, type SidebarActions, type TreeNode } from "../components/panels/sidebar";
 import { mountProviderDialog } from "../components/dialogs/provider-dialog";
-import { showToast } from "../components/toast/toast";
+import { showNotification } from "../components/notification/notification";
 import { cache } from "../cache";
 import { editorSelfBase } from "../config";
 import { pushPath, replacePath } from "../utils/url";
@@ -151,8 +151,8 @@ export class NavigationService {
 
       const actions: SidebarActions = {
         onNavigate: (path, searchQuery, matchIndex, snippetText) => onNavigate(path, searchQuery, matchIndex, snippetText),
-        onNewItem: (parentPath) =>
-          createNewItem(this.cacheService, parentPath, (p) => onNavigate(p), () => this.loadSidebar(onNavigate, onUpdateMention)),
+        onNewItem: (parentPath, isFolder) =>
+          createNewItem(this.cacheService, parentPath, (p) => onNavigate(p), () => this.loadSidebar(onNavigate, onUpdateMention), isFolder),
         onDelete: (path) => this.deletePage(path, onNavigate),
         onRename: (path) => this.renamePage(path, onNavigate),
         onMove: (from, to) => this.movePage(from, to, onNavigate),
@@ -193,7 +193,7 @@ export class NavigationService {
       this.callbacks.onUpdateUI?.();
 
       const pdi = getProviderDisplayInfo(result.type);
-      showToast(`Switched to ${pdi.label}`);
+      showNotification(`Switched to ${pdi.label}`, { type: "info" });
     } catch (error) {
       console.error("Failed to change provider:", error);
     }
@@ -259,6 +259,7 @@ export class NavigationService {
   async movePage(from: string, to: string, onNavigate: (path: string) => void): Promise<void> {
     await movePage(this.cacheService, from, to, () => {
       cache.clearPath(from);
+      cache.clearPath(to);
       cache.sync();
 
       if (this.currentPath === from) {

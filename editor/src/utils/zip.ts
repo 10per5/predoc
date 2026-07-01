@@ -1,5 +1,5 @@
 import { zipSync, unzipSync, strToU8, strFromU8 } from "fflate"
-import { showToast } from "../components/toast/toast"
+import { showNotification } from "../components/notification/notification"
 
 const STORAGE_PREFIX = "predoc:"
 
@@ -20,7 +20,7 @@ export async function exportToZip(): Promise<void> {
   }
 
   if (count === 0) {
-    showToast("No files to export")
+    showNotification("No files to export", { type: "warning" })
     return
   }
 
@@ -35,7 +35,7 @@ export async function exportToZip(): Promise<void> {
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
 
-  showToast(`Exported ${count} file${count > 1 ? "s" : ""}`)
+  showNotification(`Exported ${count} file${count > 1 ? "s" : ""}`, { type: "info" })
 }
 
 export interface ZipEntry {
@@ -66,7 +66,7 @@ export async function pickAndParseZip(): Promise<ZipEntry[] | null> {
   try {
     extracted = unzipSync(data)
   } catch {
-    showToast("Failed to read zip file")
+    showNotification("Failed to read zip file", { type: "danger" })
     return null
   }
 
@@ -79,7 +79,7 @@ export async function pickAndParseZip(): Promise<ZipEntry[] | null> {
   }
 
   if (entries.length === 0) {
-    showToast("No markdown files found in archive")
+    showNotification("No markdown files found in archive", { type: "warning" })
     return null
   }
 

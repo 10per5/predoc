@@ -24,7 +24,8 @@ import "./styles/responsive.css"
 import { Application } from "@hotwired/stimulus"
 import EditorController, { setSessionStarted } from "./controllers/editor_controller"
 import { setProvider } from "./content/provider-registry"
-import { initToast } from "./components/toast/toast"
+import { initToast } from "./components/notification/toast"
+import { initNotifications } from "./components/notification/notification"
 import { createProvider } from "./content"
 
 async function init() {
@@ -39,8 +40,10 @@ async function init() {
   document.addEventListener("turbo:load", () => {
     app.load()
     initToast()
+    initNotifications()
   })
   initToast()
+  initNotifications()
 }
 
 init()
