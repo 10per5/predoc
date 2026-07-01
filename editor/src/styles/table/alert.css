@@ -33,3 +33,22 @@
   border-color: #ebcb8b;
   background: #fcf8e8;
 }
+
+:root[data-theme="dark"] .book-hint.warning,
+:root[data-theme="dark"] .book-hint.caution {
+  background: rgba(208, 135, 112, 0.1);
+}
+
+:root[data-theme="dark"] .book-hint.danger {
+  background: rgba(191, 97, 106, 0.1);
+}
+
+:root[data-theme="dark"] .book-hint.tip,
+:root[data-theme="dark"] .book-hint.success {
+  background: rgba(163, 190, 140, 0.1);
+}
+
+:root[data-theme="dark"] .book-hint.important {
+  background: rgba(235, 203, 139, 0.1);
+  border-color: #ebcb8b;
+}
