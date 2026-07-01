@@ -642,20 +642,34 @@ class PrismEditorBlock {
 
   private copyCode() {
     const text = this.editor?.value ?? this.node.textContent ?? "";
-    navigator.clipboard.writeText(text).catch(() => {
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.style.position = "fixed";
-      ta.style.opacity = "0";
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      document.body.removeChild(ta);
-    });
+
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch {}
+    document.body.removeChild(ta);
+
+    if (!ok) {
+      const p = navigator.clipboard?.writeText?.(text);
+      if (p) {
+        p.catch(() => {
+          const saucer = (window as any).saucer;
+          if (saucer?.exposed?._nativeCopy)
+            saucer.exposed._nativeCopy(text);
+        });
+      } else {
+        const saucer = (window as any).saucer;
+        if (saucer?.exposed?._nativeCopy)
+          saucer.exposed._nativeCopy(text);
+      }
+    }
+
     this.copyBtn.classList.add("copied");
-    setTimeout(() => {
-      this.copyBtn.classList.remove("copied");
-    }, 1500);
+    setTimeout(() => this.copyBtn.classList.remove("copied"), 1500);
   }
 }
 

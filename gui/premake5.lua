@@ -15,6 +15,13 @@ files({ "src/**.cpp" })
 filter("system:linux")
 	includedirs({ "vendor" })
 	includedirs({ saucer_dir .. "/include" })
+	local qt_inc = os.outputof(
+		"pkg-config --cflags-only-I Qt6Core Qt6Gui 2>/dev/null")
+	if qt_inc and qt_inc ~= "" then
+		for dir in qt_inc:gmatch("%-I([^%s]+)") do
+			includedirs({ dir })
+		end
+	end
 	libdirs({ saucer_dir .. "/lib" })
 
 filter("system:windows")
