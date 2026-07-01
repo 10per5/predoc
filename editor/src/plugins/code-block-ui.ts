@@ -7,130 +7,75 @@ import { TextSelection } from "@milkdown/kit/prose/state";
 import { exitCode } from "@milkdown/kit/prose/commands";
 import { redo, undo } from "@milkdown/kit/prose/history";
 
-import { Compartment, EditorState } from "@codemirror/state";
-import type { Line, SelectionRange } from "@codemirror/state";
-import {
-  EditorView as CodeMirrorView,
-  type ViewUpdate,
-  keymap,
-  drawSelection,
-  lineNumbers,
-  highlightActiveLineGutter,
-  highlightActiveLine,
-  highlightSpecialChars,
-  dropCursor,
-} from "@codemirror/view";
-import { defaultKeymap, indentWithTab } from "@codemirror/commands";
-import {
-  bracketMatching,
-  indentOnInput,
-  syntaxHighlighting,
-  defaultHighlightStyle,
-  StreamLanguage,
-  LanguageSupport,
-} from "@codemirror/language";
-import { oneDark } from "@codemirror/theme-one-dark";
+import { createEditor } from "prism-code-editor";
+import type { PrismEditor } from "prism-code-editor";
+import { matchBrackets } from "prism-code-editor/match-brackets";
+import { highlightBracketPairs } from "prism-code-editor/highlight-brackets";
+import { editorCommands, defaultKeymap, addEditorHotkey } from "prism-code-editor/commands";
+import "prism-code-editor/layout.css";
+import "prism-code-editor/themes/atom-one-dark.css";
+
 import { renderLatex } from "./math";
+import { LANG_IMPORTS } from "./code-block-langs";
 
-const PAIRS: Record<string, string> = { "(": ")", "[": "]", "{": "}" };
+// ---- Language registry ----
 
-function autoClosePair(view: CodeMirrorView, open: string): boolean {
-  const close = PAIRS[open];
-  if (!close) return false;
-  const { selection, doc } = view.state;
-  const { from, to, empty } = selection.main;
-  if (empty) {
-    view.dispatch({
-      changes: { from, insert: open + close },
-      selection: { anchor: from + 1, head: from + 1 },
-    });
-  } else {
-    view.dispatch({
-      changes: { from, to, insert: open + doc.sliceString(from, to) + close },
-      selection: { anchor: from + 1, head: to + 1 },
-    });
-  }
-  return true;
-}
-
-function skipClose(view: CodeMirrorView, close: string): boolean {
-  const { selection, doc } = view.state;
-  const { head } = selection.main;
-  if (head < doc.length && doc.sliceString(head, head + 1) === close) {
-    view.dispatch({ selection: { anchor: head + 1, head: head + 1 } });
-    return true;
-  }
-  return false;
-}
-
-const closeBracketKeymap = [
-  { key: "(", run: (view: CodeMirrorView) => autoClosePair(view, "(") },
-  { key: "[", run: (view: CodeMirrorView) => autoClosePair(view, "[") },
-  { key: "{", run: (view: CodeMirrorView) => autoClosePair(view, "{") },
-  { key: ")", run: (view: CodeMirrorView) => skipClose(view, ")") },
-  { key: "]", run: (view: CodeMirrorView) => skipClose(view, "]") },
-  { key: "}", run: (view: CodeMirrorView) => skipClose(view, "}") },
-];
-
-interface CuratedLang {
+interface PrismLang {
   name: string;
   alias: readonly string[];
-  load: () => Promise<LanguageSupport>;
+  prismId: string;
+  behavior?: string;
 }
 
-const CORE_LANGS: CuratedLang[] = [
-  {
-    name: "JavaScript",
-    alias: ["js", "jsx", "mjs", "cjs", "ts", "tsx", "typescript"],
-    load: () => import("@codemirror/lang-javascript").then(m => m.javascript()),
-  },
-  {
-    name: "Python",
-    alias: ["py", "python3"],
-    load: () => import("@codemirror/lang-python").then(m => m.python()),
-  },
-  {
-    name: "Go",
-    alias: ["golang"],
-    load: () => import("@codemirror/lang-go").then(m => m.go()),
-  },
-  {
-    name: "HTML",
-    alias: ["htm", "xhtml"],
-    load: () => import("@codemirror/lang-html").then(m => m.html()),
-  },
-  {
-    name: "CSS",
-    alias: ["scss", "less"],
-    load: () => import("@codemirror/lang-css").then(m => m.css()),
-  },
-  {
-    name: "Shell",
-    alias: ["bash", "sh", "zsh"],
-    load: () => import("@codemirror/legacy-modes/mode/shell").then(m =>
-      new LanguageSupport(StreamLanguage.define(m.shell)),
-    ),
-  },
-  {
-    name: "JSON",
-    alias: [],
-    load: () => import("@codemirror/lang-json").then(m => m.json()),
-  },
-  {
-    name: "YAML",
-    alias: ["yml"],
-    load: () => import("@codemirror/lang-yaml").then(m => m.yaml()),
-  },
-  {
-    name: "Rust",
-    alias: ["rs"],
-    load: () => import("@codemirror/lang-rust").then(m => m.rust()),
-  },
-  {
-    name: "C/C++",
-    alias: ["c", "cpp", "h", "hpp", "c++", "h++"],
-    load: () => import("@codemirror/lang-cpp").then(m => m.cpp()),
-  },
+const PRISM_LANGS: PrismLang[] = [
+  { name: "JavaScript", alias: ["js", "mjs", "cjs"], prismId: "javascript", behavior: "clike" },
+  { name: "TypeScript", alias: ["ts"], prismId: "typescript", behavior: "clike" },
+  { name: "JSX", alias: [], prismId: "jsx", behavior: "jsx" },
+  { name: "TSX", alias: [], prismId: "tsx", behavior: "tsx" },
+  { name: "Python", alias: ["py", "python3"], prismId: "python", behavior: "python" },
+  { name: "HTML", alias: ["htm", "xhtml"], prismId: "markup", behavior: "html" },
+  { name: "XML", alias: ["svg", "mathml"], prismId: "xml", behavior: "html" },
+  { name: "CSS", alias: ["scss", "less"], prismId: "css", behavior: "css" },
+  { name: "Shell", alias: ["bash", "sh", "zsh", "shell"], prismId: "bash" },
+  { name: "JSON", alias: [], prismId: "json" },
+  { name: "YAML", alias: ["yml"], prismId: "yaml" },
+  { name: "TOML", alias: [], prismId: "toml" },
+  { name: "Markdown", alias: ["md"], prismId: "markdown", behavior: "html" },
+  { name: "LaTeX", alias: ["tex"], prismId: "latex" },
+  { name: "Rust", alias: ["rs"], prismId: "rust", behavior: "clike" },
+  { name: "Go", alias: ["golang"], prismId: "go", behavior: "clike" },
+  { name: "Java", alias: [], prismId: "java", behavior: "clike" },
+  { name: "C", alias: ["h"], prismId: "c", behavior: "clike" },
+  { name: "C++", alias: ["cpp", "cxx", "hpp"], prismId: "cpp", behavior: "clike" },
+  { name: "C#", alias: ["csharp", "dotnet"], prismId: "csharp", behavior: "clike" },
+  { name: "Kotlin", alias: ["kt", "kts"], prismId: "kotlin", behavior: "clike" },
+  { name: "Dart", alias: [], prismId: "dart", behavior: "clike" },
+  { name: "Swift", alias: [], prismId: "swift" },
+  { name: "Ruby", alias: ["rb"], prismId: "ruby", behavior: "ruby" },
+  { name: "PHP", alias: [], prismId: "php", behavior: "php" },
+  { name: "SQL", alias: ["mysql", "postgresql"], prismId: "sql", behavior: "sql" },
+  { name: "GraphQL", alias: ["gql"], prismId: "graphql" },
+  { name: "Docker", alias: ["dockerfile"], prismId: "docker" },
+  { name: "Nginx", alias: [], prismId: "nginx" },
+  { name: "Git", alias: [], prismId: "git" },
+  { name: "Diff", alias: [], prismId: "diff" },
+  { name: "Makefile", alias: ["make"], prismId: "makefile" },
+  { name: "INI", alias: ["cfg", "conf"], prismId: "ini" },
+  { name: "Lua", alias: [], prismId: "lua", behavior: "lua" },
+  { name: "Elixir", alias: ["ex", "exs"], prismId: "elixir" },
+  { name: "Haskell", alias: ["hs"], prismId: "haskell" },
+  { name: "Julia", alias: ["jl"], prismId: "julia" },
+  { name: "R", alias: [], prismId: "r" },
+  { name: "Perl", alias: ["pl"], prismId: "perl" },
+  { name: "Clojure", alias: ["clojure", "cl"], prismId: "clojure" },
+  { name: "PowerShell", alias: ["ps", "ps1"], prismId: "powershell", behavior: "batch" },
+  { name: "Batch", alias: ["bat", "cmd"], prismId: "batch", behavior: "batch" },
+  { name: "HTTP", alias: [], prismId: "http" },
+  { name: "Regex", alias: ["regexp"], prismId: "regex" },
+  { name: "Vim", alias: [], prismId: "vim" },
+  { name: "Zig", alias: [], prismId: "zig", behavior: "clike" },
+  { name: "SCSS", alias: [], prismId: "scss" },
+  { name: "Less", alias: [], prismId: "less" },
 ];
 
 const DISPLAY_OVERRIDE: Record<string, string> = {
@@ -143,14 +88,14 @@ interface DisplayLang {
   alias: readonly string[];
 }
 
-const allLangs: DisplayLang[] = CORE_LANGS.map((l) => ({
+const allLangs: DisplayLang[] = PRISM_LANGS.map((l) => ({
   display: DISPLAY_OVERRIDE[l.name] ?? l.name,
   canonical: l.name,
   alias: l.alias,
 }));
 
 const aliasToName = new Map<string, string>();
-for (const lang of CORE_LANGS) {
+for (const lang of PRISM_LANGS) {
   aliasToName.set(lang.name.toLowerCase(), lang.name);
   for (const a of lang.alias) {
     aliasToName.set(a.toLowerCase(), lang.name);
@@ -162,33 +107,25 @@ function resolveLang(value: string): string {
   return aliasToName.get(value.toLowerCase()) ?? value;
 }
 
-const loadedCache = new Map<string, LanguageSupport>();
-
-class LanguageLoader {
-  private map: Record<string, CuratedLang> = {};
-
-  constructor() {
-    for (const lang of CORE_LANGS) {
-      for (const alias of lang.alias) {
-        this.map[alias.toLowerCase()] = lang;
-      }
-      this.map[lang.name.toLowerCase()] = lang;
-    }
-  }
-
-  async load(languageName: string): Promise<LanguageSupport | undefined> {
-    const canonical = resolveLang(languageName);
-    const lang = this.map[canonical.toLowerCase()];
-    if (!lang) return undefined;
-    const cached = loadedCache.get(lang.name);
-    if (cached) return cached;
-    const support = await lang.load();
-    loadedCache.set(lang.name, support);
-    return support;
-  }
+const nameToPrismId = new Map<string, string>();
+for (const lang of PRISM_LANGS) {
+  nameToPrismId.set(lang.name, lang.prismId);
 }
 
-const loader = new LanguageLoader();
+function toPrismId(canonical: string): string {
+  return nameToPrismId.get(canonical) ?? canonical.toLowerCase();
+}
+
+const loadedGrammars = new Set<string>();
+
+async function loadLanguage(language: string): Promise<void> {
+  if (!language || loadedGrammars.has(language)) return;
+  loadedGrammars.add(language);
+  const imp = LANG_IMPORTS[language];
+  if (imp) await imp();
+}
+
+// ---- Language picker ----
 
 class LanguagePicker {
   dom: HTMLElement;
@@ -351,9 +288,11 @@ class LanguagePicker {
   }
 }
 
-class CodeMirrorBlock {
+// ---- Prism editor block ----
+
+class PrismEditorBlock {
   dom: HTMLElement;
-  cm!: CodeMirrorView;
+  editor!: PrismEditor;
 
   private node: Node;
   private pmView: PMEditorView;
@@ -365,8 +304,10 @@ class CodeMirrorBlock {
   private langPicker: LanguagePicker;
   private copyBtn: HTMLElement;
   private previewPanel: HTMLElement;
-  private languageConf: Compartment;
-  private readOnlyConf: Compartment;
+  private langLoadId = 0;
+  private oldValue = "";
+  private cleanupFns: (() => void)[] = [];
+  private keymap: Record<string, any>;
 
   constructor(
     node: Node,
@@ -376,9 +317,6 @@ class CodeMirrorBlock {
     this.node = node;
     this.pmView = view;
     this.getPos = getPos;
-
-    this.languageConf = new Compartment();
-    this.readOnlyConf = new Compartment();
 
     this.dom = document.createElement("div");
     this.dom.className = "code-block-wrapper";
@@ -391,7 +329,7 @@ class CodeMirrorBlock {
 
     this.langPicker = new LanguagePicker((name) => {
       this.setLanguage(name);
-      this.cm?.focus();
+      this.editor?.textarea.focus();
     });
     this.langPicker.value = resolveLang(node.attrs.language ?? "");
 
@@ -409,198 +347,218 @@ class CodeMirrorBlock {
 
     this.overlay.appendChild(this.langPicker.dom);
     this.overlay.appendChild(this.copyBtn);
-
     this.dom.appendChild(this.overlay);
 
-    this.initializeCodeMirror();
+    const { "Mod-Enter": _modEnter, ...rest } = defaultKeymap;
+    this.keymap = rest;
+
+    this.initializeEditor();
   }
 
-  private initializeCodeMirror() {
+  private initializeEditor() {
     if (this.initialized) return;
     this.initialized = true;
 
-    this.cm = new CodeMirrorView({
-      doc: this.node.textContent ?? "",
-      root: (this.pmView as any).root as Document | ShadowRoot,
-      extensions: [
-        lineNumbers(),
-        highlightActiveLineGutter(),
-        highlightActiveLine(),
-        highlightSpecialChars(),
-        drawSelection(),
-        dropCursor(),
-        indentOnInput(),
-        bracketMatching(),
-        syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
-        oneDark,
-        keymap.of([
-          ...defaultKeymap,
-          indentWithTab,
-          ...closeBracketKeymap,
-        ]),
-        this.readOnlyConf.of(EditorState.readOnly.of(!this.pmView.editable)),
-        this.languageConf.of([]),
-        CodeMirrorView.updateListener.of((update) =>
-          this.forwardUpdate(update),
-        ),
-        keymap.of(this.codeMirrorKeymap()),
-      ],
-    });
+    this.editor = createEditor(
+      null,
+      {
+        language: "text",
+        readOnly: !this.pmView.editable,
+        lineNumbers: true,
+        tabSize: 2,
+        insertSpaces: true,
+        value: this.node.textContent ?? "",
+      },
+      matchBrackets(),
+      highlightBracketPairs(),
+      editorCommands(this.keymap, undefined, undefined),
+    );
 
-    this.dom.insertBefore(this.cm.dom, this.overlay);
+    this.oldValue = this.editor.value;
+
+    this.cleanupFns.push(
+      this.editor.on("update", this.forwardUpdate),
+    );
+
+    const pm = this.pmView;
+
+    this.cleanupFns.push(
+      addEditorHotkey(this.editor, "Mod-z", () => {
+        undo(pm.state, pm.dispatch);
+        return true;
+      }),
+      addEditorHotkey(this.editor, "Mod-y", () => {
+        redo(pm.state, pm.dispatch);
+        return true;
+      }),
+      addEditorHotkey(this.editor, "Shift-Mod-z", () => {
+        redo(pm.state, pm.dispatch);
+        return true;
+      }),
+      addEditorHotkey(this.editor, "Mod-Enter", () => {
+        exitCode(pm.state, pm.dispatch);
+        pm.focus();
+        return true;
+      }),
+      addEditorHotkey(this.editor, "ArrowUp", () => {
+        return this.maybeEscape("line", -1) || undefined;
+      }),
+      addEditorHotkey(this.editor, "ArrowLeft", () => {
+        return this.maybeEscape("char", -1) || undefined;
+      }),
+      addEditorHotkey(this.editor, "ArrowDown", () => {
+        return this.maybeEscape("line", 1) || undefined;
+      }),
+      addEditorHotkey(this.editor, "ArrowRight", () => {
+        return this.maybeEscape("char", 1) || undefined;
+      }),
+      addEditorHotkey(this.editor, "Backspace", () => {
+        return this.backspaceToParagraph() || undefined;
+      }),
+    );
+
+    this.dom.insertBefore(this.editor.container, this.overlay);
     this.dom.insertBefore(this.previewPanel, this.overlay);
+
     this.updateLanguage();
-    this.cm.focus();
+    this.editor.textarea.focus();
   }
 
-  private forwardUpdate(update: ViewUpdate) {
-    if (this.updating || !this.cm.hasFocus) return;
+  // ---- Change forwarding ----
+
+  private forwardUpdate = (value: string) => {
+    if (this.updating) return;
+
+    const [start, end] = this.editor.getSelection();
     let offset = (this.getPos() ?? 0) + 1;
-    const { main } = update.state.selection;
-    const selFrom = offset + main.from;
-    const selTo = offset + main.to;
+    const selFrom = offset + start;
+    const selTo = offset + end;
     const pmSel = this.pmView.state.selection;
-    if (
-      update.docChanged ||
-      pmSel.from !== selFrom ||
-      pmSel.to !== selTo
-    ) {
+
+    const change = computeChange(this.oldValue, value);
+    if (change) {
+      this.updating = true;
       const tr = this.pmView.state.tr;
-      update.changes.iterChanges(
-        (fromA, toA, fromB, toB, text) => {
-          if (text.length)
-            tr.replaceWith(
-              offset + fromA,
-              offset + toA,
-              this.pmView.state.schema.text(text.toString()),
-            );
-          else tr.delete(offset + fromA, offset + toA);
-          offset += toB - fromB - (toA - fromA);
-        },
-      );
+      if (change.text) {
+        tr.replaceWith(
+          offset + change.from,
+          offset + change.to,
+          this.pmView.state.schema.text(change.text),
+        );
+      } else {
+        tr.delete(offset + change.from, offset + change.to);
+      }
+      tr.setSelection(TextSelection.create(tr.doc, selFrom, selTo));
+      this.pmView.dispatch(tr);
+      this.updatePreview();
+      this.updating = false;
+    } else if (pmSel.from !== selFrom || pmSel.to !== selTo) {
+      const tr = this.pmView.state.tr;
       tr.setSelection(TextSelection.create(tr.doc, selFrom, selTo));
       this.pmView.dispatch(tr);
     }
-    if (update.docChanged) {
-      this.updatePreview();
-    }
-  }
 
-  private codeMirrorKeymap() {
-    const view = this.pmView;
-    return [
-      {
-        key: "ArrowUp",
-        run: () => this.maybeEscape("line", -1),
-      },
-      {
-        key: "ArrowLeft",
-        run: () => this.maybeEscape("char", -1),
-      },
-      {
-        key: "ArrowDown",
-        run: () => this.maybeEscape("line", 1),
-      },
-      {
-        key: "ArrowRight",
-        run: () => this.maybeEscape("char", 1),
-      },
-      {
-        key: "Mod-Enter",
-        run: () => {
-          if (!exitCode(view.state, view.dispatch)) return false;
-          view.focus();
-          return true;
-        },
-      },
-      { key: "Mod-z", run: () => undo(view.state, view.dispatch) },
-      {
-        key: "Shift-Mod-z",
-        run: () => redo(view.state, view.dispatch),
-      },
-      { key: "Mod-y", run: () => redo(view.state, view.dispatch) },
-      {
-        key: "Backspace",
-        run: () => {
-          const ranges = this.cm.state.selection.ranges;
-          if (ranges.length > 1) return false;
-          const selection = ranges[0];
-          if (selection && (!selection.empty || selection.anchor > 0))
-            return false;
-          if (this.cm.state.doc.lines >= 2) return false;
-          const state = this.pmView.state;
-          const pos = this.getPos() ?? 0;
-          const tr = state.tr.replaceWith(
-            pos,
-            pos + this.node.nodeSize,
-            state.schema.nodes.paragraph!.createChecked(
-              {},
-              this.node.content,
-            ),
-          );
-          tr.setSelection(TextSelection.near(tr.doc.resolve(pos)));
-          this.pmView.dispatch(tr);
-          this.pmView.focus();
-          return true;
-        },
-      },
-    ];
-  }
+    this.oldValue = value;
+  };
 
   private maybeEscape(unit: "line" | "char", dir: -1 | 1): boolean {
-    const { state } = this.cm;
-    let main: SelectionRange | Line = state.selection.main;
-    if (!main.empty) return false;
-    if (unit === "line") main = state.doc.lineAt(main.head);
-    if (dir < 0 ? main.from > 0 : main.to < state.doc.length) return false;
+    const [start, end] = this.editor.getSelection();
+    if (start !== end) return false;
+
+    const text = this.editor.value;
+    const pos = start;
+
+    if (unit === "line") {
+      const before = text.slice(0, pos);
+      const lineIdx = before.split("\n").length - 1;
+      const totalLines = text.length === 0 ? 1 : text.split("\n").length;
+      if (dir < 0 ? lineIdx > 0 : lineIdx < totalLines - 1) return false;
+    } else {
+      if (dir < 0 ? pos > 0 : pos < text.length) return false;
+    }
+
     const targetPos =
       (this.getPos() ?? 0) + (dir < 0 ? 0 : this.node.nodeSize);
     const selection = TextSelection.near(
       this.pmView.state.doc.resolve(targetPos),
       dir,
     );
-    const tr = this.pmView.state.tr.setSelection(selection).scrollIntoView();
+    this.pmView.dispatch(
+      this.pmView.state.tr.setSelection(selection).scrollIntoView(),
+    );
+    this.pmView.focus();
+    return true;
+  }
+
+  private backspaceToParagraph(): boolean {
+    const text = this.editor.value;
+    const [start, end] = this.editor.getSelection();
+    if (start !== end || start !== 0) return false;
+    if (text.includes("\n")) return false;
+
+    const state = this.pmView.state;
+    const pos = this.getPos() ?? 0;
+    const tr = state.tr.replaceWith(
+      pos,
+      pos + this.node.nodeSize,
+      state.schema.nodes.paragraph!.createChecked({}, this.node.content),
+    );
+    tr.setSelection(TextSelection.near(tr.doc.resolve(pos)));
     this.pmView.dispatch(tr);
     this.pmView.focus();
     return true;
+  }
+
+  // ---- Language handling ----
+
+  private async updateLanguage() {
+    const languageName = this.node.attrs.language as string | undefined;
+    const canonical = resolveLang(languageName ?? "");
+    if (canonical === this.languageName) return;
+    this.languageName = canonical;
+    this.langPicker.value = canonical;
+
+    if (!this.initialized) return;
+    this.updatePreview();
+
+    const prismId = toPrismId(canonical);
+    if (!prismId) {
+      this.editor.setOptions({ language: "text" });
+      return;
+    }
+
+    const id = ++this.langLoadId;
+    await loadLanguage(prismId);
+    if (id !== this.langLoadId) return;
+    this.editor.setOptions({ language: prismId });
   }
 
   private updatePreview() {
     const isLatex = this.languageName === "LaTeX";
     this.dom.classList.toggle("latex", isLatex);
     if (isLatex) {
-      const content = this.cm.state.doc.toString();
+      const content = this.editor.value;
       this.previewPanel.innerHTML = renderLatex(content, true);
       this.previewPanel.style.display = "block";
-      this.cm.dom.style.borderTop = "1px solid #3b4252";
+      this.editor.container.style.borderTop = "1px solid #3b4252";
     } else {
       this.previewPanel.style.display = "none";
-      this.cm.dom.style.borderTop = "none";
+      this.editor.container.style.borderTop = "none";
     }
   }
 
-  private updateLanguage() {
-    const languageName = this.node.attrs.language as string | undefined;
-    const canonical = resolveLang(languageName ?? "");
-    if (canonical === this.languageName) return;
-    this.languageName = canonical;
-    this.langPicker.value = canonical;
-    if (!this.initialized) return;
-    this.updatePreview();
-    loader.load(canonical).then((lang) => {
-      if (!this.initialized) return;
-      this.cm.dispatch({
-        effects: this.languageConf.reconfigure(lang ?? []),
-      });
-    });
-  }
+  // ---- PM NodeView API ----
 
   setSelection(anchor: number, head: number) {
-    if (!this.initialized) this.initializeCodeMirror();
-    if (!this.cm.dom.isConnected) return;
-    this.cm.focus();
+    if (!this.initialized) this.initializeEditor();
+    if (!this.editor.container.isConnected) return;
+    this.editor.textarea.focus();
     this.updating = true;
-    this.cm.dispatch({ selection: { anchor, head } });
+    this.editor.textarea.setSelectionRange(
+      Math.min(anchor, head),
+      Math.max(anchor, head),
+      anchor > head ? "backward" : "forward",
+    );
     this.updating = false;
   }
 
@@ -609,35 +567,48 @@ class CodeMirrorBlock {
     if (this.updating) return true;
     this.node = node;
     if (!this.initialized) return true;
-    this.updateLanguage();
-    if (this.pmView.editable === this.cm.state.readOnly) {
-      this.cm.dispatch({
-        effects: this.readOnlyConf.reconfigure(
-          EditorState.readOnly.of(!this.pmView.editable),
-        ),
-      });
+
+    this.editor.setOptions({ readOnly: !this.pmView.editable });
+
+    const newLang = resolveLang(node.attrs.language ?? "");
+    if (newLang !== this.languageName) {
+      this.languageName = newLang;
+      this.langPicker.value = newLang;
+      if (!this.initialized) return true;
+      this.updatePreview();
+
+      const prismId = toPrismId(newLang);
+      if (!prismId) {
+        this.editor.setOptions({ language: "text" });
+      } else {
+        const id = ++this.langLoadId;
+        loadLanguage(prismId).then(() => {
+          if (id === this.langLoadId) {
+            this.editor.setOptions({ language: prismId });
+          }
+        });
+      }
     }
-    const change = computeChange(
-      this.cm.state.doc.toString(),
-      node.textContent ?? "",
-    );
+
+    const currentText = this.editor.value;
+    const newText = node.textContent ?? "";
+    const change = computeChange(currentText, newText);
     if (change) {
       this.updating = true;
-      this.cm.dispatch({
-        changes: { from: change.from, to: change.to, insert: change.text },
-        scrollIntoView: true,
-      });
+      this.editor.setOptions({ value: newText });
+      this.oldValue = newText;
       this.updating = false;
     }
+
     this.updatePreview();
     return true;
   }
 
   selectNode() {
-    if (!this.initialized) this.initializeCodeMirror();
+    if (!this.initialized) this.initializeEditor();
     this.dom.classList.add("selected");
     this.overlay.classList.add("visible");
-    this.cm?.focus();
+    this.editor?.textarea.focus();
   }
 
   deselectNode() {
@@ -651,9 +622,13 @@ class CodeMirrorBlock {
 
   destroy() {
     if (this.initialized) {
-      this.cm.destroy();
+      for (const fn of this.cleanupFns) fn();
+      this.cleanupFns = [];
+      this.editor.remove();
     }
   }
+
+  // ---- Helpers ----
 
   private setLanguage(language: string) {
     this.pmView.dispatch(
@@ -684,6 +659,8 @@ class CodeMirrorBlock {
   }
 }
 
+// ---- Diff helper ----
+
 function computeChange(
   oldVal: string,
   newVal: string,
@@ -708,8 +685,10 @@ function computeChange(
   return { from: start, to: oldEnd, text: newVal.slice(start, newEnd) };
 }
 
+// ---- Export ----
+
 export const codeBlockUI = $view(
   codeBlockSchema.node,
   (): NodeViewConstructor => (node, view, getPos) =>
-    new CodeMirrorBlock(node, view, getPos),
+    new PrismEditorBlock(node, view, getPos),
 );
