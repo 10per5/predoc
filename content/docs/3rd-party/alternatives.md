@@ -28,7 +28,7 @@ A full framework for editing documents, more like a workspace aggregator than an
 
 ## Docmost
 
-**Site:** <https://docmost.com/> — **Repo:** <https://github.com/docmost/docmost>
+**Site:** <https://docmost.com/>
 
 Open source / cloud-based self-hosted editor. Full-featured with real-time collaboration and file format support for import and export. Delivered as a web app with an optional Electron-based desktop wrapper.
 
@@ -43,7 +43,7 @@ Open source / cloud-based self-hosted editor. Full-featured with real-time colla
 
 ## Otterwiki
 
-**Site:** **Repo:** <https://github.com/redimp/otterwiki>
+**Site:** <https://otterwiki.com/>
 
 Python-based, block editor, similar in style. Uses Flask, Halfmoon CSS, and CodeMirror as editor.
 
