@@ -1,5 +1,4 @@
 import "@milkdown/theme-nord/style.css"
-import "katex/dist/katex.min.css"
 
 /* KaTeX math inline style */
 import "./styles/math.css"

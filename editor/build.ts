@@ -3,16 +3,17 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, readdirSync, statSync } from "fs";
 import { interpolateHtml } from "./lib/interpolate";
+import { parseKatexFormats, processKatexAssets } from "./lib/katex";
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(readFileSync(join(__dir, "package.json"), "utf-8"));
 process.env.APP_VERSION ??= pkg.version;
 const watch = process.argv.includes("--watch");
 const withMeta = process.argv.includes("--with-metafile");
+const publicDir = join(__dir, "public");
 
 // Copy static files to public, interpolating env vars in HTML
 const staticDir = join(__dir, "static");
-const publicDir = join(__dir, "public");
 mkdirSync(publicDir, { recursive: true });
 for (const name of readdirSync(staticDir)) {
   if (name.startsWith(".")) continue;
@@ -35,4 +36,8 @@ const result = Bun.spawnSync(["bun", ...args], {
   cwd: __dir,
   stdio: ["inherit", "inherit", "inherit"],
 });
-process.exit(result.exitCode);
+if (result.exitCode !== 0) process.exit(result.exitCode);
+
+const katexFontsArg = process.argv.find(a => a.startsWith("--katex-fonts="));
+const formats = parseKatexFormats(katexFontsArg?.split("=")[1]);
+processKatexAssets({ publicDir, formats });
