@@ -39,9 +39,6 @@ gui/bin/predoc-gui             # ~1.2MB — GUI binary (links Qt6 at runtime)
 editor/public/assets/app.js  # Editor frontend JS (minified)
 editor/public/assets/app.css # Editor frontend CSS (minified)
 editor/public/index.html     # Static HTML shell
-ssg/
-  hugo.toml                  # Hugo configuration
-  themes/book/               # Hugo Book theme (downloaded on fetch-deps)
 ```
 
 These are the only files needed at runtime. Source files (`gui/src/`, `editor/src/`) and dev dependencies are not needed on the target machine.
