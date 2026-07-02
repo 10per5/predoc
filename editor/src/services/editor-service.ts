@@ -70,10 +70,11 @@ import { codeBlockUI } from "../plugins/code-block-ui";
 import { cache } from "../cache";
 import { toggleSourceMode, applySourceContent } from "../editor-source";
 import { getProvider } from "../content/provider-registry";
-import { stripFrontmatter } from "../utils/frontmatter";
+import { stripFrontmatter, serializeFrontmatter } from "../utils/frontmatter";
 import { setCurrentDocDir, uploadImage } from "./image-config";
 import { imageRegistry } from "./image-registry";
 import { findTextInProseMirror } from "../utils/prosemirror-search";
+import { mountExternalChangeDialog } from "../components/dialogs/external-change-dialog";
 
 export interface EditorServiceConfig {
   onContentChange?: (content: string) => void;
@@ -97,6 +98,13 @@ export class EditorService {
    * Set current path context
    */
   setCurrentPath(path: string): void {
+    const prev = this.currentPath;
+    if (prev && prev !== path && this.editor) {
+      this.editor.action((ctx) => {
+        const view = ctx.get(editorViewCtx);
+        this.editorStates.set(prev, view.state);
+      });
+    }
     this.currentPath = path;
     const dir = path.includes("/")
       ? path.substring(0, path.lastIndexOf("/"))
@@ -172,6 +180,65 @@ export class EditorService {
       const { frontmatter, body } = stripFrontmatter(raw);
       const serverTime = await provider?.getServerTime(path);
       const cachedTime = cache.getServerTime(path) || 0;
+
+      const baseline = cache.getBaseline(path);
+      if (baseline !== undefined && body !== baseline) {
+        if (cache.isDirty(path)) {
+          const localBody = cache.getBody(path) ?? body;
+          const localFm = cache.getFrontmatter(path);
+          const localFull = localFm
+            ? `---\n${serializeFrontmatter(localFm)}\n---\n\n${localBody}`
+            : localBody;
+
+          const captured = {
+            p: path,
+            diskBody: body,
+            diskFm: frontmatter,
+            diskTime: serverTime ?? Date.now(),
+            localBody,
+            localFm,
+            onMeta: onMetaUpdate,
+          };
+
+          mountExternalChangeDialog(path, localFull, raw).then((action) => {
+            if (this.currentPath !== captured.p) return;
+            if (action === "discard") {
+              this.editorStates.delete(captured.p);
+              cache.clearPath(captured.p);
+              cache.setBaseline(captured.p, captured.diskBody);
+              cache.setServerTime(captured.p, captured.diskTime);
+              if (captured.diskFm) {
+                cache.setFrontmatter(captured.p, captured.diskFm);
+                captured.onMeta?.(captured.diskFm);
+              }
+              this.ensureEditor(captured.diskBody);
+            } else {
+              this.editorStates.delete(captured.p);
+              cache.clearPath(captured.p);
+              cache.setBaseline(captured.p, captured.diskBody);
+              cache.setServerTime(captured.p, captured.diskTime);
+              if (captured.localFm) {
+                cache.setFrontmatter(captured.p, captured.localFm);
+                captured.onMeta?.(captured.localFm);
+              }
+              cache.setBody(captured.p, captured.localBody);
+              this.ensureEditor(captured.localBody);
+            }
+          });
+
+          this.editorStates.delete(path);
+          cache.setServerTime(path, serverTime ?? Date.now());
+          if (frontmatter) onMetaUpdate?.(frontmatter);
+          return body;
+        } else {
+          this.editorStates.delete(path);
+          cache.clearPath(path);
+          cache.setBaseline(path, body);
+          cache.setServerTime(path, serverTime ?? Date.now());
+          if (frontmatter) { cache.setFrontmatter(path, frontmatter); onMetaUpdate?.(frontmatter); }
+          return body;
+        }
+      }
 
       if (serverTime && serverTime > cachedTime) {
         cache.clearPath(path);
