@@ -1,6 +1,7 @@
 ---
 title: 3rd Party
 weight: 30
+bookFlatSection: true
 ---
 
 # 3rd Party

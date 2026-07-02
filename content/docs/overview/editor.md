@@ -54,3 +54,7 @@ Triggered by typing `@` in the editor.
 * Searches and links to other pages in the project
 
 * **Mobile**: menu height limited to avoid keyboard overlap
+
+## See Also
+
+- [Superdoc](https://github.com/superdoc-dev/superdoc) — a modern collaborative DOCX editor. Too heavy for this project ([5.79 MB build](https://sizepanic.com/package/superdoc), [113 MB deps](https://pkg-size.dev/superdoc)), but a nice option if full Office-style editing is needed.

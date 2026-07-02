@@ -1,6 +1,7 @@
 ---
 title: Style
 weight: 20
+bookFlatSection: true
 ---
 
 # Style
