@@ -1,4 +1,4 @@
-import { buttonVariants, type ButtonVariant } from "../../config/theme"
+import { buttonVariants, type ButtonVariant } from "@/config/theme"
 
 export interface PressTwiceButtonOptions {
   idleText: string

@@ -1,4 +1,4 @@
-import { editorSelfBase, ssgMode } from "../config";
+import { editorSelfBase, ssgMode } from "@/config";
 
 export function getCurrentPath(): string {
   if (ssgMode) {

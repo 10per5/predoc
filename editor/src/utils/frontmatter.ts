@@ -1,4 +1,4 @@
-import type { MetaPanelData } from "../components/panels/meta-panel"
+import type { MetaPanelData } from "@/components/panels/meta-panel"
 
 export function parseFrontmatter(raw: string): MetaPanelData {
   const data: MetaPanelData = { title: "" }

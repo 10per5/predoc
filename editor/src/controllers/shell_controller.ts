@@ -1,6 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
-import { AppOrchestrator } from "../orchestrator"
-import { getCurrentPath } from "../utils/url"
+import { AppOrchestrator } from "@/orchestrator"
+import { getCurrentPath } from "@/utils/url"
 
 export default class extends Controller {
   private orchestrator!: AppOrchestrator

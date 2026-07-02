@@ -14,7 +14,7 @@ import {
 } from "@milkdown/kit/preset/commonmark";
 import { createTable } from "@milkdown/kit/preset/gfm";
 import type { Node } from "@milkdown/kit/prose/model";
-import { menuAPI, type MenuAPI } from "./menu-api";
+import { menuAPI, type MenuAPI } from "@/features/menu-api";
 import {
   plusIcon,
   menuIcon,
@@ -30,12 +30,12 @@ import {
   tableIcon,
   todoListIcon,
   imageIcon,
-} from "../components/ui/icons";
+} from "@/components/ui/icons";
 import {
   getAllImages,
   uploadImage,
   listImages,
-} from "../services/image-config";
+} from "@/services/image-config";
 
 const slash = slashFactory("predoc");
 

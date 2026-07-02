@@ -6,29 +6,29 @@
  * Owns pending sidebar operations (create/delete/rename/move)
  */
 
-import { stripFrontmatter, serializeFrontmatter } from "../utils/frontmatter";
+import { stripFrontmatter, serializeFrontmatter } from "@/utils/frontmatter";
 import {
   mountChangesDialog,
   type ChangesDialogData,
-} from "../components/dialogs/changes-dialog";
-import { confirmDialog } from "../components/dialogs/dialog";
-import { cache } from "../stores/cache";
-import { getProvider } from "../providers/provider-registry";
+} from "@/components/dialogs/changes-dialog";
+import { confirmDialog } from "@/components/dialogs/dialog";
+import { cache } from "@/stores/cache";
+import { getProvider } from "@/providers/provider-registry";
 import {
   commitAllPendingImages,
   replacePendingUrls,
   getCurrentDocDir,
-} from "./image-config";
-import { showNotification } from "../components/notification/notification";
-import { applyPendingOps, type PendingOp } from "../utils/tree";
-import type { TreeNode } from "../components/panels/sidebar";
+} from "@/services/image-config";
+import { showNotification } from "@/components/notification/notification";
+import { applyPendingOps, type PendingOp } from "@/utils/tree";
+import type { TreeNode } from "@/components/panels/sidebar";
 import {
   savePendingOps,
   loadPendingOps,
   clearPendingOpsStorage,
-} from "../utils/storage";
-import { extractSnippets } from "../utils/content-search";
-import { imageRegistry } from "../stores/image-registry";
+} from "@/utils/storage";
+import { extractSnippets } from "@/utils/content-search";
+import { imageRegistry } from "@/stores/image-registry";
 
 export interface SearchMatch {
   path: string;

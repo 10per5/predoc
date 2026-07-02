@@ -1,4 +1,4 @@
-import type { TreeNode } from "../components/panels/sidebar"
+import type { TreeNode } from "@/components/panels/sidebar"
 
 export function collectLeaves(tree: TreeNode, prefix = ""): string[] {
   const leaves: string[] = [];

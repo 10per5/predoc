@@ -1,7 +1,7 @@
-import type { ContentProvider, TreeNode, ImageEntry, SearchResult } from "./provider"
-import { stripFrontmatter } from "../utils/frontmatter"
-import { extractSnippets, contentMatches } from "../utils/content-search"
-import { sanitizeImageName } from "../utils/sanitize"
+import type { ContentProvider, TreeNode, ImageEntry, SearchResult } from "@/providers/provider"
+import { stripFrontmatter } from "@/utils/frontmatter"
+import { extractSnippets, contentMatches } from "@/utils/content-search"
+import { sanitizeImageName } from "@/utils/sanitize"
 
 export class FileSystemProvider implements ContentProvider {
   readonly name = "fs"

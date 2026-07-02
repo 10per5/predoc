@@ -1,7 +1,7 @@
-import { loadPrefs } from "../utils/storage"
-import { getProvider } from "../providers/provider-registry"
-import type { ImageEntry } from "../providers/provider"
-import { imageRegistry } from "../stores/image-registry"
+import { loadPrefs } from "@/utils/storage"
+import { getProvider } from "@/providers/provider-registry"
+import type { ImageEntry } from "@/providers/provider"
+import { imageRegistry } from "@/stores/image-registry"
 
 let currentDocDir = ""
 

@@ -1,5 +1,5 @@
 import { diffLines } from "diff";
-import { pressTwiceButton } from "../ui/press-twice-button";
+import { pressTwiceButton } from "@/components/ui/press-twice-button";
 
 export type ExternalChangeAction = "discard" | "keep";
 

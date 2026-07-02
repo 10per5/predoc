@@ -1,5 +1,5 @@
 import { zipSync, unzipSync, strToU8, strFromU8 } from "fflate"
-import { showNotification } from "../components/notification/notification"
+import { showNotification } from "@/components/notification/notification"
 
 const STORAGE_PREFIX = "predoc:"
 

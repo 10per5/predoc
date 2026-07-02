@@ -1,6 +1,6 @@
 import { $node } from "@milkdown/utils"
 import type { EditorView } from "@milkdown/kit/prose/view"
-import { mountHugoRefEditDialog } from "../components/dialogs/hugo-ref-dialog"
+import { mountHugoRefEditDialog } from "@/components/dialogs/hugo-ref-dialog"
 
 export const hugoRefSchema = $node("hugoRef", () => ({
   group: "inline",

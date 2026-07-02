@@ -1,5 +1,5 @@
-import { mountDropdownMenu } from "../ui/dropdown-menu"
-import type { ViewType } from "../views/view"
+import { mountDropdownMenu } from "@/components/ui/dropdown-menu"
+import type { ViewType } from "@/components/views/view"
 
 export interface FileMenuCallbacks {
   onChangeProvider: () => void

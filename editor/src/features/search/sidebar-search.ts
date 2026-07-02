@@ -1,9 +1,9 @@
-import { getProvider } from "../../providers/provider-registry";
-import type { TreeNode } from "../../components/panels/sidebar";
-import { searchCache, type SearchMatch } from "../../services/cache-management-service";
-import { hotkeys } from "../../services/hotkey-manager";
+import { getProvider } from "@/providers/provider-registry";
+import type { TreeNode } from "@/components/panels/sidebar";
+import { searchCache, type SearchMatch } from "@/services/cache-management-service";
+import { hotkeys } from "@/services/hotkey-manager";
 
-export type { SearchMatch } from "../../services/cache-management-service";
+export type { SearchMatch } from "@/services/cache-management-service";
 
 export function focusSidebarSearch(): void {
   const input = document.querySelector<HTMLInputElement>(".sidebar-search");

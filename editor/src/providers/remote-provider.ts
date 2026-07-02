@@ -1,4 +1,4 @@
-import type { ContentProvider, TreeNode, ImageEntry, SearchResult } from "./provider"
+import type { ContentProvider, TreeNode, ImageEntry, SearchResult } from "@/providers/provider"
 
 export class RemoteProvider implements ContentProvider {
   readonly name = "remote"

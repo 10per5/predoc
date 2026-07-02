@@ -5,7 +5,7 @@
  * Handles sticky toolbar preferences and scroll event listeners
  */
 
-import type { TopbarAPI } from "../components/toolbar/topbar";
+import type { TopbarAPI } from "@/components/toolbar/topbar";
 
 export interface ToolbarConfig {
   stickyToolbar: boolean;

@@ -1,7 +1,7 @@
 import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { parserCtx } from "@milkdown/core";
-import { autoResize } from "../utils/text";
+import { autoResize } from "@/utils/text";
 
 export function setEditorContent(milkdown: Editor, content: string) {
   milkdown.action((ctx) => {

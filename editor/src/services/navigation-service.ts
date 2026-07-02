@@ -5,19 +5,19 @@
  * Handles navigation state and provider switching
  */
 
-import { stripFrontmatter } from "../utils/frontmatter";
-import { createNewItem, deletePage, renamePage, movePage } from "./editor-actions";
-import { setupNavListeners, collectPageList } from "../features/navigation";
-import { getProvider, setProvider, cacheKeyForProvider, getProviderDisplayInfo } from "../providers/provider-registry";
-import { createProviderByType } from "../providers";
-import { mountSidebar, type SidebarActions, type TreeNode } from "../components/panels/sidebar";
-import { mountProviderDialog } from "../components/dialogs/provider-dialog";
-import { showNotification } from "../components/notification/notification";
-import { cache } from "../stores/cache";
-import { editorSelfBase } from "../config";
-import { pushPath, replacePath } from "../utils/url";
-import type { CacheManagementService } from "./cache-management-service";
-import type { PendingOp } from "../utils/tree";
+import { stripFrontmatter } from "@/utils/frontmatter";
+import { createNewItem, deletePage, renamePage, movePage } from "@/services/editor-actions";
+import { setupNavListeners, collectPageList } from "@/features/navigation";
+import { getProvider, setProvider, cacheKeyForProvider, getProviderDisplayInfo } from "@/providers/provider-registry";
+import { createProviderByType } from "@/providers";
+import { mountSidebar, type SidebarActions, type TreeNode } from "@/components/panels/sidebar";
+import { mountProviderDialog } from "@/components/dialogs/provider-dialog";
+import { showNotification } from "@/components/notification/notification";
+import { cache } from "@/stores/cache";
+import { editorSelfBase } from "@/config";
+import { pushPath, replacePath } from "@/utils/url";
+import type { CacheManagementService } from "@/services/cache-management-service";
+import type { PendingOp } from "@/utils/tree";
 
 function existsInTree(tree: TreeNode, mdPath: string): boolean {
   const parts = mdPath.split("/");

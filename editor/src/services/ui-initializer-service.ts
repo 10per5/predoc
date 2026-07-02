@@ -6,11 +6,11 @@
  */
 
 import type { Editor } from "@milkdown/kit/core";
-import type { TopbarAPI } from "../components/toolbar/topbar";
-import type { MetaPanelAPI } from "../components/panels/meta-panel";
-import { mountTopbar } from "../components/toolbar/topbar";
-import { mountMetaPanel } from "../components/panels/meta-panel";
-import type { ViewType } from "../components/views/view-manager";
+import type { TopbarAPI } from "@/components/toolbar/topbar";
+import type { MetaPanelAPI } from "@/components/panels/meta-panel";
+import { mountTopbar } from "@/components/toolbar/topbar";
+import { mountMetaPanel } from "@/components/panels/meta-panel";
+import type { ViewType } from "@/components/views/view-manager";
 
 export interface UIInitializeOptions {
   onPrefs?: () => void;

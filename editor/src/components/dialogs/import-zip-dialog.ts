@@ -1,6 +1,6 @@
 import { html, render } from "lit-html"
-import { miniWindow } from "../ui/ui-helpers"
-import type { ZipFileEntry } from "../../utils/zip"
+import { miniWindow } from "@/components/ui/ui-helpers"
+import type { ZipFileEntry } from "@/utils/zip"
 
 export interface ImportDialogResult {
   selected: ZipFileEntry[]

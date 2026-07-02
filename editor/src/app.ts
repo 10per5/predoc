@@ -21,12 +21,12 @@ import "./styles/dialogs.css"
 import "./styles/responsive.css"
 
 import { Application } from "@hotwired/stimulus"
-import ShellController from "./controllers/shell_controller"
-import { setSessionStarted } from "./orchestrator"
-import { setProvider } from "./providers/provider-registry"
-import { initToast } from "./components/notification/toast"
-import { initNotifications } from "./components/notification/notification"
-import { createProvider } from "./providers"
+import ShellController from "@/controllers/shell_controller"
+import { setSessionStarted } from "@/orchestrator"
+import { setProvider } from "@/providers/provider-registry"
+import { initToast } from "@/components/notification/toast"
+import { initNotifications } from "@/components/notification/notification"
+import { createProvider } from "@/providers"
 
 async function init() {
   setSessionStarted(Date.now())

@@ -1,6 +1,6 @@
 import { html, render } from "lit-html"
-import { listImages, deleteImage, getCurrentDocDir, getAllImages } from "../../services/image-config"
-import { showNotification } from "../notification/notification"
+import { listImages, deleteImage, getCurrentDocDir, getAllImages } from "@/services/image-config"
+import { showNotification } from "@/components/notification/notification"
 
 export async function mountImageManagerDialog(): Promise<void> {
   const dir = getCurrentDocDir()

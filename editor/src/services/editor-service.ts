@@ -27,7 +27,7 @@ import {
 } from "@milkdown/kit/component/link-tooltip";
 import { cursor, dropIndicatorConfig } from "@milkdown/kit/plugin/cursor";
 import { $prose } from "@milkdown/kit/utils";
-import { fixedHeadingInputRule } from "../plugins/heading-input-rule";
+import { fixedHeadingInputRule } from "@/plugins/heading-input-rule";
 
 const commonmark = _commonmark.filter(
   (p) => p !== wrapInHeadingInputRule,
@@ -40,23 +40,23 @@ import {
   imageBlockComponent,
   imageBlockConfig,
 } from "@milkdown/kit/component/image-block";
-import { createKeymap } from "../plugins/keyboard";
+import { createKeymap } from "@/plugins/keyboard";
 import {
   copyIcon,
   editIcon,
   removeIcon,
   confirmIcon,
-} from "../components/ui/icons";
-import { alertRemarkPlugin, alertSchema } from "../plugins/alert";
-import { shortcodeDecoration } from "../plugins/shortcode";
-import { hugoRefSchema, initHugoRefClicks } from "../plugins/hugo-ref";
-import { MentionView } from "../features/mention";
+} from "@/components/ui/icons";
+import { alertRemarkPlugin, alertSchema } from "@/plugins/alert";
+import { shortcodeDecoration } from "@/plugins/shortcode";
+import { hugoRefSchema, initHugoRefClicks } from "@/plugins/hugo-ref";
+import { MentionView } from "@/features/mention";
 import {
   configureBlockEdit,
   block,
   slash,
   menuAPI,
-} from "../features/block-edit";
+} from "@/features/block-edit";
 import {
   remarkMathPlugin,
   remarkMathBlockPlugin,
@@ -65,16 +65,16 @@ import {
   mathBlockInputRule,
   blockLatexSchema,
   toggleLatexCommand,
-} from "../plugins/math";
-import { codeBlockUI } from "../plugins/code-block-ui";
-import { cache } from "../stores/cache";
-import { toggleSourceMode, applySourceContent } from "../features/editor-source";
-import { getProvider } from "../providers/provider-registry";
-import { stripFrontmatter, serializeFrontmatter } from "../utils/frontmatter";
-import { setCurrentDocDir, uploadImage } from "./image-config";
-import { imageRegistry } from "../stores/image-registry";
-import { findTextInProseMirror } from "../features/search/prosemirror-search";
-import { mountExternalChangeDialog } from "../components/dialogs/external-change-dialog";
+} from "@/plugins/math";
+import { codeBlockUI } from "@/plugins/code-block-ui";
+import { cache } from "@/stores/cache";
+import { toggleSourceMode, applySourceContent } from "@/features/editor-source";
+import { getProvider } from "@/providers/provider-registry";
+import { stripFrontmatter, serializeFrontmatter } from "@/utils/frontmatter";
+import { setCurrentDocDir, uploadImage } from "@/services/image-config";
+import { imageRegistry } from "@/stores/image-registry";
+import { findTextInProseMirror } from "@/features/search/prosemirror-search";
+import { mountExternalChangeDialog } from "@/components/dialogs/external-change-dialog";
 
 export interface EditorServiceConfig {
   onContentChange?: (content: string) => void;

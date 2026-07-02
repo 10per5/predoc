@@ -1,10 +1,10 @@
 import { html, render } from "lit-html"
 import { diffLines } from "diff"
-import { miniWindow } from "../ui/ui-helpers"
-import { pressTwiceButton } from "../ui/press-twice-button"
-import { colors } from "../../config/theme"
-import { formatBytes } from "../../utils/format"
-import type { MetaPanelData } from "../panels/meta-panel"
+import { miniWindow } from "@/components/ui/ui-helpers"
+import { pressTwiceButton } from "@/components/ui/press-twice-button"
+import { colors } from "@/config/theme"
+import { formatBytes } from "@/utils/format"
+import type { MetaPanelData } from "@/components/panels/meta-panel"
 
 function createOverlay(): HTMLDivElement {
   const existing = document.getElementById("predoc-dialog-overlay")

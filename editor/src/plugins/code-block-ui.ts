@@ -15,8 +15,8 @@ import { editorCommands, defaultKeymap, addEditorHotkey } from "prism-code-edito
 import "prism-code-editor/layout.css";
 import "prism-code-editor/themes/atom-one-dark.css";
 
-import { renderLatex } from "./math";
-import { LANG_IMPORTS } from "./code-block-langs";
+import { renderLatex } from "@/plugins/math";
+import { LANG_IMPORTS } from "@/plugins/code-block-langs";
 
 // ---- Language registry ----
 
