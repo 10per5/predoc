@@ -1,7 +1,7 @@
-import type { ContentProvider } from "./provider"
-import { RemoteProvider } from "./remote-provider"
-import { FileSystemProvider } from "./fs-provider"
-import { LocalStorageProvider } from "./local-storage-provider"
+import type { ContentProvider } from "@/providers/provider"
+import { RemoteProvider } from "@/providers/remote-provider"
+import { FileSystemProvider } from "@/providers/fs-provider"
+import { LocalStorageProvider } from "@/providers/local-storage-provider"
 
 export type ProviderType = "remote" | "filesystem" | "localStorage"
 

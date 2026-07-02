@@ -1,6 +1,6 @@
 import { html, render } from "lit-html"
-import { loadPrefs, savePrefs } from "../../storage"
-import type { ImageStorageMode } from "../../storage"
+import { loadPrefs, savePrefs } from "@/utils/storage"
+import type { ImageStorageMode } from "@/utils/storage"
 
 export function applyThemeFromPrefs() {
   const prefs = loadPrefs()

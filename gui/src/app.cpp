@@ -10,6 +10,18 @@
 #include <optional>
 #include <memory>
 
+#if defined(__linux__)
+#include <QClipboard>
+#include <QGuiApplication>
+#endif
+
+#if defined(__APPLE__)
+#include <objc/runtime.h>
+#include <objc/message.h>
+#elif defined(_WIN32)
+#include <windows.h>
+#endif
+
 static void toast(saucer::smartview &wv, const std::string &msg)
 {
     std::string escaped;
@@ -63,6 +75,7 @@ int run_app(config cfg)
                 opts.hardware_acceleration = false;
                 opts.browser_flags = {"--disable-gpu"};
             }
+            opts.browser_flags.insert("--no-sandbox");
             auto wv = saucer::smartview::create(opts).value();
 
             if (!safe->favicon.empty())
@@ -123,6 +136,44 @@ int run_app(config cfg)
             );
 
             // -- JS bridges --
+
+            wv.expose("_nativeCopy", [](const std::string &text)
+            {
+#if defined(__APPLE__)
+                auto send = reinterpret_cast<id (*)(id, SEL, ...)>(
+                    &objc_msgSend);
+                id pb = send(objc_getClass("NSPasteboard"),
+                    sel_getUid("generalPasteboard"));
+                send(pb, sel_getUid("clearContents"));
+                id str = send(
+                    send(objc_getClass("NSString"),
+                        sel_getUid("alloc")),
+                    sel_getUid("initWithUTF8String:"),
+                    text.c_str());
+                send(pb, sel_getUid("setString:forType:"),
+                    str,
+                    send(objc_getClass("NSPasteboard"),
+                        sel_getUid("typeString")));
+#elif defined(__linux__)
+                QGuiApplication::clipboard()->setText(
+                    QString::fromStdString(text));
+#elif defined(_WIN32)
+                if (OpenClipboard(nullptr))
+                {
+                    EmptyClipboard();
+                    auto h = GlobalAlloc(GMEM_MOVEABLE,
+                                         text.size() + 1);
+                    if (h)
+                    {
+                        memcpy(GlobalLock(h), text.c_str(),
+                               text.size() + 1);
+                        GlobalUnlock(h);
+                        SetClipboardData(CF_TEXT, h);
+                    }
+                    CloseClipboard();
+                }
+#endif
+            });
 
             wv.expose("navigateToEditor", [safe, &wv]()
             {

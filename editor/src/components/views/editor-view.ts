@@ -1,4 +1,4 @@
-import type { ViewManager, ViewType } from "./view"
+import type { ViewManager, ViewType } from "@/components/views/view"
 
 export interface EditorViewOptions {
   sourceMode: () => boolean

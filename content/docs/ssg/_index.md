@@ -1,6 +1,7 @@
 ---
 title: SSG
 weight: 40
+bookFlatSection: true
 ---
 
 # SSG

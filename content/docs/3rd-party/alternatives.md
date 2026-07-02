@@ -9,7 +9,7 @@ Other editors and platforms that overlap with predoc's space.
 
 Notable difference across all these: predoc ships as a single ~2 MB binary that needs only the system web engine (WebKit/WebView) at runtime. It doesn't require a server but supports 3 different file APIs (local storage, browser file API, remote server), with future cloud sync planned.
 
-***
+---
 
 ## Anytype
 
@@ -24,13 +24,13 @@ A full framework for editing documents, more like a workspace aggregator than an
 
 **Why choose Anytype over predoc?** You want an all-in-one encrypted knowledge base with offline-first sync, native mobile apps, and a rich object model rather than a focused document editor.
 
-***
+---
 
 ## Docmost
 
-**Site:** <https://docmost.com/> — **Repo:** <https://github.com/docmost/docmost>
+**Site:** <https://docmost.com/>
 
-Open source / cloud-based self-hosted editor. Full-featured with real-time collaboration and file format support for import and export. Delivered as a web app with an optional Electron-based desktop wrapper.
+Open source, cloud-based self-hosted editor. Full-featured with real-time collaboration and file format support for import and export. Delivered as a web app with an optional Electron-based desktop wrapper.
 
 | Strength                                                                       | Weakness                                                                                           |
 | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
@@ -39,11 +39,11 @@ Open source / cloud-based self-hosted editor. Full-featured with real-time colla
 
 **Why choose Docmost over predoc?** You need real-time collaboration across a team and want a self-hosted wiki-like editor with broad import/export support.
 
-***
+---
 
 ## Otterwiki
 
-**Site:** **Repo:** <https://github.com/redimp/otterwiki>
+**Site:** <https://otterwiki.com/>
 
 Python-based, block editor, similar in style. Uses Flask, Halfmoon CSS, and CodeMirror as editor.
 
@@ -54,22 +54,7 @@ Python-based, block editor, similar in style. Uses Flask, Halfmoon CSS, and Code
 
 **Why choose Otterwiki over predoc?** You prefer a Python ecosystem, want a lightweight self-hosted wiki with block editing, and value similarity in editing style.
 
-***
-
-## MkDocs
-
-**Site:** <https://www.mkdocs.org/>
-
-A static site generator built in Python that turns Markdown files into documentation sites. Supports multiple themes and easy deployment to GitHub Pages. Similar in spirit to predoc's Hugo-based backend — write markdown, get a static site.
-
-| Strength                                                                        | Weakness                                                                   |
-| ------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Simple to set up — single `mkdocs.yml` config, no templating required           | No built-in editor; you bring your own (IDE, text editor, etc.)            |
-| First-class GitHub Pages deployment (`mkdocs gh-deploy`); rich plugin ecosystem | Python runtime dependency; predoc ships as a single zero-dependency binary |
-
-**Why choose MkDocs over predoc?** You want a pure Python documentation site generator with a large plugin ecosystem and tight GitHub Pages integration, and don't need a built-in editor.
-
-***
+---
 
 ## Docusaurus
 

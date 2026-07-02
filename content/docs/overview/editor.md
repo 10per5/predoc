@@ -11,6 +11,8 @@ The editor is a Milkdown v7 WYSIWYG interface loaded inside the native GUI windo
 
 [Milkdown](https://milkdown.dev) (v7, 11k+ stars) is the core editor. It's built on ProseMirror + Remark and works with markdown natively — no HTML→MD→HTML roundtrip. Both WYSIWYG and raw markdown source modes are available via toggle.
 
+predoc's plugin surface is intentionally small, but Milkdown and ProseMirror have a large [plugin ecosystem](https://github.com/artemnistuley/awesome-prosemirror) — individual maintainers or forks can implement custom behavior through ProseMirror plugins or Milkdown prosemirror plugins.
+
 ## Hotwired (Turbo + Stimulus)
 
 Navigation and interaction use [Hotwired](https://hotwired.dev):
@@ -54,3 +56,7 @@ Triggered by typing `@` in the editor.
 * Searches and links to other pages in the project
 
 * **Mobile**: menu height limited to avoid keyboard overlap
+
+## See Also
+
+- [Superdoc](https://github.com/superdoc-dev/superdoc) — a modern collaborative DOCX editor. Too heavy for this project ([5.79 MB build](https://sizepanic.com/package/superdoc), [113 MB deps](https://pkg-size.dev/superdoc)), but a nice option if full Office-style editing is needed.

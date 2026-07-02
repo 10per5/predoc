@@ -17,7 +17,9 @@
 <script>
 (function() {
   var theme = localStorage.getItem("book-theme");
-  if (theme === "dark") {
+  if (theme === "light") {
+    document.documentElement.setAttribute("data-theme", "light");
+  } else if (theme === "dark") {
     document.documentElement.setAttribute("data-theme", "dark");
   }
   var btn = document.getElementById("theme-toggle");
@@ -25,7 +27,7 @@
     btn.addEventListener("click", function() {
       var html = document.documentElement;
       if (html.getAttribute("data-theme") === "dark") {
-        html.removeAttribute("data-theme");
+        html.setAttribute("data-theme", "light");
         localStorage.setItem("book-theme", "light");
       } else {
         html.setAttribute("data-theme", "dark");

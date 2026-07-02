@@ -1,4 +1,47 @@
+<meta property="og:title" content="{{ .Title }}">
+<meta property="og:description" content="{{ with .Description }}{{ . }}{{ else }}{{ if .IsPage }}{{ .Summary | plainify | htmlUnescape }}{{ else }}{{ with .Site.Params.description }}{{ . }}{{ end }}{{ end }}{{ end }}">
+<meta property="og:url" content="{{ .Permalink }}">
+<meta property="og:site_name" content="{{ .Site.Title }}">
+<meta property="og:type" content="{{ if .IsPage }}article{{ else }}website{{ end }}">
+<meta property="og:locale" content="{{ with .Site.Language.Lang }}{{ . }}{{ else }}en_US{{ end }}">
+{{- with .Params.images }}{{ range first 6 . }}<meta property="og:image" content="{{ . | absURL }}">
+{{ end }}{{ else }}{{ with .Site.Params.images }}<meta property="og:image" content="{{ index . 0 | absURL }}">
+{{ end }}{{ end -}}
+{{- if .IsPage }}<meta property="article:published_time" content="{{ .PublishDate.Format "2006-01-02T15:04:05-07:00" }}">
+<meta property="article:modified_time" content="{{ .Lastmod.Format "2006-01-02T15:04:05-07:00" }}">{{ end }}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ .Title }}">
+<meta name="twitter:description" content="{{ with .Description }}{{ . }}{{ else }}{{ if .IsPage }}{{ .Summary | plainify | htmlUnescape }}{{ else }}{{ with .Site.Params.description }}{{ . }}{{ end }}{{ end }}{{ end }}">
 <style>
+  :root[data-theme="light"] {
+    --body-background: white;
+    --body-background-tint: none;
+    --body-font-color: black;
+    --color-link: #0055bb;
+    --color-visited-link: #5500bb;
+    --icon-filter: none;
+    --gray-100: #f8f9fa;
+    --gray-200: #e9ecef;
+    --gray-500: #adb5bd;
+    --color-accent-default: #64748b;
+    --color-accent-default-tint: rgba(100, 116, 139, 0.1);
+    --color-accent-note: #4486dd;
+    --color-accent-note-tint: rgba(68, 134, 221, 0.1);
+    --color-accent-tip: #3bad3b;
+    --color-accent-tip-tint: rgba(59, 173, 59, 0.1);
+    --color-accent-important: #8144dd;
+    --color-accent-important-tint: rgba(129, 68, 221, 0.1);
+    --color-accent-warning: #f59e42;
+    --color-accent-warning-tint: rgba(245, 158, 66, 0.1);
+    --color-accent-caution: #d84747;
+    --color-accent-caution-tint: rgba(216, 71, 71, 0.1);
+    --color-accent-info: #4486dd;
+    --color-accent-info-tint: rgba(68, 134, 221, 0.1);
+    --color-accent-success: #3bad3b;
+    --color-accent-success-tint: rgba(59, 173, 59, 0.1);
+    --color-accent-danger: #d84747;
+    --color-accent-danger-tint: rgba(216, 71, 71, 0.1);
+  }
   :root[data-theme="dark"] {
     --body-background: #2e3440;
     --body-background-tint: none;

@@ -1,4 +1,4 @@
-import { savePendingImage, loadAllPendingImages, removePendingImageById, clearAllPendingImages } from "./pending-images-db"
+import { savePendingImage, loadAllPendingImages, removePendingImageById, clearAllPendingImages } from "@/stores/pending-images-db"
 
 interface PendingImage {
   id: string

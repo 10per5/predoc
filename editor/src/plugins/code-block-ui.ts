@@ -15,8 +15,8 @@ import { editorCommands, defaultKeymap, addEditorHotkey } from "prism-code-edito
 import "prism-code-editor/layout.css";
 import "prism-code-editor/themes/atom-one-dark.css";
 
-import { renderLatex } from "./math";
-import { LANG_IMPORTS } from "./code-block-langs";
+import { renderLatex } from "@/plugins/math";
+import { LANG_IMPORTS } from "@/plugins/code-block-langs";
 
 // ---- Language registry ----
 
@@ -641,21 +641,35 @@ class PrismEditorBlock {
   }
 
   private copyCode() {
-    const text = this.node.textContent ?? "";
-    navigator.clipboard.writeText(text).catch(() => {
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.style.position = "fixed";
-      ta.style.opacity = "0";
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      document.body.removeChild(ta);
-    });
+    const text = this.editor?.value ?? this.node.textContent ?? "";
+
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch {}
+    document.body.removeChild(ta);
+
+    if (!ok) {
+      const p = navigator.clipboard?.writeText?.(text);
+      if (p) {
+        p.catch(() => {
+          const saucer = (window as any).saucer;
+          if (saucer?.exposed?._nativeCopy)
+            saucer.exposed._nativeCopy(text);
+        });
+      } else {
+        const saucer = (window as any).saucer;
+        if (saucer?.exposed?._nativeCopy)
+          saucer.exposed._nativeCopy(text);
+      }
+    }
+
     this.copyBtn.classList.add("copied");
-    setTimeout(() => {
-      this.copyBtn.classList.remove("copied");
-    }, 1500);
+    setTimeout(() => this.copyBtn.classList.remove("copied"), 1500);
   }
 }
 

@@ -19,6 +19,7 @@ COPY src/ src/
 COPY lib/ lib/
 COPY static/ static/
 COPY *.ts ./
+COPY tsconfig.json ./
 RUN bun run build
 
 FROM scratch

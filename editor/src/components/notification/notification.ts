@@ -1,4 +1,4 @@
-import { colors } from "../../theme";
+import { colors } from "@/config/theme";
 
 export type NotificationType = "danger" | "info" | "warning" | "success";
 
@@ -126,6 +126,7 @@ export function initNotifications(): void {
   font: 13px/1.45 system-ui, sans-serif;
   box-shadow: 0 4px 16px rgba(0,0,0,.45);
   animation: prdc-notif-in .2s ease-out;
+  min-width: 240px;
 }
 .prdc-notif-close {
   position: absolute; top: 4px; right: 4px;

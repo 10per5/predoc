@@ -1,7 +1,7 @@
 import * as diff from "diff";
-import { loadStorage, saveStorage } from "./storage";
-import { serializeFrontmatter } from "./utils/frontmatter";
-import type { MetaPanelData } from "./components/panels/meta-panel";
+import { loadStorage, saveStorage } from "@/utils/storage";
+import { serializeFrontmatter } from "@/utils/frontmatter";
+import type { MetaPanelData } from "@/components/panels/meta-panel";
 
 class Cache {
   private patches: Map<string, string> = new Map();

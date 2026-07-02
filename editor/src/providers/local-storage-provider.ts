@@ -1,5 +1,5 @@
-import type { ContentProvider, TreeNode, ImageEntry, SearchResult } from "./provider"
-import { extractSnippets, contentMatches } from "../utils/content-search"
+import type { ContentProvider, TreeNode, ImageEntry, SearchResult } from "@/providers/provider"
+import { extractSnippets, contentMatches } from "@/utils/content-search"
 
 const STORAGE_PREFIX = "predoc:"
 const IMAGE_PREFIX = "predoc:image:"

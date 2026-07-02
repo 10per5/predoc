@@ -16,7 +16,7 @@ import {
 import { commonmark as _commonmark, wrapInHeadingInputRule } from "@milkdown/kit/preset/commonmark";
 import { gfm } from "@milkdown/kit/preset/gfm";
 import { nord } from "@milkdown/theme-nord";
-import { EditorState, Plugin, PluginKey } from "@milkdown/kit/prose/state";
+import { EditorState, NodeSelection, Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { parserCtx, remarkStringifyOptionsCtx } from "@milkdown/core";
 import { clipboard } from "@milkdown/plugin-clipboard";
 import { history } from "@milkdown/kit/plugin/history";
@@ -27,7 +27,7 @@ import {
 } from "@milkdown/kit/component/link-tooltip";
 import { cursor, dropIndicatorConfig } from "@milkdown/kit/plugin/cursor";
 import { $prose } from "@milkdown/kit/utils";
-import { fixedHeadingInputRule } from "../plugins/heading-input-rule";
+import { fixedHeadingInputRule } from "@/plugins/heading-input-rule";
 
 const commonmark = _commonmark.filter(
   (p) => p !== wrapInHeadingInputRule,
@@ -40,23 +40,23 @@ import {
   imageBlockComponent,
   imageBlockConfig,
 } from "@milkdown/kit/component/image-block";
-import { createKeymap } from "../keyboard";
+import { createKeymap } from "@/plugins/keyboard";
 import {
   copyIcon,
   editIcon,
   removeIcon,
   confirmIcon,
-} from "../components/icons";
-import { alertRemarkPlugin, alertSchema } from "../plugins/alert";
-import { shortcodeDecoration } from "../plugins/shortcode";
-import { hugoRefSchema, initHugoRefClicks } from "../plugins/hugo-ref";
-import { MentionView } from "../components/editor/editor-mention";
+} from "@/components/ui/icons";
+import { alertRemarkPlugin, alertSchema } from "@/plugins/alert";
+import { shortcodeDecoration } from "@/plugins/shortcode";
+import { hugoRefSchema, initHugoRefClicks } from "@/plugins/hugo-ref";
+import { MentionView } from "@/features/mention";
 import {
   configureBlockEdit,
   block,
   slash,
   menuAPI,
-} from "../features/block-edit";
+} from "@/features/block-edit";
 import {
   remarkMathPlugin,
   remarkMathBlockPlugin,
@@ -65,15 +65,16 @@ import {
   mathBlockInputRule,
   blockLatexSchema,
   toggleLatexCommand,
-} from "../plugins/math";
-import { codeBlockUI } from "../plugins/code-block-ui";
-import { cache } from "../cache";
-import { toggleSourceMode, applySourceContent } from "../editor-source";
-import { getProvider } from "../content/provider-registry";
-import { stripFrontmatter } from "../utils/frontmatter";
-import { setCurrentDocDir, uploadImage } from "./image-config";
-import { imageRegistry } from "./image-registry";
-import { findTextInProseMirror } from "../utils/prosemirror-search";
+} from "@/plugins/math";
+import { codeBlockUI } from "@/plugins/code-block-ui";
+import { cache } from "@/stores/cache";
+import { toggleSourceMode, applySourceContent } from "@/features/editor-source";
+import { getProvider } from "@/providers/provider-registry";
+import { stripFrontmatter, serializeFrontmatter } from "@/utils/frontmatter";
+import { setCurrentDocDir, uploadImage } from "@/services/image-config";
+import { imageRegistry } from "@/stores/image-registry";
+import { findTextInProseMirror } from "@/features/search/prosemirror-search";
+import { mountExternalChangeDialog } from "@/components/dialogs/external-change-dialog";
 
 export interface EditorServiceConfig {
   onContentChange?: (content: string) => void;
@@ -97,6 +98,13 @@ export class EditorService {
    * Set current path context
    */
   setCurrentPath(path: string): void {
+    const prev = this.currentPath;
+    if (prev && prev !== path && this.editor) {
+      this.editor.action((ctx) => {
+        const view = ctx.get(editorViewCtx);
+        this.editorStates.set(prev, view.state);
+      });
+    }
     this.currentPath = path;
     const dir = path.includes("/")
       ? path.substring(0, path.lastIndexOf("/"))
@@ -172,6 +180,65 @@ export class EditorService {
       const { frontmatter, body } = stripFrontmatter(raw);
       const serverTime = await provider?.getServerTime(path);
       const cachedTime = cache.getServerTime(path) || 0;
+
+      const baseline = cache.getBaseline(path);
+      if (baseline !== undefined && body !== baseline) {
+        if (cache.isDirty(path)) {
+          const localBody = cache.getBody(path) ?? body;
+          const localFm = cache.getFrontmatter(path);
+          const localFull = localFm
+            ? `---\n${serializeFrontmatter(localFm)}\n---\n\n${localBody}`
+            : localBody;
+
+          const captured = {
+            p: path,
+            diskBody: body,
+            diskFm: frontmatter,
+            diskTime: serverTime ?? Date.now(),
+            localBody,
+            localFm,
+            onMeta: onMetaUpdate,
+          };
+
+          mountExternalChangeDialog(path, localFull, raw).then((action) => {
+            if (this.currentPath !== captured.p) return;
+            if (action === "discard") {
+              this.editorStates.delete(captured.p);
+              cache.clearPath(captured.p);
+              cache.setBaseline(captured.p, captured.diskBody);
+              cache.setServerTime(captured.p, captured.diskTime);
+              if (captured.diskFm) {
+                cache.setFrontmatter(captured.p, captured.diskFm);
+                captured.onMeta?.(captured.diskFm);
+              }
+              this.ensureEditor(captured.diskBody);
+            } else {
+              this.editorStates.delete(captured.p);
+              cache.clearPath(captured.p);
+              cache.setBaseline(captured.p, captured.diskBody);
+              cache.setServerTime(captured.p, captured.diskTime);
+              if (captured.localFm) {
+                cache.setFrontmatter(captured.p, captured.localFm);
+                captured.onMeta?.(captured.localFm);
+              }
+              cache.setBody(captured.p, captured.localBody);
+              this.ensureEditor(captured.localBody);
+            }
+          });
+
+          this.editorStates.delete(path);
+          cache.setServerTime(path, serverTime ?? Date.now());
+          if (frontmatter) onMetaUpdate?.(frontmatter);
+          return body;
+        } else {
+          this.editorStates.delete(path);
+          cache.clearPath(path);
+          cache.setBaseline(path, body);
+          cache.setServerTime(path, serverTime ?? Date.now());
+          if (frontmatter) { cache.setFrontmatter(path, frontmatter); onMetaUpdate?.(frontmatter); }
+          return body;
+        }
+      }
 
       if (serverTime && serverTime > cachedTime) {
         cache.clearPath(path);
@@ -488,21 +555,28 @@ export class EditorService {
             props: {
               handleDOMEvents: {
                 dragstart(view, event) {
-                  if (view.dragging?.move) {
-                    const { selection, doc } = view.state;
-                    const $from = doc.resolve(selection.from);
-                    const from = $from.before($from.depth);
-                    const to = from + $from.node($from.depth).nodeSize;
+                    if (view.dragging?.move) {
+                        const { selection, doc } = view.state;
+                        let from: number, to: number;
+                        if (selection instanceof NodeSelection) {
+                            from = selection.from;
+                            to = selection.to;
+                        } else {
+                            const $from = doc.resolve(selection.from);
+                            const depth = Math.max(1, $from.depth);
+                            from = $from.before(depth);
+                            to = from + $from.node(depth).nodeSize;
+                        }
 
-                    (view.dragging as any).node = {
-                      replace: (tr: any) => {
-                        const mappedFrom = tr.mapping.map(from);
-                        const mappedTo = tr.mapping.map(to);
-                        tr.delete(mappedFrom, mappedTo);
-                      },
-                    };
-                  }
-                  return false;
+                        (view.dragging as any).node = {
+                            replace: (tr: any) => {
+                                const mappedFrom = tr.mapping.map(from);
+                                const mappedTo = tr.mapping.map(to);
+                                tr.delete(mappedFrom, mappedTo);
+                            },
+                        };
+                    }
+                    return false;
                 },
               },
             },

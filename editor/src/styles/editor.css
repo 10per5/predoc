@@ -304,6 +304,11 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.code-block-copy-btn svg {
+  transition: stroke 0.3s;
 }
 
 .code-block-copy-btn:hover {

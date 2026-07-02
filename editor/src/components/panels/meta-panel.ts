@@ -1,4 +1,4 @@
-import { githubIconStr } from "../icons";
+import { githubIconStr } from "@/components/ui/icons";
 
 export interface MetaPanelData {
   title: string;

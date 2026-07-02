@@ -1,6 +1,6 @@
-import { colors } from "../../theme"
-import { formatBytes } from "../../utils/format"
-import type { TreeNode } from "../panels/sidebar"
+import { colors } from "@/config/theme"
+import { formatBytes } from "@/utils/format"
+import type { TreeNode } from "@/components/panels/sidebar"
 
 const PIE_COLORS = [
   "#5e81ac", "#bf616a", "#a3be8c", "#ebcb8b",

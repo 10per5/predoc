@@ -1,17 +1,16 @@
 /**
  * UIInitializerService
- * 
+ *
  * Manages initialization and mounting of all UI components
  * Responsible for wiring up topbar, meta panel, and other UI elements
  */
 
 import type { Editor } from "@milkdown/kit/core";
-import type { TopbarAPI } from "../components/toolbar/topbar";
-import type { MetaPanelAPI } from "../components/panels/meta-panel";
-import { mountTopbar } from "../components/toolbar/topbar";
-import { mountMetaPanel } from "../components/panels/meta-panel";
-import type { ViewType } from "../components/views/view";
-import type { ViewManager } from "../components/views/view";
+import type { TopbarAPI } from "@/components/toolbar/topbar";
+import type { MetaPanelAPI } from "@/components/panels/meta-panel";
+import { mountTopbar } from "@/components/toolbar/topbar";
+import { mountMetaPanel } from "@/components/panels/meta-panel";
+import type { ViewType } from "@/components/views/view-manager";
 
 export interface UIInitializeOptions {
   onPrefs?: () => void;
@@ -36,7 +35,7 @@ export class UIInitializerService {
    */
   public initializeTopbar(
     getEditor: () => Editor | null,
-    options: UIInitializeOptions
+    options: UIInitializeOptions,
   ): TopbarAPI | null {
     const toolbarEl = document.getElementById("app-toolbar");
     if (!toolbarEl) return null;
@@ -63,7 +62,7 @@ export class UIInitializerService {
    * Initialize meta panel and return API
    */
   public initializeMetaPanel(
-    onChange?: (data: any) => void
+    onChange?: (data: any) => void,
   ): MetaPanelAPI | null {
     const metaMount = document.getElementById("meta-panel-mount");
     if (!metaMount) return null;
@@ -106,7 +105,11 @@ export class UIInitializerService {
   /**
    * Update dirty counter in topbar
    */
-  public updateDirtyCounter(count: number, totalBytes: number, pendingCount: number = 0): void {
+  public updateDirtyCounter(
+    count: number,
+    totalBytes: number,
+    pendingCount: number = 0,
+  ): void {
     this.topbar?.updateCounter(count, totalBytes, pendingCount);
     this.topbar?.setDirtyState(count > 0 || pendingCount > 0);
   }

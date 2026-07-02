@@ -1,6 +1,6 @@
 import { html, render } from "lit-html"
 import { unsafeHTML } from "lit-html/directives/unsafe-html.js"
-import { colors } from "../../theme"
+import { colors } from "@/config/theme"
 import type { Editor } from "@milkdown/kit/core"
 import { commandsCtx, editorViewCtx } from "@milkdown/kit/core"
 import {
@@ -11,14 +11,14 @@ import {
   insertHrCommand,
 } from "@milkdown/kit/preset/commonmark"
 import { toggleStrikethroughCommand } from "@milkdown/kit/preset/gfm"
-import { mountLinkDialog } from "../dialogs/link-dialog"
-import type { ViewType } from "../views/view"
+import { mountLinkDialog } from "@/components/dialogs/link-dialog"
+import type { ViewType } from "@/components/views/view"
 import {
   boldIcon, italicIcon, strikethroughIcon, codeIcon, linkIcon, dividerIcon,
-} from "../icons"
-import { mountFileMenu } from "./file-menu"
-import { pressTwiceButton } from "../dialogs/press-twice-button"
-import { formatBytes } from "../../utils/format"
+} from "@/components/ui/icons"
+import { mountFileMenu } from "@/components/toolbar/file-menu"
+import { pressTwiceButton } from "@/components/ui/press-twice-button"
+import { formatBytes } from "@/utils/format"
 
 export interface TopbarAPI {
   updateCounter(count: number, totalBytes: number, pendingCount?: number): void

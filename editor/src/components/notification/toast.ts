@@ -1,4 +1,4 @@
-import { colors } from "../../theme.js";
+import { colors } from "@/config/theme";
 
 const DEFAULT_DURATION = 4000;
 

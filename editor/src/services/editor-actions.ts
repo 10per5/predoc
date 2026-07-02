@@ -1,9 +1,9 @@
-import { confirmDialog, promptDialog, promptCreateDialog } from "./components/dialogs/dialog"
-import { serializeFrontmatter } from "./utils/frontmatter"
-import type { MetaPanelData } from "./components/panels/meta-panel"
-import { cache } from "./cache"
-import type { CacheManagementService } from "./services/cache-management-service"
-import { showNotification } from "./components/notification/notification"
+import { confirmDialog, promptDialog, promptCreateDialog } from "@/components/dialogs/dialog"
+import { serializeFrontmatter } from "@/utils/frontmatter"
+import type { MetaPanelData } from "@/components/panels/meta-panel"
+import { cache } from "@/stores/cache"
+import type { CacheManagementService } from "@/services/cache-management-service"
+import { showNotification } from "@/components/notification/notification"
 
 export async function createNewItem(
   cacheService: CacheManagementService,

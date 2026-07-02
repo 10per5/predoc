@@ -1,15 +1,15 @@
 import { html, render } from "lit-html";
-import { editorSelfBase, liveUrlBase, isDev } from "../../config";
-import { liveIcon } from "../icons";
-import { confirmDialog } from "../dialogs/dialog";
-import { showNotification } from "../notification/notification";
-import { buildEditorUrl } from "../../utils/url";
-import type { PendingOp } from "../../utils/tree";
+import { editorSelfBase, liveUrlBase, isDev } from "@/config";
+import { liveIcon } from "@/components/ui/icons";
+import { confirmDialog } from "@/components/dialogs/dialog";
+import { showNotification } from "@/components/notification/notification";
+import { buildEditorUrl } from "@/utils/url";
+import type { PendingOp } from "@/utils/tree";
 import {
   collectPagePaths,
   searchContent,
   type SearchMatch,
-} from "../../services/sidebar-search";
+} from "@/features/search/sidebar-search";
 
 const fileIcon = html`<svg
   class="sidebar-icon sidebar-icon-file"

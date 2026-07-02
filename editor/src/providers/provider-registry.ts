@@ -1,5 +1,5 @@
-import type { ContentProvider } from "./provider";
-import type { ProviderType } from "./index";
+import type { ContentProvider } from "@/providers/provider";
+import type { ProviderType } from "@/providers/index";
 
 let globalProvider: ContentProvider | null = null;
 
