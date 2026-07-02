@@ -1,5 +1,5 @@
 import { html, render } from "lit-html"
-import { miniWindow } from "../ui"
+import { miniWindow } from "../ui/ui-helpers"
 import type { ZipFileEntry } from "../../utils/zip"
 
 export interface ImportDialogResult {

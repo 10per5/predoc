@@ -30,7 +30,7 @@ import {
   tableIcon,
   todoListIcon,
   imageIcon,
-} from "../components/icons";
+} from "../components/ui/icons";
 import {
   getAllImages,
   uploadImage,

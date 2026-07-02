@@ -7,10 +7,10 @@
 
 import { stripFrontmatter } from "../utils/frontmatter";
 import { mountDiskUsageView } from "../components/views/disk-usage-view";
-import { ViewManager, type ViewType } from "../components/views/view";
+import { ViewManager, type ViewType } from "../components/views/view-manager";
 import { registerEditorView } from "../components/views/editor-view";
-import { cache } from "../cache";
-import { getProvider, getProviderDisplayInfo } from "../content/provider-registry";
+import { cache } from "../stores/cache";
+import { getProvider, getProviderDisplayInfo } from "../providers/provider-registry";
 import { collectLeaves } from "../utils/tree";
 
 export interface ViewCallbacks {

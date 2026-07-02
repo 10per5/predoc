@@ -21,11 +21,12 @@ import "./styles/dialogs.css"
 import "./styles/responsive.css"
 
 import { Application } from "@hotwired/stimulus"
-import EditorController, { setSessionStarted } from "./controllers/editor_controller"
-import { setProvider } from "./content/provider-registry"
+import ShellController from "./controllers/shell_controller"
+import { setSessionStarted } from "./orchestrator"
+import { setProvider } from "./providers/provider-registry"
 import { initToast } from "./components/notification/toast"
 import { initNotifications } from "./components/notification/notification"
-import { createProvider } from "./content"
+import { createProvider } from "./providers"
 
 async function init() {
   setSessionStarted(Date.now())
@@ -34,7 +35,7 @@ async function init() {
   setProvider(provider)
 
   const app = Application.start()
-  app.register("editor", EditorController)
+  app.register("editor", ShellController)
 
   document.addEventListener("turbo:load", () => {
     app.load()

@@ -1,6 +1,6 @@
 import { editorSelfBase } from "../config"
 import type { TreeNode } from "../components/panels/sidebar"
-import { getProvider } from "../content/provider-registry"
+import { getProvider } from "../providers/provider-registry"
 import { stripFrontmatter } from "../utils/frontmatter"
 import type { MetaPanelData } from "../components/panels/meta-panel"
 import { pushPath, getCurrentPath } from "../utils/url"

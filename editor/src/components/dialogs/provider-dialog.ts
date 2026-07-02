@@ -1,6 +1,6 @@
 import { html, render } from "lit-html"
-import { miniWindow, actionBtn, overlayStyles, windowStyles } from "../ui"
-import { getAvailableProviders, type ProviderInfo } from "../../content"
+import { miniWindow, actionBtn, overlayStyles, windowStyles } from "../ui/ui-helpers"
+import { getAvailableProviders, type ProviderInfo } from "../../providers"
 
 export interface ProviderDialogResult {
   type: "remote" | "filesystem" | "localStorage"

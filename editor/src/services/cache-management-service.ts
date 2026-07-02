@@ -12,8 +12,8 @@ import {
   type ChangesDialogData,
 } from "../components/dialogs/changes-dialog";
 import { confirmDialog } from "../components/dialogs/dialog";
-import { cache } from "../cache";
-import { getProvider } from "../content/provider-registry";
+import { cache } from "../stores/cache";
+import { getProvider } from "../providers/provider-registry";
 import {
   commitAllPendingImages,
   replacePendingUrls,
@@ -26,9 +26,9 @@ import {
   savePendingOps,
   loadPendingOps,
   clearPendingOpsStorage,
-} from "../storage";
+} from "../utils/storage";
 import { extractSnippets } from "../utils/content-search";
-import { imageRegistry } from "./image-registry";
+import { imageRegistry } from "../stores/image-registry";
 
 export interface SearchMatch {
   path: string;

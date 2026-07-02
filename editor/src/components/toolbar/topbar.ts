@@ -1,6 +1,6 @@
 import { html, render } from "lit-html"
 import { unsafeHTML } from "lit-html/directives/unsafe-html.js"
-import { colors } from "../../theme"
+import { colors } from "../../config/theme"
 import type { Editor } from "@milkdown/kit/core"
 import { commandsCtx, editorViewCtx } from "@milkdown/kit/core"
 import {
@@ -15,9 +15,9 @@ import { mountLinkDialog } from "../dialogs/link-dialog"
 import type { ViewType } from "../views/view"
 import {
   boldIcon, italicIcon, strikethroughIcon, codeIcon, linkIcon, dividerIcon,
-} from "../icons"
+} from "../ui/icons"
 import { mountFileMenu } from "./file-menu"
-import { pressTwiceButton } from "../dialogs/press-twice-button"
+import { pressTwiceButton } from "../ui/press-twice-button"
 import { formatBytes } from "../../utils/format"
 
 export interface TopbarAPI {

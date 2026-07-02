@@ -6,14 +6,14 @@
  */
 
 import { stripFrontmatter } from "../utils/frontmatter";
-import { createNewItem, deletePage, renamePage, movePage } from "../editor-actions";
+import { createNewItem, deletePage, renamePage, movePage } from "./editor-actions";
 import { setupNavListeners, collectPageList } from "../features/navigation";
-import { getProvider, setProvider, cacheKeyForProvider, getProviderDisplayInfo } from "../content/provider-registry";
-import { createProviderByType } from "../content";
+import { getProvider, setProvider, cacheKeyForProvider, getProviderDisplayInfo } from "../providers/provider-registry";
+import { createProviderByType } from "../providers";
 import { mountSidebar, type SidebarActions, type TreeNode } from "../components/panels/sidebar";
 import { mountProviderDialog } from "../components/dialogs/provider-dialog";
 import { showNotification } from "../components/notification/notification";
-import { cache } from "../cache";
+import { cache } from "../stores/cache";
 import { editorSelfBase } from "../config";
 import { pushPath, replacePath } from "../utils/url";
 import type { CacheManagementService } from "./cache-management-service";

@@ -1,4 +1,4 @@
-import { colors } from "../../theme";
+import { colors } from "../../config/theme";
 
 export type NotificationType = "danger" | "info" | "warning" | "success";
 

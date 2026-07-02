@@ -1,6 +1,6 @@
 import { html, render } from "lit-html";
 import { editorSelfBase, liveUrlBase, isDev } from "../../config";
-import { liveIcon } from "../icons";
+import { liveIcon } from "../ui/icons";
 import { confirmDialog } from "../dialogs/dialog";
 import { showNotification } from "../notification/notification";
 import { buildEditorUrl } from "../../utils/url";
@@ -9,7 +9,7 @@ import {
   collectPagePaths,
   searchContent,
   type SearchMatch,
-} from "../../services/sidebar-search";
+} from "../../features/search/sidebar-search";
 
 const fileIcon = html`<svg
   class="sidebar-icon sidebar-icon-file"

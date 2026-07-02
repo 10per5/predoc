@@ -1,8 +1,8 @@
 import { html, render } from "lit-html"
 import { diffLines } from "diff"
-import { miniWindow } from "../ui"
-import { pressTwiceButton } from "./press-twice-button"
-import { colors } from "../../theme"
+import { miniWindow } from "../ui/ui-helpers"
+import { pressTwiceButton } from "../ui/press-twice-button"
+import { colors } from "../../config/theme"
 import { formatBytes } from "../../utils/format"
 import type { MetaPanelData } from "../panels/meta-panel"
 

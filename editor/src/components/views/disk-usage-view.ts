@@ -1,4 +1,4 @@
-import { colors } from "../../theme"
+import { colors } from "../../config/theme"
 import { formatBytes } from "../../utils/format"
 import type { TreeNode } from "../panels/sidebar"
 

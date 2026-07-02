@@ -40,17 +40,17 @@ import {
   imageBlockComponent,
   imageBlockConfig,
 } from "@milkdown/kit/component/image-block";
-import { createKeymap } from "../keyboard";
+import { createKeymap } from "../plugins/keyboard";
 import {
   copyIcon,
   editIcon,
   removeIcon,
   confirmIcon,
-} from "../components/icons";
+} from "../components/ui/icons";
 import { alertRemarkPlugin, alertSchema } from "../plugins/alert";
 import { shortcodeDecoration } from "../plugins/shortcode";
 import { hugoRefSchema, initHugoRefClicks } from "../plugins/hugo-ref";
-import { MentionView } from "../components/editor/editor-mention";
+import { MentionView } from "../features/mention";
 import {
   configureBlockEdit,
   block,
@@ -67,13 +67,13 @@ import {
   toggleLatexCommand,
 } from "../plugins/math";
 import { codeBlockUI } from "../plugins/code-block-ui";
-import { cache } from "../cache";
-import { toggleSourceMode, applySourceContent } from "../editor-source";
-import { getProvider } from "../content/provider-registry";
+import { cache } from "../stores/cache";
+import { toggleSourceMode, applySourceContent } from "../features/editor-source";
+import { getProvider } from "../providers/provider-registry";
 import { stripFrontmatter, serializeFrontmatter } from "../utils/frontmatter";
 import { setCurrentDocDir, uploadImage } from "./image-config";
-import { imageRegistry } from "./image-registry";
-import { findTextInProseMirror } from "../utils/prosemirror-search";
+import { imageRegistry } from "../stores/image-registry";
+import { findTextInProseMirror } from "../features/search/prosemirror-search";
 import { mountExternalChangeDialog } from "../components/dialogs/external-change-dialog";
 
 export interface EditorServiceConfig {
